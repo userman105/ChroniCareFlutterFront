@@ -36,6 +36,13 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.2.3
   google_fonts: ^8.0.2
+  flutter_launcher_icons: ^0.14.4
+
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/logos/appIcon.png"
 
 dev_dependencies:
   flutter_test:
@@ -66,6 +73,12 @@ flutter:
      - assets/buttons/mainButton.svg
      - assets/buttons/mainButton.png
      - assets/logos/appIcon.png
+     - assets/icons/asthma.png
+     - assets/icons/diabetesIcon.png
+     - assets/icons/hypertensionIcon.png
+     - assets/icons/eatRight.png
+     - assets/icons/chart.png
+     - assets/icons/neverForgetMed.png
 
 
 

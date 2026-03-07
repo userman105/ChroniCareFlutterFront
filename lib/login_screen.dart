@@ -1,3 +1,4 @@
+import 'package:chronic_care/choose_your_condition.dart';
 import 'package:chronic_care/sign_up_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -62,7 +63,8 @@ final TextEditingController password = TextEditingController();
                 const SizedBox(height: 35),
                 
                 MainButton(text: "Login",
-                onTap: (){//TODO
+                onTap: (){
+                  Navigator.push(context, MaterialPageRoute(builder: (_)=>ChooseYourCondition()));
                    },),
 
                 const SizedBox(height: 35),
