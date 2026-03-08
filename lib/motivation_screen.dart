@@ -1,3 +1,4 @@
+import 'package:chronic_care/personalize_schedule.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'widgets/components.dart';
@@ -21,7 +22,7 @@ class _MotivationScreenState extends State<MotivationScreen> {
             children: [
 
               Image.asset(
-                "assets/logos/appIcon.png",
+                "assets/logos/launcherIcon.png",
                 height: 128,
                 width: 128,
               ),
@@ -121,8 +122,8 @@ class _MotivationScreenState extends State<MotivationScreen> {
               MainButton(
                 text: "Let's get started",
                 onTap: () {
-                  // TODO
-                },
+                  Navigator.push(context, MaterialPageRoute(builder:
+                  (_)=>PersonalizeSchedule()));},
               ),
 
               const SizedBox(height: 12),
