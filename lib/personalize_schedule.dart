@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'widgets/components.dart';
+import 'main_activity/home_screen.dart';
+
 class PersonalizeSchedule extends StatefulWidget {
   const PersonalizeSchedule({super.key});
 
@@ -94,9 +96,16 @@ class _PersonalizeScheduleState extends State<PersonalizeSchedule> {
                 text: "Proceed",
                 enabled: selectedIndexes.isNotEmpty,
                 onTap: () {
+
+
+                  final selectedTiles =
+                  selectedIndexes.map((i) => allTiles[i]).toList();
+
+                  Navigator.pop(context, selectedTiles);
                   if (selectedIndexes.isNotEmpty) {
-                    // Handle proceed
-                    print("Selected indexes: $selectedIndexes");
+                    Navigator.push(context, MaterialPageRoute(builder: (_)=>
+                    HomeScreen(tiles: selectedTiles))
+                    );
                   }
                 },
               ),

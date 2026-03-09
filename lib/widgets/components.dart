@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:intl/intl.dart';
 
 ///***
 ///list of components
@@ -9,7 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 /// MainButton
 /// ChronicLogo
 /// conditionButton
-///
+/// TodayDateBar
 ///
 ///
 ///
@@ -203,8 +203,6 @@ class ConditionButton extends StatelessWidget {
   final bool selected;
   final bool enabled;
   final VoidCallback onTap;
-
-  /// New optional parameters
   final double width;
   final double height;
   final double iconSize;
@@ -429,6 +427,376 @@ class ConditionGridButton extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class TodayDateBar extends StatefulWidget {
+  final String calendarIconAsset;
+
+  const TodayDateBar({
+    super.key,
+    required this.calendarIconAsset,
+  });
+
+  @override
+  State<TodayDateBar> createState() => _TodayDateBarState();
+}
+
+class _TodayDateBarState extends State<TodayDateBar> {
+  DateTime selectedDate = DateTime.now();
+
+  final ScrollController _scrollController = ScrollController();
+
+    List<DateTime> get visibleDates {
+    final now = DateTime.now();
+    return List.generate(7, (i) => now.subtract(Duration(days: 6 - i)));
+  }
+
+  bool get isToday {
+    final now = DateTime.now();
+    return selectedDate.year == now.year &&
+        selectedDate.month == now.month &&
+        selectedDate.day == now.day;
+  }
+
+  void _scrollToSelected() {
+    final index =
+    visibleDates.indexWhere((d) =>
+    d.year == selectedDate.year &&
+        d.month == selectedDate.month &&
+        d.day == selectedDate.day);
+
+    if (index == -1) return;
+
+    const itemWidth = 64.0;
+
+    final offset = (index * itemWidth) -
+        (MediaQuery.of(context).size.width / 2) +
+        (itemWidth / 2);
+
+    _scrollController.animateTo(
+      offset.clamp(
+        0,
+        _scrollController.position.maxScrollExtent,
+      ),
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOut,
+    );
+  }
+
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: now,
+    );
+
+    if (picked != null) {
+      setState(() {
+        selectedDate = picked;
+      });
+
+      Future.delayed(const Duration(milliseconds: 50), _scrollToSelected);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToSelected();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dateText = DateFormat('MMM d, yyyy').format(selectedDate);
+
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          height: 46,
+          padding: const EdgeInsets.only(
+            top: 8,
+            left: 14,
+            right: 22,
+            bottom: 8,
+          ),
+          decoration: const BoxDecoration(
+            color: Color(0xFF2D2D2D),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  if (isToday)
+                    Text(
+                      "Today",
+                      style: GoogleFonts.arimo(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  if (isToday) const SizedBox(width: 8),
+                  Text(
+                    dateText,
+                    style: GoogleFonts.arimo(
+                      color: Colors.white70,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              GestureDetector(
+                onTap: _pickDate,
+                child: Image.asset(
+                  widget.calendarIconAsset,
+                  width: 30,
+                  height: 30,
+                ),
+              )
+            ],
+          ),
+        ),
+
+        SizedBox(
+          height: 73,
+          child: ListView.builder(
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 13),
+            itemCount: visibleDates.length,
+            itemBuilder: (context, index) {
+              final date = visibleDates[index];
+
+              final selected =
+                  date.year == selectedDate.year &&
+                      date.month == selectedDate.month &&
+                      date.day == selectedDate.day;
+
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    selectedDate = date;
+                  });
+
+                  _scrollToSelected();
+                },
+                child: SizedBox(
+                  width: 64,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        DateFormat('EEE').format(date),
+                        style: GoogleFonts.arimo(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeOut,
+                        width: 31,
+                        height: 31,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: selected ? Colors.white : Colors.transparent,
+                          shape: BoxShape.circle,
+                        ),
+                        child: AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 200),
+                          style: GoogleFonts.arimo(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w500,
+                            color: selected
+                                ? Colors.black
+                                : const Color(0xFFB4B4B4),
+                          ),
+                          child: Text(date.day.toString()),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class HealthTile {
+  final String icon;
+  final String label;
+  bool selected;
+
+  HealthTile({
+    required this.icon,
+    required this.label,
+    this.selected = false
+  });
+}
+
+List<HealthTile> allTiles = [
+  HealthTile(icon: 'assets/icons/bloodPressure.png', label: 'Blood Pressure',selected: false),
+  HealthTile(icon: 'assets/icons/capsule.png', label: 'Meds',selected: false),
+  HealthTile(icon: 'assets/icons/healthcare.png', label: 'Symptoms',selected: false),
+  HealthTile(icon: 'assets/icons/cutlery.png', label: 'Food',selected: false),
+  HealthTile(icon: 'assets/icons/weight.png', label: 'Weight',selected: false),
+  HealthTile(icon: 'assets/icons/diabetes.png', label: 'Glucose',selected: false),
+];
+
+
+class HighlightableGridTile extends StatelessWidget {
+  final String iconAsset;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const HighlightableGridTile({
+    super.key,
+    required this.iconAsset,
+    required this.label,
+    this.selected = false,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedScale(
+        scale: selected ? 1.05 : 1.0,
+        duration: const Duration(milliseconds: 200),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: ShapeDecoration(
+            color: selected ? Colors.green[400] : const Color(0xFF2D2D2D),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            shadows: [
+              BoxShadow(
+                color: selected
+                    ? Colors.green.withOpacity(0.5)
+                    : Colors.black.withOpacity(0.1),
+                blurRadius: selected ? 12 : 4,
+                offset: const Offset(0, 2),
+              )
+            ],
+          ),
+          child: Row(
+            children: [
+              Image.asset(
+                iconAsset,
+                width: 28,
+                height: 28,
+              ),
+              const SizedBox(width: 3),
+              Expanded(
+                child: Text(
+                  label,
+                  style: GoogleFonts.arimo(
+                    color: selected ? Colors.white : Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  softWrap: true,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class BottomNavigationBarCustom extends StatelessWidget {
+  const BottomNavigationBarCustom({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Helper widget for normal icons with text
+    Widget navItem(String iconAsset, String label, Color color) {
+      return GestureDetector(
+        onTap: () {},
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              iconAsset,
+              width: 28,
+              height: 28,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: GoogleFonts.arimo(
+                color: color,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget addButton() {
+      return GestureDetector(
+        onTap: () {},
+        child: Container(
+          width: 50,
+          height: 50,
+          decoration: const ShapeDecoration(
+            color: Color(0xFF00C950),
+            shape: OvalBorder(),
+          ),
+          child: const Center(
+            child: Icon(
+              Icons.add,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      height: 80,
+      color: const Color(0xFF2D2D2D),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          navItem('assets/icons/calendar2.png', 'Today', const Color(0xFF05DF72)),
+          navItem('assets/icons/insights.png', 'Insights', const Color(0xFF929292)),
+          addButton(),
+          navItem('assets/icons/reminders.png', 'Remindrs', const Color(0xFF929292)),
+          navItem('assets/icons/profile.png', 'Profile', const Color(0xFFB3B3B3)),
+        ],
       ),
     );
   }

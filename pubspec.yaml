@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.2.3
   google_fonts: ^8.0.2
+  intl: ^0.20.2
 
 
 
@@ -87,6 +88,13 @@ flutter:
      - assets/icons/diabetes.png
      - assets/icons/healthcare.png
      - assets/icons/weight.png
+     - assets/icons/calendar.png
+     - assets/icons/add.png
+     - assets/icons/addIconGreen.png
+     - assets/icons/calendar2.png
+     - assets/icons/insights.png
+     - assets/icons/profile.png
+     - assets/icons/reminders.png
 
 
 
