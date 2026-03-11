@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'widgets/components.dart';
-import 'main_activity/home_screen.dart';
+import 'main_activity/today_screen.dart';
+import 'main_activity/main_container.dart';
 
 class PersonalizeSchedule extends StatefulWidget {
   const PersonalizeSchedule({super.key});
@@ -105,7 +106,7 @@ class _PersonalizeScheduleState extends State<PersonalizeSchedule> {
                   Navigator.pop(context, selectedTiles);
                   if (selectedIndexes.isNotEmpty) {
                     Navigator.push(context, MaterialPageRoute(builder: (_)=>
-                    HomeScreen(tiles: selectedTiles))
+                    MainContainer(tiles: selectedTiles))
                     );
                   }
                 },

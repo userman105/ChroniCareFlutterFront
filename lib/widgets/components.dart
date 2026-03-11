@@ -2,7 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import '../main_activity/home_screen.dart';
+import '../main_activity/today_screen.dart';
 ///***
 ///list of components
 /// RoundedInputBox
@@ -735,26 +735,48 @@ class HighlightableGridTile extends StatelessWidget {
 }
 
 class BottomNavigationBarCustom extends StatelessWidget {
-  const BottomNavigationBarCustom({super.key});
+
+  final int currentIndex;
+  final Function(int) onTabSelected;
+
+  const BottomNavigationBarCustom({
+    super.key,
+    required this.currentIndex,
+    required this.onTabSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
-    Widget navItem(String iconAsset, String label, Color color) {
+
+    Widget navItem(
+        int index,
+        String icon,
+        String activeIcon,
+        String label,
+        ) {
+
+      final bool isActive = currentIndex == index;
+
       return GestureDetector(
-        onTap: () {},
+        onTap: () => onTabSelected(index),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+
             Image.asset(
-              iconAsset,
+              isActive ? activeIcon : icon,
               width: 28,
               height: 28,
             ),
+
             const SizedBox(height: 4),
+
             Text(
               label,
               style: GoogleFonts.arimo(
-                color: color,
+                color: isActive
+                    ? const Color(0xFF05DF72)
+                    : const Color(0xFF929292),
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -766,10 +788,14 @@ class BottomNavigationBarCustom extends StatelessWidget {
 
     Widget addButton() {
       return GestureDetector(
-          onTap: () {
-            AddEventSlider.show(context, onAddDoctorAppointment: () {  },
-                onScheduleReminder: () {  }, onAddOneTimeEntry: () {  });
-          },
+        onTap: () {
+          AddEventSlider.show(
+            context,
+            onAddDoctorAppointment: () {},
+            onScheduleReminder: () {},
+            onAddOneTimeEntry: () {},
+          );
+        },
         child: Container(
           width: 50,
           height: 50,
@@ -778,29 +804,27 @@ class BottomNavigationBarCustom extends StatelessWidget {
             shape: OvalBorder(),
           ),
           child: const Center(
-            child: Icon(
-              Icons.add,
-              color: Colors.white,
-              size: 28,
-            ),
+            child: Icon(Icons.add, color: Colors.white, size: 28),
           ),
         ),
       );
     }
 
     return Container(
-      width: double.infinity,
       height: 80,
       color: const Color(0xFF2D2D2D),
       padding: const EdgeInsets.symmetric(horizontal: 20),
+
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          navItem('assets/icons/calendar2.png', 'Today', const Color(0xFF05DF72)),
-          navItem('assets/icons/insights.png', 'Insights', const Color(0xFF929292)),
+
+          navItem(0, 'assets/icons/today.png', 'assets/icons/today_active.png', 'Today'),
+          navItem(1, 'assets/icons/insights.png', 'assets/icons/insights.png', 'Insights'),
           addButton(),
-          navItem('assets/icons/reminders.png', 'Remindrs', const Color(0xFF929292)),
-          navItem('assets/icons/profile.png', 'Profile', const Color(0xFFB3B3B3)),
+          navItem(2, 'assets/icons/reminders.png', 'assets/icons/reminders_active.png', 'Reminders'),
+          navItem(3, 'assets/icons/profile.png', 'assets/icons/profile.png', 'Profile'),
+
         ],
       ),
     );
