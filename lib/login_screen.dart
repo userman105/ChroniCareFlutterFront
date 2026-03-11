@@ -12,7 +12,7 @@ final TextEditingController password = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Color(0xFF1A1A1A),
       body: SafeArea(child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 13),
             child: Column(
@@ -29,6 +29,7 @@ final TextEditingController password = TextEditingController();
                   style: GoogleFonts.bonaNova(
                     fontSize: 28,
                     fontWeight: FontWeight.w500,
+                    color: Color(0xFFE4E4E4)
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -39,7 +40,7 @@ final TextEditingController password = TextEditingController();
                   "Your daily health companion",
                   style: GoogleFonts.bonaNova(
                     fontSize: 16,
-                    color: Colors.black54,
+                    color: Color(0xFFE4E4E4),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -75,7 +76,7 @@ final TextEditingController password = TextEditingController();
                     Text(
                       "Don't have an account yet?",
                       style: TextStyle(
-                        color: const Color(0xFF4A5565),
+                        color: const Color(0xFFE4E4E4),
                         fontSize: 16,
                         fontFamily: 'Arimo',
                         fontWeight: FontWeight.w400,

@@ -51,93 +51,85 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
 
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 2.3,
-                        ),
-                        itemCount: widget.tiles.length + 1,
-                        itemBuilder: (context, index) {
-                          if (index == widget.tiles.length) {
-                            // + ADD ENTRY TILE
-                            return GestureDetector(
-                              onTap: () async {
-                                final newTiles = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const PersonalizeSchedule()),
-                                );
-                                if (newTiles != null) {
-                                  setState(() {
-                                    widget.tiles
-                                      ..clear()
-                                      ..addAll(newTiles);
-                                  });
-                                }
-                              },
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF2D2D2D),
-                                  borderRadius: BorderRadius.circular(12),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 12,
+                      childAspectRatio: 2.3,
+                    ),
+                    itemCount: widget.tiles.length + 1,
+                    itemBuilder: (context, index) {
+
+                      if (index == widget.tiles.length) {
+                        return GestureDetector(
+                          onTap: () {
+
+                            AddEntryPopup.show(context, widget.tiles);
+
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2D2D2D),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.asset(
+                                  'assets/icons/add.png',
+                                  width: 20,
+                                  height: 20,
                                 ),
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Image.asset(
-                                      'assets/icons/add.png',
-                                      width: 20,
-                                      height: 20,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      "Add Entry",
-                                      textAlign: TextAlign.center,
-                                      style: GoogleFonts.arimo(
-                                        color: Colors.white,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
+                                const SizedBox(width: 6),
+                                Text(
+                                  "Add Entry",
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.arimo(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
-                            );
-                          }
+                              ],
+                            ),
+                          ),
+                        );
+                      }
 
-                          final tile = widget.tiles[index];
+                      final tile = widget.tiles[index];
 
-                          // Only one tile can be selected at a time
-                          return HighlightableGridTile(
-                            iconAsset: tile.icon,
-                            label: tile.label,
-                            selected: tile.selected,
-                            onTap: () {
-                              setState(() {
-                                for (var t in widget.tiles) {
-                                  t.selected = false;
-                                }
-                                tile.selected = true;
-                              });
-                            },
-                          );
+                      return HighlightableGridTile(
+                        iconAsset: tile.icon,
+                        label: tile.label,
+                        selected: tile.selected,
+                        onTap: () {
+                          setState(() {
+
+                            for (var t in widget.tiles) {
+                              t.selected = false;
+                            }
+
+                            tile.selected = true;
+                          });
                         },
-                      ),
-
-                    ],
+                      );
+                    },
                   ),
-                ),
+                ],
               ),
+            ),
+          ),
 
             ],
           ),

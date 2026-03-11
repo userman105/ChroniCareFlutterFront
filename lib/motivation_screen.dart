@@ -14,6 +14,7 @@ class _MotivationScreenState extends State<MotivationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFF1A1A1A),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -33,7 +34,7 @@ class _MotivationScreenState extends State<MotivationScreen> {
                 'We know that living with a chronic disease is uncomfortable',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.arimo(
-                  color: const Color(0xFF1E2939),
+                  color: const Color(0xFFFFFFFF),
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
                   height: 1.33,
@@ -48,7 +49,7 @@ class _MotivationScreenState extends State<MotivationScreen> {
                     TextSpan(
                       text: "But don't worry, ",
                       style: GoogleFonts.arimo(
-                        color: const Color(0xFF364153),
+                        color: const Color(0xFFFFFFFF),
                         fontSize: 20,
                         fontWeight: FontWeight.w400,
                         height: 1.40,
@@ -57,7 +58,7 @@ class _MotivationScreenState extends State<MotivationScreen> {
                     TextSpan(
                       text: "we got you\n",
                       style: GoogleFonts.arimo(
-                        color: const Color(0xFF364153),
+                        color: const Color(0xFFFFFFFF),
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
                         height: 1.40,
@@ -67,7 +68,7 @@ class _MotivationScreenState extends State<MotivationScreen> {
                       text:
                       "We help you live a happy life with diabetes",
                       style: GoogleFonts.arimo(
-                        color: const Color(0xFF364153),
+                        color: const Color(0xFFFFFFFF),
                         fontSize: 20,
                         fontWeight: FontWeight.w400,
                         height: 1.40,

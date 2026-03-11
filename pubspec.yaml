@@ -95,6 +95,11 @@ flutter:
      - assets/icons/insights.png
      - assets/icons/profile.png
      - assets/icons/reminders.png
+     - assets/icons/close.png
+     - assets/icons/Chevronup.png
+     - assets/icons/bellCalendar.png
+     - assets/icons/calendarSlider.png
+     - assets/icons/calendarEdit.png
 
 
 

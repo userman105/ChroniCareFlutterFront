@@ -17,6 +17,7 @@ class _ChooseYourConditionState extends State<ChooseYourCondition> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFF1A1A1A),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -31,7 +32,7 @@ class _ChooseYourConditionState extends State<ChooseYourCondition> {
                     'Choose Your Condition',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.arimo(
-                      color: const Color(0xFF1E2939),
+                      color: const Color(0xFFE4E4E4),
                       fontSize: 30,
                       fontWeight: FontWeight.w700,
                     ),
@@ -43,7 +44,7 @@ class _ChooseYourConditionState extends State<ChooseYourCondition> {
                     "Select the condition you'd like to manage",
                     textAlign: TextAlign.center,
                     style: GoogleFonts.arimo(
-                      color: const Color(0xFF4A5565),
+                      color: const Color(0xFFE4E4E4),
                       fontSize: 16,
                       fontWeight: FontWeight.w400,
                       height: 1.5,

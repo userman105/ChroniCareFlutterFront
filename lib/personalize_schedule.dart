@@ -25,6 +25,7 @@ class _PersonalizeScheduleState extends State<PersonalizeSchedule> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFF1A1A1A),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -36,7 +37,7 @@ class _PersonalizeScheduleState extends State<PersonalizeSchedule> {
                   'Select what you want us to help you with',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.arimo(
-                    color: Colors.black,
+                    color: Color(0xFFFFFFFF),
                     fontSize: 24,
                     fontWeight: FontWeight.w500,
                   ),
@@ -49,7 +50,7 @@ class _PersonalizeScheduleState extends State<PersonalizeSchedule> {
                 height: 282,
                 padding: const EdgeInsets.all(8),
                 decoration: ShapeDecoration(
-                  color: const Color(0xFFD9D9D9),
+                  color: const Color(0xFF272727),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),

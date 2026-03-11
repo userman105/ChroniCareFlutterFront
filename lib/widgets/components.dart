@@ -2,13 +2,15 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-
+import '../main_activity/home_screen.dart';
 ///***
 ///list of components
 /// RoundedInputBox
 /// MainButton
 /// ChronicLogo
 /// conditionButton
+/// TodayDateBar
+/// HealthTile
 /// TodayDateBar
 ///
 ///
@@ -37,12 +39,12 @@ class RoundedInputBox extends StatelessWidget {
       decoration: InputDecoration(
         labelText: hintTop,
         labelStyle: const TextStyle(
-          color: Color(0xFF364153),
+          color: Color(0xFFFFFFFF),
           fontSize: 14,
         ),
         hintText: centerPlaceholder,
         hintStyle: const TextStyle(
-          color: Color(0xFF9CA3AF),
+          color: Color(0xFF4A5565),
         ),
 
         alignLabelWithHint: true,
@@ -54,21 +56,21 @@ class RoundedInputBox extends StatelessWidget {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(
-            color: Color(0xFFE5E7EB),
+            color: Color(0xFFFFFFFF),
           ),
         ),
 
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(
-            color: Color(0xFFE5E7EB),
+            color: Color(0xFFFFFFFF),
           ),
         ),
 
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(
-            color: Color(0xFFE5E7EB),
+            color: Color(0xFFFFFFFF),
             width: 1.5,
           ),
         ),
@@ -238,12 +240,13 @@ class ConditionButton extends StatelessWidget {
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOut,
               decoration: BoxDecoration(
-                color: selected ? const Color(0xFFEFF6FF) : Colors.white,
+
+                color: selected ? const Color(0xFF383838) : Color(0xFF383838),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
                   color: selected
                       ? const Color(0xFF05DF72)
-                      : const Color(0xFFE5E7EB),
+                      : const Color(0xFF383838),
                   width: 2.75,
                 ),
                 boxShadow: [
@@ -292,7 +295,7 @@ class ConditionButton extends StatelessWidget {
                         Text(
                           title,
                           style: GoogleFonts.arimo(
-                            color: const Color(0xFF1E2939),
+                            color: const Color(0xFFFFFFFF),
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                           ),
@@ -301,7 +304,7 @@ class ConditionButton extends StatelessWidget {
                         Text(
                           description,
                           style: GoogleFonts.arimo(
-                            color: const Color(0xFF4A5565),
+                            color: const Color(0xFFFFFFFF),
                             fontSize: 14,
                           ),
                         ),
@@ -382,7 +385,7 @@ class ConditionGridButton extends StatelessWidget {
           height: 80,
           clipBehavior: Clip.antiAlias,
           decoration: ShapeDecoration(
-            color: selected ? Colors.green[400] : Colors.white,
+            color: selected ? Colors.green[400] : Color(0xFF383838),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(11),
             ),
@@ -418,7 +421,7 @@ class ConditionGridButton extends StatelessWidget {
                 child: Text(
                   label,
                   style: GoogleFonts.arimo(
-                    color: selected ? Colors.white : Colors.black,
+                    color: selected ? Colors.white : Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
@@ -736,7 +739,6 @@ class BottomNavigationBarCustom extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Helper widget for normal icons with text
     Widget navItem(String iconAsset, String label, Color color) {
       return GestureDetector(
         onTap: () {},
@@ -764,7 +766,10 @@ class BottomNavigationBarCustom extends StatelessWidget {
 
     Widget addButton() {
       return GestureDetector(
-        onTap: () {},
+          onTap: () {
+            AddEventSlider.show(context, onAddDoctorAppointment: () {  },
+                onScheduleReminder: () {  }, onAddOneTimeEntry: () {  });
+          },
         child: Container(
           width: 50,
           height: 50,
@@ -801,3 +806,330 @@ class BottomNavigationBarCustom extends StatelessWidget {
     );
   }
 }
+
+class AddEntryPopup extends StatefulWidget {
+  final List<HealthTile> currentTiles;
+
+  const AddEntryPopup({
+    super.key,
+    required this.currentTiles,
+  });
+
+  static void show(
+      BuildContext context,
+      List<HealthTile> currentTiles,
+      ) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => AddEntryPopup(currentTiles: currentTiles),
+    );
+  }
+
+  @override
+  State<AddEntryPopup> createState() => _AddEntryPopupState();
+}
+
+class _AddEntryPopupState extends State<AddEntryPopup> {
+  late List<HealthTile> tiles;
+  int? selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    tiles = allTiles;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 420,
+      decoration: const BoxDecoration(
+        color: Color(0xFF212121),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(22),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Image.asset(
+                    "assets/icons/close.png",
+                    width: 22,
+                    height: 22,
+                  ),
+                ),
+
+                const SizedBox(width: 10),
+
+                Text(
+                  "Select Type",
+                  style: GoogleFonts.arimo(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            /// GRID
+            Expanded(
+              child: GridView.builder(
+                itemCount: tiles.length,
+                gridDelegate:
+                const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 3,
+                ),
+                  itemBuilder: (context, index) {
+                    final tile = tiles[index];
+
+                    return HighlightableGridTile(
+                      iconAsset: tile.icon,
+                      label: tile.label,
+                      selected: selectedIndex == index,
+                      onTap: () {
+
+                        setState(() {
+                          selectedIndex = index;
+                        });
+
+                        Navigator.pop(context);
+
+                        switch (tile.label) {
+                          case "Blood Pressure":
+                          // TODO: Navigate to Blood Pressure screen
+                            break;
+
+                          case "Meds":
+                          // TODO: Navigate to Medication screen
+                            break;
+
+                          case "Symptoms":
+                          // TODO: Navigate to Symptoms screen
+                            break;
+
+                          case "Food":
+                          // TODO: Navigate to Food entry screen
+                            break;
+
+                          case "Weight":
+                          // TODO: Navigate to Weight screen
+                            break;
+
+                          case "Glucose":
+                          // TODO: Navigate to Glucose screen
+                            break;
+                        }
+
+                      },
+                    );
+                  },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+class AddEventSlider {
+  static void show(
+      BuildContext context, {
+        required VoidCallback onAddDoctorAppointment,
+        required VoidCallback onScheduleReminder,
+        required VoidCallback onAddOneTimeEntry,
+      }) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black54,
+      isScrollControlled: false,
+      builder: (_) => _AddEventSliderContent(
+        onAddDoctorAppointment: onAddDoctorAppointment,
+        onScheduleReminder: onScheduleReminder,
+        onAddOneTimeEntry: onAddOneTimeEntry,
+      ),
+    );
+  }
+}
+
+class _AddEventSliderContent extends StatelessWidget {
+  final VoidCallback onAddDoctorAppointment;
+  final VoidCallback onScheduleReminder;
+  final VoidCallback onAddOneTimeEntry;
+
+  const _AddEventSliderContent({
+    required this.onAddDoctorAppointment,
+    required this.onScheduleReminder,
+    required this.onAddOneTimeEntry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Widget optionTile({
+      required String title,
+      required String description,
+      required String icon,
+      required VoidCallback onTap,
+    }) {
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(15),
+          splashColor: Colors.green.withOpacity(0.2),
+          highlightColor: Colors.green.withOpacity(0.1),
+          onTap: () {
+            Navigator.pop(context);
+            onTap();
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
+            curve: Curves.easeOut,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.white, width: 0.5),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.asset(icon, width: 20, height: 20),
+
+                const SizedBox(width: 12),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: GoogleFonts.arimo(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+
+                      const SizedBox(height: 6),
+
+                      Text(
+                        description,
+                        style: GoogleFonts.arimo(
+                          color: Colors.white.withOpacity(0.6),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 8),
+
+                Image.asset(
+                  "assets/icons/Chevronup.png",
+                  width: 18,
+                  height: 18,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      height: 380,
+      decoration: const BoxDecoration(
+        color: Color(0xFF212121),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(21),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        child: Column(
+          children: [
+
+            /// Header
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    "Select what you want to do",
+                    style: GoogleFonts.arimo(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Image.asset(
+                    "assets/icons/close.png",
+                    width: 22,
+                    height: 22,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 18),
+
+            optionTile(
+              title: "Add a doctor appointment",
+              description: "Set reminders to help you for your appointments",
+              icon: "assets/icons/calendarEdit.png",
+              onTap: (){
+                //TODO
+              },
+            ),
+
+            const SizedBox(height: 12),
+
+            optionTile(
+              title: "Schedule a reminder",
+              description:
+              "Add medications and reminders for measurements, activities, symptoms and appointments.",
+              icon: "assets/icons/bellCalendar.png",
+              onTap: (){
+                //TODO
+              },
+            ),
+
+            const SizedBox(height: 12),
+
+            optionTile(
+              title: "Add a one-time entry",
+              description:
+              "Document spontaneous medication intakes or other entries like measurements, activities or symptoms.",
+              icon: "assets/icons/calendarSlider.png",
+              onTap: (){
+
+                AddEntryPopup.show(context, allTiles);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+// AddEntryPopup.show(context, allTiles);
