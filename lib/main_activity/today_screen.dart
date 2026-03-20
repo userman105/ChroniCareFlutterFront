@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/components.dart';
+import 'metrics_screen.dart';
 
 
 class TodayScreen extends StatefulWidget {
@@ -39,8 +40,30 @@ class _TodayScreenState extends State<TodayScreen> {
               itemBuilder: (context, index) {
                 if (index == widget.tiles.length) {
                   return GestureDetector(
-                    onTap: () {
-                      AddEntryPopup.show(context, widget.tiles);
+                    onTap: () async {
+
+                      final selectedTile =
+                      await AddEntryPopup.show(context, widget.tiles);
+
+                      if (selectedTile == null) return;
+
+                      setState(() {
+
+                        final alreadyExists = widget.tiles.any(
+                              (t) => t.label == selectedTile.label,
+                        );
+
+                        if (!alreadyExists) {
+                          widget.tiles.add(
+                            HealthTile(
+                              icon: selectedTile.icon,
+                              label: selectedTile.label,
+                              selected: false, //
+                            ),
+                          );
+                        }
+
+                      });
                     },
                     child: Container(
                       decoration: BoxDecoration(
@@ -74,6 +97,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   );
                 }
 
+
                 final tile = widget.tiles[index];
 
                 return HighlightableGridTile(
@@ -91,6 +115,48 @@ class _TodayScreenState extends State<TodayScreen> {
                   },
                 );
               },
+            ),
+            const SizedBox(height: 16,),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+
+                  Text(
+                    "Metrics",
+                    style: GoogleFonts.arimo(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const MetricsScreen()),
+                      );
+                    },
+                    child: Row(
+                      children: [
+                        Text(
+                          "All",
+                          style: GoogleFonts.arimo(
+                            color: Colors.green,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(Icons.chevron_right, color: Colors.green),
+                      ],
+                    ),
+                  ),
+
+                ],
+              ),
             ),
           ],
         ),

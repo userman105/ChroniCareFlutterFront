@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../main_activity/blood_log/blood_log_screen.dart';
 import '../main_activity/today_screen.dart';
 ///***
 ///list of components
@@ -12,6 +14,9 @@ import '../main_activity/today_screen.dart';
 /// TodayDateBar
 /// HealthTile
 /// TodayDateBar
+/// BottomNavigationBar
+/// addEntrySlider
+/// addEntryPopup
 ///
 ///
 ///
@@ -738,11 +743,13 @@ class BottomNavigationBarCustom extends StatelessWidget {
 
   final int currentIndex;
   final Function(int) onTabSelected;
+  final Function(HealthTile) onTileSelected;
 
   const BottomNavigationBarCustom({
     super.key,
     required this.currentIndex,
     required this.onTabSelected,
+    required this.onTileSelected,
   });
 
   @override
@@ -791,9 +798,12 @@ class BottomNavigationBarCustom extends StatelessWidget {
         onTap: () {
           AddEventSlider.show(
             context,
+
             onAddDoctorAppointment: () {},
             onScheduleReminder: () {},
             onAddOneTimeEntry: () {},
+
+            onTileSelected: onTileSelected,
           );
         },
         child: Container(
@@ -820,10 +830,10 @@ class BottomNavigationBarCustom extends StatelessWidget {
         children: [
 
           navItem(0, 'assets/icons/today.png', 'assets/icons/today_active.png', 'Today'),
-          navItem(1, 'assets/icons/insights.png', 'assets/icons/insights.png', 'Insights'),
+          navItem(1, 'assets/icons/insights.png', 'assets/icons/insights_active.png', 'Insights'),
           addButton(),
           navItem(2, 'assets/icons/reminders.png', 'assets/icons/reminders_active.png', 'Reminders'),
-          navItem(3, 'assets/icons/profile.png', 'assets/icons/profile.png', 'Profile'),
+          navItem(3, 'assets/icons/profile.png', 'assets/icons/profile_active.png', 'Profile'),
 
         ],
       ),
@@ -839,11 +849,11 @@ class AddEntryPopup extends StatefulWidget {
     required this.currentTiles,
   });
 
-  static void show(
+  static Future<HealthTile?> show(
       BuildContext context,
       List<HealthTile> currentTiles,
       ) {
-    showModalBottomSheet(
+    return showModalBottomSheet<HealthTile>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -926,38 +936,43 @@ class _AddEntryPopupState extends State<AddEntryPopup> {
                       selected: selectedIndex == index,
                       onTap: () {
 
-                        setState(() {
-                          selectedIndex = index;
+                        final selectedTile = tile;
+
+                        Navigator.pop(context, selectedTile);
+
+                        // navigate AFTER pop using root context
+                        Future.microtask(() {
+                          switch (tile.label) {
+                            case "Blood Pressure":
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const BloodPressureScreen(),
+                                ),
+                              );
+                              break;
+
+                            case "Meds":
+                            // TODO
+                              break;
+
+                            case "Symptoms":
+                            // TODO
+                              break;
+
+                            case "Food":
+                            // TODO
+                              break;
+
+                            case "Weight":
+                            // TODO
+                              break;
+
+                            case "Glucose":
+                            // TODO
+                              break;
+                          }
                         });
-
-                        Navigator.pop(context);
-
-                        switch (tile.label) {
-                          case "Blood Pressure":
-                          // TODO: Navigate to Blood Pressure screen
-                            break;
-
-                          case "Meds":
-                          // TODO: Navigate to Medication screen
-                            break;
-
-                          case "Symptoms":
-                          // TODO: Navigate to Symptoms screen
-                            break;
-
-                          case "Food":
-                          // TODO: Navigate to Food entry screen
-                            break;
-
-                          case "Weight":
-                          // TODO: Navigate to Weight screen
-                            break;
-
-                          case "Glucose":
-                          // TODO: Navigate to Glucose screen
-                            break;
-                        }
-
                       },
                     );
                   },
@@ -977,16 +992,16 @@ class AddEventSlider {
         required VoidCallback onAddDoctorAppointment,
         required VoidCallback onScheduleReminder,
         required VoidCallback onAddOneTimeEntry,
+        required Function(HealthTile) onTileSelected,
       }) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black54,
-      isScrollControlled: false,
       builder: (_) => _AddEventSliderContent(
         onAddDoctorAppointment: onAddDoctorAppointment,
         onScheduleReminder: onScheduleReminder,
         onAddOneTimeEntry: onAddOneTimeEntry,
+        onTileSelected: onTileSelected,
       ),
     );
   }
@@ -996,11 +1011,13 @@ class _AddEventSliderContent extends StatelessWidget {
   final VoidCallback onAddDoctorAppointment;
   final VoidCallback onScheduleReminder;
   final VoidCallback onAddOneTimeEntry;
+  final Function(HealthTile) onTileSelected;
 
   const _AddEventSliderContent({
     required this.onAddDoctorAppointment,
     required this.onScheduleReminder,
     required this.onAddOneTimeEntry,
+    required this.onTileSelected,
   });
 
   @override
@@ -1145,9 +1162,15 @@ class _AddEventSliderContent extends StatelessWidget {
               description:
               "Document spontaneous medication intakes or other entries like measurements, activities or symptoms.",
               icon: "assets/icons/calendarSlider.png",
-              onTap: (){
+              onTap: () async {
 
-                AddEntryPopup.show(context, allTiles);
+                final selectedTile =
+                await AddEntryPopup.show(context, allTiles);
+
+                if (selectedTile == null) return;
+
+                onTileSelected(selectedTile);
+
               },
             ),
           ],
@@ -1157,3 +1180,134 @@ class _AddEventSliderContent extends StatelessWidget {
   }
 }
 // AddEntryPopup.show(context, allTiles);
+
+class BloodPressureInputs extends StatelessWidget {
+  final TextEditingController systolicController;
+  final TextEditingController diastolicController;
+  final TextEditingController heartRateController;
+
+  const BloodPressureInputs({
+    super.key,
+    required this.systolicController,
+    required this.diastolicController,
+    required this.heartRateController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+
+        Text(
+          "Blood Pressure (systolic/diastolic)",
+          style: GoogleFonts.arimo(
+            color: Colors.white,
+            fontSize: 16,
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        Row(
+          children: [
+
+            Container(
+              width: 68,
+              height: 27,
+              decoration: BoxDecoration(
+                color: const Color(0xFF111111),
+                borderRadius: BorderRadius.circular(3),
+              ),
+              child: TextField(
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly
+                ],
+                controller: systolicController,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 7),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 4),
+
+            Text(
+              "/",
+              style: GoogleFonts.arimo(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
+
+            const SizedBox(width: 4),
+
+            Container(
+              width: 68,
+              height: 27,
+              decoration: BoxDecoration(
+                color: const Color(0xFF111111),
+                borderRadius: BorderRadius.circular(3),
+              ),
+              child: TextField(
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly
+                ],
+                controller: diastolicController,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 7),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 8),
+
+            Text(
+              "mmHg",
+              style: GoogleFonts.arimo(
+                color: Colors.white.withOpacity(0.4),
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 20),
+
+        Text(
+          "Heart Rate (optional)",
+          style: GoogleFonts.arimo(
+            color: Colors.white,
+            fontSize: 14,
+          ),
+        ),
+
+        const SizedBox(height: 6),
+
+        Container(
+          width: 79,
+          height: 27,
+          decoration: BoxDecoration(
+            color: const Color(0xFF111111),
+            borderRadius: BorderRadius.circular(3),
+          ),
+          child: TextField(
+            controller: heartRateController,
+            keyboardType: TextInputType.number,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 7),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}

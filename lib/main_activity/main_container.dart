@@ -66,7 +66,7 @@ class _MainContainerState extends State<MainContainer> {
                 ),
               ),
 
-              /// Sliding Pages
+
               Expanded(
                 child: PageView(
                   controller: _pageController,
@@ -88,7 +88,31 @@ class _MainContainerState extends State<MainContainer> {
 
         bottomNavigationBar: BottomNavigationBarCustom(
           currentIndex: currentIndex,
-          onTabSelected: changePage,
+          onTabSelected: (index) {
+            setState(() {
+              currentIndex = index;
+            });
+          },
+
+          onTileSelected: (selectedTile) {
+            setState(() {
+
+              final exists = widget.tiles.any(
+                    (t) => t.label == selectedTile.label,
+              );
+
+              if (!exists) {
+                widget.tiles.add(
+                  HealthTile(
+                    icon: selectedTile.icon,
+                    label: selectedTile.label,
+                    selected: false,
+                  ),
+                );
+              }
+
+            });
+          },
         ),
       ),
     );
