@@ -648,18 +648,48 @@ class _TodayDateBarState extends State<TodayDateBar> {
   }
 }
 
+enum HealthMetricType {
+  bloodPressure,
+  glucose,
+  weight,
+  meds,
+  symptoms,
+  food,
+  unknown,
+}
+
 class HealthTile {
   final String icon;
   final String label;
+  final HealthMetricType type;
   bool selected;
 
   HealthTile({
     required this.icon,
     required this.label,
-    this.selected = false
-  });
-}
+    this.selected = false,
+    HealthMetricType? type,
+  }) : type = type ?? _inferType(label); // auto-detect if not provided
 
+  static HealthMetricType _inferType(String label) {
+    switch (label.toLowerCase()) {
+      case 'blood pressure':
+        return HealthMetricType.bloodPressure;
+      case 'glucose':
+        return HealthMetricType.glucose;
+      case 'weight':
+        return HealthMetricType.weight;
+      case 'meds':
+        return HealthMetricType.meds;
+      case 'symptoms':
+        return HealthMetricType.symptoms;
+      case 'food':
+        return HealthMetricType.food;
+      default:
+        return HealthMetricType.unknown;
+    }
+  }
+}
 List<HealthTile> allTiles = [
   HealthTile(icon: 'assets/icons/bloodPressure.png', label: 'Blood Pressure',selected: false),
   HealthTile(icon: 'assets/icons/capsule.png', label: 'Meds',selected: false),

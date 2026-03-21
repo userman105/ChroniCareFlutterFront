@@ -92,8 +92,13 @@ class _MainContainerState extends State<MainContainer> {
             setState(() {
               currentIndex = index;
             });
-          },
 
+            _pageController.animateToPage(
+              index,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          },
           onTileSelected: (selectedTile) {
             setState(() {
 
