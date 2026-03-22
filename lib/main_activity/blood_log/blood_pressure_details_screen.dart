@@ -1,9 +1,11 @@
+import 'package:chronic_care/main_activity/blood_log/blood_log_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../cubit/health_cubit.dart';
 import '../../models/blood_pressure_entry.dart';
+import 'all_entries.dart';
 
 String getBPStatus(int sys, int dia) {
   if (sys < 90 || dia < 60) return "Low";
@@ -104,13 +106,34 @@ class _BloodPressureDetailsScreenState
                     onTap: () => Navigator.pop(context),
                     child: const Icon(Icons.arrow_back, color: Colors.white),
                   ),
+
                   const SizedBox(width: 16),
+
                   Text(
                     "Blood Pressure",
                     style: GoogleFonts.arimo(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500),
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const BloodPressureScreen(),
+                        ),
+                      );
+                    },
+                    child: Image.asset(
+                      'assets/icons/add.png',
+                      width: 26,
+                      height: 26,
+                    ),
                   ),
                 ],
               ),
@@ -141,9 +164,55 @@ class _BloodPressureDetailsScreenState
                     ),
                     const SizedBox(height: 10),
 
-                    ...allEntries.reversed
-                        .map((e) => _historyTile(e))
-                        .toList(),
+                    ...allEntries.reversed.take(3).map((e) => _historyTile(e)).toList(),
+
+                    const SizedBox(height: 12),
+
+                    Center(
+                      child: GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AllEntriesScreen(entries: allEntries),
+                          ),
+                        ),
+                        child: Container(
+                          width: 87,
+                          height: 31,
+                          clipBehavior: Clip.antiAlias,
+                          decoration: ShapeDecoration(
+                            color: const Color(0xFF474747),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(21),
+                            ),
+                          ),
+                          child: const Stack(
+                            children: [
+                              Positioned(
+                                left: 15,
+                                top: 8,
+                                child: Text(
+                                  'All Entries',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontFamily: 'Inter',
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+
+                    // ...allEntries.reversed
+                    //     .map((e) => _historyTile(e))بلام
+                    //     .toList(),
                   ],
                 ),
               ),

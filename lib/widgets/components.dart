@@ -19,6 +19,8 @@ import '../main_activity/today_screen.dart';
 /// BottomNavigationBar
 /// addEntrySlider
 /// addEntryPopup
+/// BloodPressureInputs
+/// DateRangePickerWidget
 ///
 ///
 ///
@@ -457,7 +459,6 @@ class TodayDateBar extends StatefulWidget {
 class _TodayDateBarState extends State<TodayDateBar> {
   final ScrollController _scrollController = ScrollController();
 
-  // ✅ Generate a large history of dates (e.g. 365 days back) up to today
   List<DateTime> get visibleDates {
     final today = DateTime.now();
     return List.generate(
@@ -584,10 +585,8 @@ class _TodayDateBarState extends State<TodayDateBar> {
             controller: _scrollController,
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 13),
-            // ✅ Fixed: was referencing undefined `dates`
             itemCount: visibleDates.length,
             itemBuilder: (context, index) {
-              // ✅ Fixed: removed the duplicate declaration outside the builder
               final date = visibleDates[index];
 
               final selected = date.year == selectedDate.year &&
@@ -1339,6 +1338,351 @@ class BloodPressureInputs extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class DateRangePickerWidget extends StatefulWidget {
+  final DateTime? initialStart;
+  final DateTime? initialEnd;
+  final void Function(DateTime start, DateTime end) onApply;
+
+  const DateRangePickerWidget({
+    super.key,
+    this.initialStart,
+    this.initialEnd,
+    required this.onApply,
+  });
+
+  @override
+  State<DateRangePickerWidget> createState() => _DateRangePickerWidgetState();
+}
+
+class _DateRangePickerWidgetState extends State<DateRangePickerWidget> {
+  DateTime? _start;
+  DateTime? _end;
+  late int _month;
+  late int _year;
+
+  final List<String> _monthNames = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _start = widget.initialStart;
+    _end = widget.initialEnd;
+    final now = DateTime.now();
+    _month = now.month;
+    _year = now.year;
+  }
+
+  void _onDayTap(DateTime tapped) {
+    setState(() {
+      if (_start == null || (_start != null && _end != null)) {
+        _start = tapped;
+        _end = null;
+      } else {
+        if (tapped.isBefore(_start!)) {
+          _end = _start;
+          _start = tapped;
+        } else {
+          _end = tapped;
+        }
+      }
+    });
+  }
+
+  bool _inRange(DateTime day) {
+    if (_start == null || _end == null) return false;
+    return day.isAfter(_start!) && day.isBefore(_end!);
+  }
+
+  bool _isStart(DateTime day) =>
+      _start != null &&
+          day.year == _start!.year &&
+          day.month == _start!.month &&
+          day.day == _start!.day;
+
+  bool _isEnd(DateTime day) =>
+      _end != null &&
+          day.year == _end!.year &&
+          day.month == _end!.month &&
+          day.day == _end!.day;
+
+  String _formatDisplay(DateTime? dt) {
+    if (dt == null) return '--/--/----';
+    final m = dt.month.toString().padLeft(2, '0');
+    final d = dt.day.toString().padLeft(2, '0');
+    return '$m / $d / ${dt.year}';
+  }
+
+  List<DateTime?> _buildCalendarDays() {
+    final firstDay = DateTime(_year, _month, 1);
+    final daysInMonth = DateTime(_year, _month + 1, 0).day;
+    final startWeekday = firstDay.weekday % 7; // Sun=0
+
+    final List<DateTime?> days = [];
+    for (int i = 0; i < startWeekday; i++) days.add(null);
+    for (int i = 1; i <= daysInMonth; i++) {
+      days.add(DateTime(_year, _month, i));
+    }
+
+    while (days.length % 7 != 0) {
+      final extra = days.length - startWeekday - daysInMonth + 1;
+      days.add(DateTime(_year, _month + 1, extra));
+    }
+    return days;
+  }
+
+  void _prevMonth() {
+    setState(() {
+      if (_month == 1) { _month = 12; _year--; }
+      else _month--;
+    });
+  }
+
+  void _nextMonth() {
+    setState(() {
+      if (_month == 12) { _month = 1; _year++; }
+      else _month++;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final days = _buildCalendarDays();
+    final yearList = List.generate(30, (i) => DateTime.now().year - 10 + i);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1C1C1C),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _dateDisplay("Start Date", _start),
+              _dateDisplay("End Date", _end, alignRight: true),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF2D2D2D),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                      onTap: _prevMonth,
+                      child: const Icon(Icons.chevron_left,
+                          color: Colors.white, size: 28),
+                    ),
+
+                    _styledDropdown<int>(
+                      value: _month,
+                      items: List.generate(12, (i) => i + 1),
+                      label: (v) => _monthNames[v - 1],
+                      onChanged: (v) => setState(() => _month = v),
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    // Year dropdown
+                    _styledDropdown<int>(
+                      value: _year,
+                      items: yearList,
+                      label: (v) => v.toString(),
+                      onChanged: (v) => setState(() => _year = v),
+                    ),
+
+                    GestureDetector(
+                      onTap: _nextMonth,
+                      child: const Icon(Icons.chevron_right,
+                          color: Colors.white, size: 28),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+                      .map((d) => SizedBox(
+                    width: 36,
+                    child: Center(
+                      child: Text(d,
+                          style: GoogleFonts.arimo(
+                              color: Colors.white54,
+                              fontSize: 13)),
+                    ),
+                  ))
+                      .toList(),
+                ),
+
+                const SizedBox(height: 8),
+
+                GridView.count(
+                  crossAxisCount: 7,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  childAspectRatio: 1,
+                  children: days.map((day) {
+                    if (day == null) return const SizedBox();
+
+                    final isCurrentMonth = day.month == _month;
+                    final isS = _isStart(day);
+                    final isE = _isEnd(day);
+                    final isR = _inRange(day);
+                    final isSelected = isS || isE;
+
+                    return GestureDetector(
+                      onTap: isCurrentMonth ? () => _onDayTap(day) : null,
+                      child: Container(
+                        margin: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Colors.white
+                              : isR
+                              ? const Color(0xFF606060)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(
+                            day.day.toString(),
+                            style: GoogleFonts.arimo(
+                              fontSize: 15,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w400,
+                              color: isSelected
+                                  ? Colors.black
+                                  : isCurrentMonth
+                                  ? Colors.white
+                                  : Colors.white24,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          GestureDetector(
+            onTap: () {
+              if (_start != null && _end != null) {
+                widget.onApply(_start!, _end!);
+                Navigator.pop(context);
+              }
+            },
+            child: Container(
+              width: double.infinity,
+              height: 44,
+              decoration: BoxDecoration(
+                color: _start != null && _end != null
+                    ? Colors.white
+                    : const Color(0xFF474747),
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: Center(
+                child: Text(
+                  "Apply",
+                  style: GoogleFonts.arimo(
+                    color: _start != null && _end != null
+                        ? Colors.black
+                        : Colors.white54,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _dateDisplay(String label, DateTime? dt,
+      {bool alignRight = false}) {
+    return Column(
+      crossAxisAlignment:
+      alignRight ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: GoogleFonts.arimo(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w700)),
+        const SizedBox(height: 4),
+        Container(
+          padding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            _formatDisplay(dt),
+            style: GoogleFonts.arimo(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _styledDropdown<T>({
+    required T value,
+    required List<T> items,
+    required String Function(T) label,
+    required void Function(T) onChanged,
+  }) {
+    return DropdownButtonHideUnderline(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.white),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: DropdownButton<T>(
+          value: value,
+          dropdownColor: const Color(0xFF2D2D2D),
+          icon: const Icon(Icons.keyboard_arrow_down,
+              color: Colors.white, size: 20),
+          style: GoogleFonts.arimo(color: Colors.white, fontSize: 15),
+          items: items
+              .map((v) => DropdownMenuItem<T>(
+            value: v,
+            child: Text(label(v)),
+          ))
+              .toList(),
+          onChanged: (v) {
+            if (v != null) onChanged(v);
+          },
+        ),
+      ),
     );
   }
 }
