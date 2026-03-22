@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../cubit/health_cubit.dart';
 import '../models/blood_pressure_entry.dart';
 import '../widgets/components.dart';
-
+import 'blood_log/blood_pressure_details_screen.dart';
 class MetricsScreen extends StatelessWidget {
   final List<HealthTile> tiles;
 
@@ -26,9 +26,9 @@ class MetricsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
         value: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent, // or your header color
-          statusBarIconBrightness: Brightness.light, // 👈 Android
-          statusBarBrightness: Brightness.dark, // 👈 iOS
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
         ),
         child: Scaffold(
           backgroundColor: const Color(0xFF111111),
@@ -57,7 +57,7 @@ class MetricsScreen extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const Spacer(), // 👈 better than fixed width
+                    const Spacer(),
                     Container(
                       width: 30,
                       height: 30,
@@ -74,7 +74,6 @@ class MetricsScreen extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              // rest of your code...
           // Tiles
           Expanded(
             child: BlocBuilder<HealthCubit, List<BloodPressureEntry>>(
@@ -98,13 +97,11 @@ class MetricsScreen extends StatelessWidget {
                         break;
 
                       case HealthMetricType.glucose:
-                      // future
                         value = "--";
                         subtitle = "No data";
                         break;
 
                       case HealthMetricType.weight:
-                      // future
                         value = "--";
                         subtitle = "No data";
                         break;
@@ -114,6 +111,7 @@ class MetricsScreen extends StatelessWidget {
                     }
 
                     return _buildMetricTile(
+                      context: context,
                       label: tile.label,
                       icon: tile.icon,
                       value: value,
@@ -133,67 +131,77 @@ class MetricsScreen extends StatelessWidget {
     required String icon,
     required String value,
     required String subtitle,
+    required BuildContext context,
   }) {
-    return Container(
-      width: double.infinity,
-      height: 73,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: ShapeDecoration(
-        color: const Color(0xFF2D2D2D),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
-      child: Row(
-        children: [
-          // ✅ ICON (LEFT)
-          Image.asset(
-            icon,
-            width: 28,
-            height: 28,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: () {
+          if (label == "Blood Pressure") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const BloodPressureDetailsScreen(),
+              ),
+            );
+          }
+        },
+        child: Container(
+          width: double.infinity,
+          height: 73,
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: ShapeDecoration(
+            color: const Color(0xFF2D2D2D),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
+          child: Row(
+            children: [
+              Image.asset(icon, width: 28, height: 28),
 
-          const SizedBox(width: 12),
+              const SizedBox(width: 12),
 
-          // ✅ LABEL + TIME
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: GoogleFonts.arimo(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    if (subtitle.isNotEmpty)
+                      Text(
+                        subtitle,
+                        style: GoogleFonts.arimo(
+                          color: Colors.white.withOpacity(0.52),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w300,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+
+              if (value.isNotEmpty)
                 Text(
-                  label,
+                  value,
                   style: GoogleFonts.arimo(
                     color: Colors.white,
-                    fontSize: 13,
+                    fontSize: 15,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                if (subtitle.isNotEmpty)
-                  Text(
-                    subtitle,
-                    style: GoogleFonts.arimo(
-                      color: Colors.white.withOpacity(0.52),
-                      fontSize: 15,
-                      fontWeight: FontWeight.w300,
-                    ),
-                  ),
-              ],
-            ),
+            ],
           ),
-
-
-          if (value.isNotEmpty)
-            Text(
-              value,
-              style: GoogleFonts.arimo(
-                color: Colors.white,
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-        ],
+        ),
       ),
     );
   }

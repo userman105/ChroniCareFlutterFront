@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../cubit/health_cubit.dart';
 import '../main_activity/blood_log/blood_log_screen.dart';
 import '../main_activity/today_screen.dart';
 ///***
@@ -453,25 +455,26 @@ class TodayDateBar extends StatefulWidget {
 }
 
 class _TodayDateBarState extends State<TodayDateBar> {
-  DateTime selectedDate = DateTime.now();
-
   final ScrollController _scrollController = ScrollController();
 
-    List<DateTime> get visibleDates {
-    final now = DateTime.now();
-    return List.generate(7, (i) => now.subtract(Duration(days: 6 - i)));
+  // ✅ Generate a large history of dates (e.g. 365 days back) up to today
+  List<DateTime> get visibleDates {
+    final today = DateTime.now();
+    return List.generate(
+      365,
+          (i) => today.subtract(Duration(days: 364 - i)),
+    );
   }
 
-  bool get isToday {
+  bool isToday(DateTime selectedDate) {
     final now = DateTime.now();
     return selectedDate.year == now.year &&
         selectedDate.month == now.month &&
         selectedDate.day == now.day;
   }
 
-  void _scrollToSelected() {
-    final index =
-    visibleDates.indexWhere((d) =>
+  void _scrollToSelected(DateTime selectedDate) {
+    final index = visibleDates.indexWhere((d) =>
     d.year == selectedDate.year &&
         d.month == selectedDate.month &&
         d.day == selectedDate.day);
@@ -479,51 +482,49 @@ class _TodayDateBarState extends State<TodayDateBar> {
     if (index == -1) return;
 
     const itemWidth = 64.0;
-
     final offset = (index * itemWidth) -
         (MediaQuery.of(context).size.width / 2) +
         (itemWidth / 2);
 
     _scrollController.animateTo(
-      offset.clamp(
-        0,
-        _scrollController.position.maxScrollExtent,
-      ),
+      offset.clamp(0.0, _scrollController.position.maxScrollExtent),
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeOut,
     );
   }
 
-  Future<void> _pickDate() async {
+  Future<void> _pickDate(DateTime current) async {
     final now = DateTime.now();
-
     final picked = await showDatePicker(
       context: context,
-      initialDate: selectedDate,
+      initialDate: current,
       firstDate: DateTime(2000),
       lastDate: now,
     );
 
     if (picked != null) {
-      setState(() {
-        selectedDate = picked;
-      });
-
-      Future.delayed(const Duration(milliseconds: 50), _scrollToSelected);
+      context.read<HealthCubit>().setSelectedDate(picked);
+      Future.delayed(
+        const Duration(milliseconds: 50),
+            () => _scrollToSelected(picked),
+      );
     }
   }
 
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToSelected();
+      final cubit = context.read<HealthCubit>();
+      _scrollToSelected(cubit.selectedDate);
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final cubit = context.watch<HealthCubit>();
+    final selectedDate = cubit.selectedDate;
+
     final dateText = DateFormat('MMM d, yyyy').format(selectedDate);
 
     return Column(
@@ -545,7 +546,7 @@ class _TodayDateBarState extends State<TodayDateBar> {
             children: [
               Row(
                 children: [
-                  if (isToday)
+                  if (isToday(selectedDate))
                     Text(
                       "Today",
                       style: GoogleFonts.arimo(
@@ -554,7 +555,7 @@ class _TodayDateBarState extends State<TodayDateBar> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                  if (isToday) const SizedBox(width: 8),
+                  if (isToday(selectedDate)) const SizedBox(width: 8),
                   Text(
                     dateText,
                     style: GoogleFonts.arimo(
@@ -566,13 +567,13 @@ class _TodayDateBarState extends State<TodayDateBar> {
                 ],
               ),
               GestureDetector(
-                onTap: _pickDate,
+                onTap: () => _pickDate(selectedDate),
                 child: Image.asset(
                   widget.calendarIconAsset,
                   width: 30,
                   height: 30,
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -583,22 +584,24 @@ class _TodayDateBarState extends State<TodayDateBar> {
             controller: _scrollController,
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 13),
+            // ✅ Fixed: was referencing undefined `dates`
             itemCount: visibleDates.length,
             itemBuilder: (context, index) {
+              // ✅ Fixed: removed the duplicate declaration outside the builder
               final date = visibleDates[index];
 
-              final selected =
-                  date.year == selectedDate.year &&
-                      date.month == selectedDate.month &&
-                      date.day == selectedDate.day;
+              final selected = date.year == selectedDate.year &&
+                  date.month == selectedDate.month &&
+                  date.day == selectedDate.day;
 
               return GestureDetector(
                 onTap: () {
-                  setState(() {
-                    selectedDate = date;
-                  });
+                  behavior: HitTestBehavior.opaque;
+                  final today = DateTime.now();
+                  if (date.isAfter(today)) return;
 
-                  _scrollToSelected();
+                  context.read<HealthCubit>().setSelectedDate(date);
+                  _scrollToSelected(date);
                 },
                 child: SizedBox(
                   width: 64,
@@ -629,9 +632,7 @@ class _TodayDateBarState extends State<TodayDateBar> {
                           style: GoogleFonts.arimo(
                             fontSize: 20,
                             fontWeight: FontWeight.w500,
-                            color: selected
-                                ? Colors.black
-                                : const Color(0xFFB4B4B4),
+                            color: selected ? Colors.black : const Color(0xFFB4B4B4),
                           ),
                           child: Text(date.day.toString()),
                         ),

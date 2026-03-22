@@ -8,6 +8,7 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   HealthCubit() : super([]) {
     _loadEntries();
   }
+  DateTime selectedDate = DateTime.now();
 
   Future<void> _loadEntries() async {
     final prefs = await SharedPreferences.getInstance();
@@ -22,11 +23,20 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     await prefs.setStringList(_key, list);
   }
 
+
+
+  List<BloodPressureEntry> getEntries() => state;
+
+  void setSelectedDate(DateTime date) {
+    selectedDate = date;
+    emit(List.from(state));
+  }
+
+  DateTime getSelectedDate() => selectedDate;
+
   Future<void> addBloodPressure(BloodPressureEntry entry) async {
     final updated = List<BloodPressureEntry>.from(state)..add(entry);
     emit(updated);
     await _saveEntries(updated);
   }
-
-  List<BloodPressureEntry> getEntries() => state;
 }

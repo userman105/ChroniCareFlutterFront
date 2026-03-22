@@ -48,7 +48,7 @@ class _MainContainerState extends State<MainContainer> {
           child: Column(
             children: [
 
-              const TodayDateBar(
+              TodayDateBar(
                 calendarIconAsset: 'assets/icons/calendar.png',
               ),
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../cubit/health_cubit.dart';
 import 'components.dart';
 
 class LogEntryScreen extends StatefulWidget {
@@ -32,7 +34,14 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
   @override
   void initState() {
     super.initState();
-    _setDateTime();
+
+    final cubit = context.read<HealthCubit>();
+    selectedDate = cubit.getSelectedDate();
+
+    selectedTime = TimeOfDay.now();
+
+    _updateDateLabel(selectedDate);
+    _updateTimeLabel(selectedTime);
   }
 
   void _setDateTime() {
