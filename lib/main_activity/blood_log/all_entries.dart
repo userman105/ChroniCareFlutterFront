@@ -214,55 +214,54 @@ class _AllEntriesScreenState extends State<AllEntriesScreen> {
                 itemCount: entries.length,
                 itemBuilder: (context, index) {
                   final e = entries[index];
-                  final status =
-                  getStatus(e.systolic, e.diastolic);
+                  final status = getStatus(e.systolic, e.diastolic);
                   final color = getStatusColor(status);
 
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2D2D2D),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "${e.systolic}/${e.diastolic} mmHg",
-                                style: GoogleFonts.arimo(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                "${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}",
-                                style: GoogleFonts.arimo(
-                                    color: Colors.white54,
-                                    fontSize: 12),
-                              ),
-                            ],
+                  return GestureDetector(
+                    onTap: () => _showEntryDetail(context, e),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2D2D2D),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "${e.systolic}/${e.diastolic} mmHg",
+                                  style: GoogleFonts.arimo(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  "${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}",
+                                  style: GoogleFonts.arimo(
+                                      color: Colors.white54,
+                                      fontSize: 12),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: color.withOpacity(0.3),
-                            borderRadius:
-                            BorderRadius.circular(12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(status,
+                                style: GoogleFonts.arimo(color: Colors.white)),
                           ),
-                          child: Text(status,
-                              style: GoogleFonts.arimo(
-                                  color: Colors.white)),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   );
                 },
@@ -273,4 +272,136 @@ class _AllEntriesScreenState extends State<AllEntriesScreen> {
       ),
     );
   }
+  void _showEntryDetail(BuildContext context, BloodPressureEntry e) {
+    final status = getStatus(e.systolic, e.diastolic);
+    final color = getStatusColor(status);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Color(0xFF1C1C1C),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "${e.systolic}/${e.diastolic} mmHg",
+                  style: GoogleFonts.arimo(
+                    color: Colors.white,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    status,
+                    style: GoogleFonts.arimo(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 6),
+
+            Text(
+              "${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}",
+              style: GoogleFonts.arimo(
+                  color: Colors.white54, fontSize: 13),
+            ),
+
+            const SizedBox(height: 20),
+
+            const Divider(color: Color(0xFF3A3A3A)),
+
+            const SizedBox(height: 16),
+
+            _detailRow(
+              icon: Icons.favorite,
+              iconColor: Colors.redAccent,
+              label: "Heart Rate",
+              value: e.heartRate != null
+                  ? "${e.heartRate} bpm"
+                  : "Not recorded",
+            ),
+
+            const SizedBox(height: 14),
+
+            _detailRow(
+              icon: Icons.notes,
+              iconColor: Colors.white54,
+              label: "Notes",
+              value: (e.notes != null && e.notes!.trim().isNotEmpty)
+                  ? e.notes!
+                  : "No notes",
+            ),
+
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _detailRow({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: iconColor, size: 20),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.arimo(
+                  color: Colors.white54, fontSize: 12),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: GoogleFonts.arimo(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+
 }

@@ -15,7 +15,6 @@ class BloodPressureEntry {
     required this.dateTime,
   });
 
-  /// Convert the entry to a Map for JSON serialization
   Map<String, dynamic> toMap() {
     return {
       'systolic': systolic,

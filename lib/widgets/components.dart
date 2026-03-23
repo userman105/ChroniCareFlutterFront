@@ -648,6 +648,80 @@ class _TodayDateBarState extends State<TodayDateBar> {
   }
 }
 
+class TodayHeader extends StatelessWidget {
+  final DateTime selectedDate;
+  final String calendarIconAsset;
+  final VoidCallback onCalendarTap;
+
+  const TodayHeader({
+    super.key,
+    required this.selectedDate,
+    required this.calendarIconAsset,
+    required this.onCalendarTap,
+  });
+
+  bool isToday(DateTime selectedDate) {
+    final now = DateTime.now();
+    return selectedDate.year == now.year &&
+        selectedDate.month == now.month &&
+        selectedDate.day == now.day;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dateText = DateFormat('MMM d, yyyy').format(selectedDate);
+
+    return Container(
+      width: double.infinity,
+      height: 46,
+      padding: const EdgeInsets.only(
+        top: 8,
+        left: 14,
+        right: 22,
+        bottom: 8,
+      ),
+      decoration: const BoxDecoration(
+        color: Color(0xFF2D2D2D),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              if (isToday(selectedDate))
+                Text(
+                  "Today",
+                  style: GoogleFonts.arimo(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              if (isToday(selectedDate)) const SizedBox(width: 8),
+              Text(
+                dateText,
+                style: GoogleFonts.arimo(
+                  color: Colors.white70,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          GestureDetector(
+            onTap: onCalendarTap,
+            child: Image.asset(
+              calendarIconAsset,
+              width: 30,
+              height: 30,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 enum HealthMetricType {
   bloodPressure,
   glucose,
@@ -824,27 +898,28 @@ class BottomNavigationBarCustom extends StatelessWidget {
     }
 
     Widget addButton() {
-      return GestureDetector(
-        onTap: () {
-          AddEventSlider.show(
-            context,
-
-            onAddDoctorAppointment: () {},
-            onScheduleReminder: () {},
-            onAddOneTimeEntry: () {},
-
-            onTileSelected: onTileSelected,
-          );
-        },
-        child: Container(
-          width: 50,
-          height: 50,
-          decoration: const ShapeDecoration(
-            color: Color(0xFF00C950),
-            shape: OvalBorder(),
-          ),
-          child: const Center(
-            child: Icon(Icons.add, color: Colors.white, size: 28),
+      return Transform.translate(
+        offset: const Offset(9, 0),
+        child: GestureDetector(
+          onTap: () {
+            AddEventSlider.show(
+              context,
+              onAddDoctorAppointment: () {},
+              onScheduleReminder: () {},
+              onAddOneTimeEntry: () {},
+              onTileSelected: onTileSelected,
+            );
+          },
+          child: Container(
+            width: 50,
+            height: 50,
+            decoration: const ShapeDecoration(
+              color: Color(0xFF00C950),
+              shape: OvalBorder(),
+            ),
+            child: const Center(
+              child: Icon(Icons.add, color: Colors.white, size: 28),
+            ),
           ),
         ),
       );

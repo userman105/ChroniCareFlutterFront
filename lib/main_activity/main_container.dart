@@ -48,11 +48,11 @@ class _MainContainerState extends State<MainContainer> {
           child: Column(
             children: [
 
-              TodayDateBar(
-                calendarIconAsset: 'assets/icons/calendar.png',
-              ),
-
-              const SizedBox(height: 10),
+              // TodayDateBar(
+              //   calendarIconAsset: 'assets/icons/calendar.png',
+              // ),
+              //
+              // const SizedBox(height: 10),
 
               Container(
                 width: 412,
@@ -70,14 +70,19 @@ class _MainContainerState extends State<MainContainer> {
               Expanded(
                 child: PageView(
                   controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
+                  physics: const BouncingScrollPhysics(),
 
+                  onPageChanged: (index) {
+                    setState(() {
+                      currentIndex = index;
+                    });
+                  },
+
+                  children: [
                     TodayScreen(tiles: widget.tiles),
-                    const InsightsScreen(),
+                    InsightsScreen(tiles: widget.tiles),
                     const RemindersScreen(),
                     const ProfileScreen(),
-
                   ],
                 ),
               ),
@@ -96,7 +101,7 @@ class _MainContainerState extends State<MainContainer> {
             _pageController.animateToPage(
               index,
               duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
+              curve: Curves.easeInOut,
             );
           },
           onTileSelected: (selectedTile) {
