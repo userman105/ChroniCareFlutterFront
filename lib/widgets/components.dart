@@ -7,8 +7,10 @@ import 'package:intl/intl.dart';
 import '../cubit/health_cubit.dart';
 import '../main_activity/blood_log/blood_log_screen.dart';
 import '../main_activity/today_screen.dart';
+import '../main_activity/weight_log/weight_log_screen.dart';
 ///***
 ///list of components
+///
 /// RoundedInputBox
 /// MainButton
 /// ChronicLogo
@@ -21,7 +23,7 @@ import '../main_activity/today_screen.dart';
 /// addEntryPopup
 /// BloodPressureInputs
 /// DateRangePickerWidget
-///
+/// WeightInputs
 ///
 ///
 ///         ***///
@@ -1045,7 +1047,6 @@ class _AddEntryPopupState extends State<AddEntryPopup> {
 
                         Navigator.pop(context, selectedTile);
 
-                        // navigate AFTER pop using root context
                         Future.microtask(() {
                           switch (tile.label) {
                             case "Blood Pressure":
@@ -1070,7 +1071,8 @@ class _AddEntryPopupState extends State<AddEntryPopup> {
                               break;
 
                             case "Weight":
-                            // TODO
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: (_)=>WeightLogScreen()));
                               break;
 
                             case "Glucose":
@@ -1758,6 +1760,175 @@ class _DateRangePickerWidgetState extends State<DateRangePickerWidget> {
           },
         ),
       ),
+    );
+  }
+}
+
+class WeightInputs extends StatefulWidget {
+  final TextEditingController kgController;
+  final TextEditingController lbsController;
+
+  const WeightInputs({
+    super.key,
+    required this.kgController,
+    required this.lbsController,
+  });
+
+  @override
+  State<WeightInputs> createState() => _WeightInputsState();
+}
+
+class _WeightInputsState extends State<WeightInputs> {
+  bool _isUpdating = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    widget.kgController.addListener(_onKgChanged);
+    widget.lbsController.addListener(_onLbsChanged);
+  }
+
+  void _onKgChanged() {
+    if (_isUpdating) return;
+
+    final text = widget.kgController.text;
+    if (text.isEmpty) {
+      _setLbs("");
+      return;
+    }
+
+    final kg = double.tryParse(text);
+    if (kg == null) return;
+
+    final lbs = kg * 2.20462;
+    _setLbs(lbs.toStringAsFixed(1));
+  }
+
+  void _onLbsChanged() {
+    if (_isUpdating) return;
+
+    final text = widget.lbsController.text;
+    if (text.isEmpty) {
+      _setKg("");
+      return;
+    }
+
+    final lbs = double.tryParse(text);
+    if (lbs == null) return;
+
+    final kg = lbs / 2.20462;
+    _setKg(kg.toStringAsFixed(1));
+  }
+
+  void _setKg(String value) {
+    _isUpdating = true;
+    widget.kgController.text = value;
+    widget.kgController.selection = TextSelection.fromPosition(
+      TextPosition(offset: value.length),
+    );
+    _isUpdating = false;
+  }
+
+  void _setLbs(String value) {
+    _isUpdating = true;
+    widget.lbsController.text = value;
+    widget.lbsController.selection = TextSelection.fromPosition(
+      TextPosition(offset: value.length),
+    );
+    _isUpdating = false;
+  }
+
+  @override
+  void dispose() {
+    widget.kgController.removeListener(_onKgChanged);
+    widget.lbsController.removeListener(_onLbsChanged);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+
+        Text(
+          "Weight",
+          style: GoogleFonts.arimo(
+            color: Colors.white,
+            fontSize: 16,
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        Row(
+          children: [
+
+            Container(
+              width: 80,
+              height: 27,
+              decoration: BoxDecoration(
+                color: const Color(0xFF111111),
+                borderRadius: BorderRadius.circular(3),
+              ),
+              child: TextField(
+                controller: widget.kgController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  hintText: "kg",
+                  hintStyle: TextStyle(color: Colors.white38),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 7),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 6),
+
+            Text(
+              "KG",
+              style: GoogleFonts.arimo(
+                color: Colors.white.withOpacity(0.4),
+                fontSize: 14,
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            Container(
+              width: 80,
+              height: 27,
+              decoration: BoxDecoration(
+                color: const Color(0xFF111111),
+                borderRadius: BorderRadius.circular(3),
+              ),
+              child: TextField(
+                controller: widget.lbsController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  hintText: "lbs",
+                  hintStyle: TextStyle(color: Colors.white38),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 7),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 6),
+
+            Text(
+              "LBS",
+              style: GoogleFonts.arimo(
+                color: Colors.white.withOpacity(0.4),
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

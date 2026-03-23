@@ -1,3 +1,4 @@
+import 'package:chronic_care/main_activity/weight_log/weight_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,7 +32,6 @@ class InsightsScreen extends StatelessWidget {
         child: Column(
           children: [
 
-            // ── Header bar ───────────────────────────────────────
             Container(
               width: double.infinity,
               height: 46,
@@ -59,11 +59,9 @@ class InsightsScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // ── Metric tiles ─────────────────────────────────────
             Expanded(
               child: BlocBuilder<HealthCubit, List<BloodPressureEntry>>(
                 builder: (context, bpEntries) {
-                  // Sort by date so latest is truly the most recent
                   final sorted = List<BloodPressureEntry>.from(bpEntries)
                     ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
 
@@ -91,8 +89,16 @@ class InsightsScreen extends StatelessWidget {
                           break;
 
                         case HealthMetricType.weight:
-                          value = "--";
-                          subtitle = "No data";
+                          final weightEntries = List.from(
+                            context.read<HealthCubit>().getWeightEntries(),
+                          )..sort((a, b) => a.dateTime.compareTo(b.dateTime));
+
+                          if (weightEntries.isNotEmpty) {
+                            final latest = weightEntries.last;
+                            final kg = latest.kg ?? (latest.lbs! / 2.20462);
+                            value = "${kg.toStringAsFixed(1)} kg";
+                            subtitle = timeAgo(latest.dateTime);
+                          }
                           break;
 
                         default:
@@ -132,6 +138,14 @@ class InsightsScreen extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (_) => const BloodPressureDetailsScreen(),
+              ),
+            );
+          }
+          else if(tile.type == HealthMetricType.weight){
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => WeightDetailsScreen(),
               ),
             );
           }

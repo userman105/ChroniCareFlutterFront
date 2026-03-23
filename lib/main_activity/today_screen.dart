@@ -1,3 +1,4 @@
+import 'package:chronic_care/main_activity/weight_log/weight_log_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/components.dart';
@@ -119,7 +120,8 @@ class _TodayScreenState extends State<TodayScreen> {
                         // Navigator.push(...);
                           break;
                         case HealthMetricType.weight:
-                        // Navigator.push(...);
+                          Navigator.push(context,
+                              MaterialPageRoute(builder: (_)=>WeightLogScreen()));
                           break;
                         default:
                           break;

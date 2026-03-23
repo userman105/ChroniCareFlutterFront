@@ -239,7 +239,7 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
                     /// ADD REMINDER BUTTON
                     GestureDetector(
                       onTap: () {
-                        // TODO open reminder picker
+
                       },
                       child: Container(
                         height: 35,

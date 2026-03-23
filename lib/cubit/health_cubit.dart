@@ -1,18 +1,26 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/blood_pressure_entry.dart';
+import '../models/weight_entry.dart';
 
 class HealthCubit extends Cubit<List<BloodPressureEntry>> {
-  static const _key = 'blood_pressure_entries';
+  static const _bpKey = 'blood_pressure_entries';
+  static const _weightKey = 'weight_entries';
 
   HealthCubit() : super([]) {
     _loadEntries();
+    _loadWeightEntries();
   }
+
   DateTime selectedDate = DateTime.now();
+
+
+  /// BLOOD PRESSURE
+
 
   Future<void> _loadEntries() async {
     final prefs = await SharedPreferences.getInstance();
-    final list = prefs.getStringList(_key) ?? [];
+    final list = prefs.getStringList(_bpKey) ?? [];
     final entries = list.map((e) => BloodPressureEntry.fromJson(e)).toList();
     emit(entries);
   }
@@ -20,12 +28,46 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   Future<void> _saveEntries(List<BloodPressureEntry> entries) async {
     final prefs = await SharedPreferences.getInstance();
     final list = entries.map((e) => e.toJson()).toList();
-    await prefs.setStringList(_key, list);
+    await prefs.setStringList(_bpKey, list);
+  }
+
+  List<BloodPressureEntry> getEntries() => state;
+
+  Future<void> addBloodPressure(BloodPressureEntry entry) async {
+    final updated = List<BloodPressureEntry>.from(state)..add(entry);
+    emit(updated);
+    await _saveEntries(updated);
   }
 
 
+  /// WEIGHT
 
-  List<BloodPressureEntry> getEntries() => state;
+
+  List<WeightEntry> _weightEntries = [];
+
+  List<WeightEntry> getWeightEntries() => _weightEntries;
+
+  Future<void> _loadWeightEntries() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList(_weightKey) ?? [];
+    _weightEntries = list.map((e) => WeightEntry.fromJson(e)).toList();
+  }
+
+  Future<void> _saveWeightEntries() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = _weightEntries.map((e) => e.toJson()).toList();
+    await prefs.setStringList(_weightKey, list);
+  }
+
+  Future<void> addWeight(WeightEntry entry) async {
+    _weightEntries.add(entry);
+    await _saveWeightEntries();
+
+    emit(List.from(state));
+  }
+
+
+  /// DATE (SHARED)
 
   void setSelectedDate(DateTime date) {
     selectedDate = date;
@@ -33,10 +75,4 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   }
 
   DateTime getSelectedDate() => selectedDate;
-
-  Future<void> addBloodPressure(BloodPressureEntry entry) async {
-    final updated = List<BloodPressureEntry>.from(state)..add(entry);
-    emit(updated);
-    await _saveEntries(updated);
-  }
 }
