@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/blood_pressure_entry.dart';
 import '../models/weight_entry.dart';
+import '../widgets/alarm_screen.dart';
 
 class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   static const _bpKey = 'blood_pressure_entries';
@@ -75,4 +76,27 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   }
 
   DateTime getSelectedDate() => selectedDate;
+
+  final List<ReminderEntry> _reminders = [];
+  List<ReminderEntry> getReminders() => _reminders;
+
+  /// REMINDERS
+  void addReminder(ReminderEntry entry) {
+    _reminders.add(entry);
+    emit(List.from(state));
+  }
+
+  void updateReminder(ReminderEntry old, ReminderEntry updated) {
+    final index = _reminders.indexOf(old);
+    if (index != -1) {
+      _reminders[index] = updated;
+      emit(List.from(state));
+    }
+  }
+
+  void deleteReminder(ReminderEntry entry) {
+    _reminders.remove(entry);
+    emit(List.from(state));
+  }
 }
+

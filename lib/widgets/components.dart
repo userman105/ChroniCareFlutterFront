@@ -8,6 +8,7 @@ import '../cubit/health_cubit.dart';
 import '../main_activity/blood_log/blood_log_screen.dart';
 import '../main_activity/today_screen.dart';
 import '../main_activity/weight_log/weight_log_screen.dart';
+import 'alarm_screen.dart';
 ///***
 ///list of components
 ///
@@ -24,7 +25,7 @@ import '../main_activity/weight_log/weight_log_screen.dart';
 /// BloodPressureInputs
 /// DateRangePickerWidget
 /// WeightInputs
-///
+/// ReminderTile
 ///
 ///         ***///
 class RoundedInputBox extends StatelessWidget {
@@ -1932,3 +1933,669 @@ class _WeightInputsState extends State<WeightInputs> {
     );
   }
 }
+
+class ReminderTile extends StatefulWidget {
+  final ReminderEntry entry;
+
+  const ReminderTile({
+    super.key,
+    required this.entry,
+  });
+
+  @override
+  State<ReminderTile> createState() => _ReminderTileState();
+}
+
+class _ReminderTileState extends State<ReminderTile> {
+
+  // ── Editable state (mirrors ReminderEntry fields) ──────────────────────────
+  late String _frequency;
+  late bool _isRecurring;
+  late List<TimeOfDay> _times;
+  late DateTime _startDate;
+  late DateTime? _endDate;
+  late TextEditingController _nameCtrl;
+  late TextEditingController _reminderNameCtrl;
+  late TextEditingController _notesCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _frequency = widget.entry.frequency;
+    _isRecurring = widget.entry.schedule == 'Recurring';
+    _times = List.from(widget.entry.times);
+    _startDate = widget.entry.startDate;
+    _endDate = widget.entry.endDate;
+    _nameCtrl = TextEditingController(text: widget.entry.medicineName);
+    _reminderNameCtrl =
+        TextEditingController(text: widget.entry.reminderName ?? '');
+    _notesCtrl = TextEditingController(text: widget.entry.notes ?? '');
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _reminderNameCtrl.dispose();
+    _notesCtrl.dispose();
+    super.dispose();
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  String get _iconAsset {
+    switch (widget.entry.type) {
+      case 'blood_pressure': return 'assets/icons/bloodPressure.png';
+      case 'meds':           return 'assets/icons/capsule.png';
+      case 'weight':         return 'assets/icons/weight.png';
+      case 'glucose':        return 'assets/icons/diabetes.png';
+      default:               return 'assets/icons/bell.png';
+    }
+  }
+
+  String get _scheduleLabel {
+    final times = _times.map((t) {
+      final h = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
+      final m = t.minute.toString().padLeft(2, '0');
+      final p = t.period == DayPeriod.am ? 'am' : 'pm';
+      return '$h:$m $p';
+    }).join(', ');
+    return '${_isRecurring ? _frequency : 'Once'} - $times';
+  }
+
+  String _formatDate(DateTime dt) {
+    const months = [
+      'Jan','Feb','Mar','Apr','May','Jun',
+      'Jul','Aug','Sep','Oct','Nov','Dec'
+    ];
+    return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+  }
+
+  String _formatTime(TimeOfDay t) {
+    final h = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
+    final m = t.minute.toString().padLeft(2, '0');
+    final period = t.period == DayPeriod.am ? 'AM' : 'PM';
+    return '$h:$m $period';
+  }
+
+  // ── Pickers ────────────────────────────────────────────────────────────────
+  Future<void> _pickTime(int index, StateSetter sheetSetState) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _times[index],
+      builder: (ctx, child) => Theme(
+        data: ThemeData.dark().copyWith(
+          colorScheme: const ColorScheme.dark(
+            primary: Color(0xFF00C950),
+            surface: Color(0xFF2D2D2D),
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) {
+      sheetSetState(() => _times[index] = picked);
+      setState(() {});
+    }
+  }
+
+  void _pickFrequency(StateSetter sheetSetState) {
+    final options = ['Daily', 'Weekly', 'Every 2 days', 'Monthly'];
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Color(0xFF212121),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text('Frequency',
+                style: GoogleFonts.arimo(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600)),
+            const SizedBox(height: 16),
+            ...options.map((o) => GestureDetector(
+              onTap: () {
+                sheetSetState(() => _frequency = o);
+                setState(() {});
+                Navigator.pop(context);
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(
+                  color: _frequency == o
+                      ? const Color(0xFF00C950).withOpacity(0.15)
+                      : const Color(0xFF2D2D2D),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: _frequency == o
+                          ? const Color(0xFF00C950)
+                          : Colors.transparent),
+                ),
+                child: Center(
+                  child: Text(o,
+                      style: GoogleFonts.arimo(
+                          color: _frequency == o
+                              ? const Color(0xFF00C950)
+                              : Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500)),
+                ),
+              ),
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openDateRange(StateSetter sheetSetState) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 16, right: 16, top: 16,
+        ),
+        child: DateRangePickerWidget(
+          initialStart: _startDate,
+          initialEnd: _endDate,
+          onApply: (start, end) {
+            sheetSetState(() { _startDate = start; _endDate = end; });
+            setState(() {});
+          },
+        ),
+      ),
+    );
+  }
+
+  // ── Save ───────────────────────────────────────────────────────────────────
+  void _save() {
+    final updated = ReminderEntry(
+      type: widget.entry.type,
+      medicineName: _nameCtrl.text.trim().isEmpty
+          ? widget.entry.medicineName
+          : _nameCtrl.text.trim(),
+      reminderName: _reminderNameCtrl.text.trim().isEmpty
+          ? null
+          : _reminderNameCtrl.text.trim(),
+      schedule: _isRecurring ? 'Recurring' : 'Once',
+      frequency: _isRecurring ? _frequency : 'Once',
+      times: List.from(_times),
+      startDate: _startDate,
+      endDate: _endDate,
+      notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+      createdAt: widget.entry.createdAt,
+    );
+
+    context.read<HealthCubit>().updateReminder(widget.entry, updated);
+    Navigator.pop(context);
+  }
+
+  // ── Edit bottom sheet ──────────────────────────────────────────────────────
+  void _openEditSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, sheetSetState) => DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          maxChildSize: 0.95,
+          minChildSize: 0.5,
+          builder: (_, scrollCtrl) => Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFF212121),
+              borderRadius:
+              BorderRadius.vertical(top: Radius.circular(22)),
+            ),
+            child: Column(
+              children: [
+
+                // ── Handle ───────────────────────────────────────
+                const SizedBox(height: 12),
+                Center(
+                  child: Container(
+                    width: 40, height: 4,
+                    decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(2)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // ── Sheet header ──────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Image.asset(_iconAsset, width: 20, height: 20),
+                      const SizedBox(width: 8),
+                      Text('Edit Reminder',
+                          style: GoogleFonts.arimo(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600)),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: const Icon(Icons.close,
+                            color: Colors.white54, size: 20),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // ── Scrollable content ────────────────────────────
+                Expanded(
+                  child: ListView(
+                    controller: scrollCtrl,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    children: [
+
+                      // Name field
+                      Text('Name',
+                          style: GoogleFonts.arimo(
+                              color: Colors.white54, fontSize: 13)),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: _nameCtrl,
+                        onChanged: (_) => sheetSetState(() {}),
+                        style: GoogleFonts.arimo(
+                            color: Colors.white, fontSize: 16),
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: const Color(0xFF4F4F4F),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 14),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // ── Schedule card ─────────────────────────
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1E1E1E),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Column(
+                          children: [
+
+                            // Recurring / Once toggle
+                            Center(
+                              child: Container(
+                                height: 26,
+                                padding: const EdgeInsets.all(3),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF0F0F0F),
+                                  borderRadius: BorderRadius.circular(34),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _toggleOption('Recurring', _isRecurring,
+                                            () => sheetSetState(
+                                                () => _isRecurring = true),
+                                        sheetSetState),
+                                    _toggleOption('Once', !_isRecurring,
+                                            () => sheetSetState(
+                                                () => _isRecurring = false),
+                                        sheetSetState),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            // Schedule row
+                            _sheetInfoRow(
+                              label: 'Schedule',
+                              value: _isRecurring ? _frequency : 'Once',
+                              onTap: _isRecurring
+                                  ? () => _pickFrequency(sheetSetState)
+                                  : null,
+                            ),
+                            _divider(),
+
+                            // Times
+                            ..._times.asMap().entries.map((e) {
+                              final i = e.key;
+                              final t = e.value;
+                              return Column(children: [
+                                _sheetInfoRow(
+                                  label: i == 0 ? 'Times' : '',
+                                  value: _formatTime(t),
+                                  onTap: () =>
+                                      _pickTime(i, sheetSetState),
+                                  trailing: i > 0
+                                      ? GestureDetector(
+                                      onTap: () => sheetSetState(
+                                              () => _times.removeAt(i)),
+                                      child: const Icon(Icons.close,
+                                          color: Colors.white38,
+                                          size: 16))
+                                      : null,
+                                ),
+                                _divider(),
+                              ]);
+                            }),
+
+                            // Add time
+                            GestureDetector(
+                              onTap: () => sheetSetState(() => _times
+                                  .add(const TimeOfDay(hour: 8, minute: 0))),
+                              child: Padding(
+                                padding:
+                                const EdgeInsets.symmetric(vertical: 6),
+                                child: Text('+ Add time',
+                                    style: GoogleFonts.arimo(
+                                        color: const Color(0xFF00C950),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500)),
+                              ),
+                            ),
+
+                            _divider(),
+
+                            // Start & End date
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () => _openDateRange(sheetSetState),
+                              child: Column(children: [
+                                _sheetInfoRow(
+                                    label: 'Start date',
+                                    value: _formatDate(_startDate),
+                                    onTap: null),
+                                _divider(),
+                                _sheetInfoRow(
+                                    label: 'End date',
+                                    value: _endDate != null
+                                        ? _formatDate(_endDate!)
+                                        : 'Never',
+                                    onTap: null),
+                              ]),
+                            ),
+
+                            _divider(),
+
+                            // Reminder name
+                            _editableField(
+                              label: 'Reminder name',
+                              hint: 'eg. Morning meds',
+                              controller: _reminderNameCtrl,
+                              optional: true,
+                              sheetSetState: sheetSetState,
+                            ),
+
+                            _divider(),
+
+                            // Notes
+                            _editableField(
+                              label: 'Notes',
+                              hint: 'eg. take after food',
+                              controller: _notesCtrl,
+                              optional: true,
+                              sheetSetState: sheetSetState,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // ── Save button ───────────────────────────
+                      MainButton(
+                        text: 'Save',
+                        enabled: _nameCtrl.text.trim().isNotEmpty,
+                        onTap: _save,
+                      ),
+
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Helper widgets ─────────────────────────────────────────────────────────
+  Widget _toggleOption(
+      String label, bool active, VoidCallback onTap, StateSetter ss) {
+    return GestureDetector(
+      onTap: () { onTap(); setState(() {}); },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+        decoration: BoxDecoration(
+          color: active ? const Color(0xFF5A5A5A) : Colors.transparent,
+          borderRadius: BorderRadius.circular(33),
+        ),
+        child: Text(label,
+            style: GoogleFonts.arimo(
+                color: active
+                    ? const Color(0xFF00C950)
+                    : Colors.white.withOpacity(0.48),
+                fontSize: 12,
+                fontWeight: FontWeight.w400)),
+      ),
+    );
+  }
+
+  Widget _sheetInfoRow({
+    required String label,
+    required String value,
+    VoidCallback? onTap,
+    Widget? trailing,
+  }) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            if (label.isNotEmpty)
+              Text(label,
+                  style: GoogleFonts.arimo(
+                      color: Colors.white.withOpacity(0.77),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500)),
+            const Spacer(),
+            if (trailing != null) ...[trailing, const SizedBox(width: 6)],
+            Text(value,
+                style: GoogleFonts.arimo(
+                    color: const Color(0xFF00C950),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _editableField({
+    required String label,
+    required String hint,
+    required TextEditingController controller,
+    bool optional = false,
+    required StateSetter sheetSetState,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Text(label,
+                style: GoogleFonts.arimo(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400)),
+            const Spacer(),
+            if (optional)
+              Text('optional',
+                  style: GoogleFonts.arimo(
+                      color: Colors.white.withOpacity(0.49), fontSize: 14)),
+          ]),
+          const SizedBox(height: 6),
+          TextField(
+            controller: controller,
+            onChanged: (_) => sheetSetState(() {}),
+            style: GoogleFonts.arimo(color: Colors.white, fontSize: 14),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: GoogleFonts.arimo(
+                  color: const Color(0xFFB4B4B4), fontSize: 14),
+              filled: true,
+              fillColor: const Color(0xFF0C0C0C),
+              contentPadding:
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(4),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _divider() =>
+      Container(height: 0.5, color: Colors.white12);
+
+  // ── Build ──────────────────────────────────────────────────────────────────
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: 84,
+      margin: const EdgeInsets.only(bottom: 12),
+      clipBehavior: Clip.antiAlias,
+      decoration: ShapeDecoration(
+        color: const Color(0xFF444444),
+        shape: RoundedRectangleBorder(
+          side: BorderSide(
+              width: 1, color: Colors.white.withOpacity(0.10)),
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Image.asset(_iconAsset, width: 20, height: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Text(
+                    _nameCtrl.text.isNotEmpty
+                        ? _nameCtrl.text
+                        : widget.entry.medicineName,
+                    style: GoogleFonts.arimo(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _scheduleLabel,
+                    style: GoogleFonts.arimo(
+                        color: Colors.white.withOpacity(0.55),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+            ),
+            Row(
+              children: [
+                // Delete
+                GestureDetector(
+                  onTap: _confirmDelete,
+                  child: const Icon(Icons.delete_outline,
+                      color: Colors.redAccent, size: 20),
+                ),
+                const SizedBox(width: 10),
+                // Edit
+                GestureDetector(
+                  onTap: _openEditSheet,
+                  child: const Icon(Icons.edit_outlined,
+                      color: Colors.white54, size: 20),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  void _confirmDelete() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF2D2D2D),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Delete Reminder',
+          style: GoogleFonts.arimo(
+              color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+        content: Text(
+          'Are you sure you want to delete "${widget.entry.medicineName}"?',
+          style: GoogleFonts.arimo(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel',
+                style: GoogleFonts.arimo(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () {
+              context.read<HealthCubit>().deleteReminder(widget.entry);
+              Navigator.pop(context);
+            },
+            child: Text('Delete',
+                style: GoogleFonts.arimo(
+                    color: Colors.redAccent, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

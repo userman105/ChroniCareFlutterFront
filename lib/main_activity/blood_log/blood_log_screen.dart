@@ -4,6 +4,7 @@ import '../../widgets/components.dart';
 import '../../widgets/log_screen.dart';
 import '../../cubit/health_cubit.dart';
 import '../../models/blood_pressure_entry.dart';
+import 'blood_pressure_reminder_screen.dart';
 
 class BloodPressureScreen extends StatefulWidget {
   const BloodPressureScreen({super.key});
@@ -55,6 +56,13 @@ class _BloodPressureScreenState extends State<BloodPressureScreen> {
 
       buttonEnabled: buttonEnabled,
 
+      onAddReminder: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const BloodPressureReminderScreen(),
+        ),
+      ),
+
       onSubmit: (selectedDateTime, notes) {
         final systolic = int.tryParse(systolicController.text);
         final diastolic = int.tryParse(diastolicController.text);
@@ -74,6 +82,8 @@ class _BloodPressureScreenState extends State<BloodPressureScreen> {
 
         Navigator.pop(context);
       },
+
+
 
       content: [
 

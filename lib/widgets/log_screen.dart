@@ -9,6 +9,7 @@ class LogEntryScreen extends StatefulWidget {
   final List<Widget> content;
   final bool buttonEnabled;
   final Function(DateTime selectedDateTime, String notes) onSubmit;
+  final VoidCallback? onAddReminder;
 
   const LogEntryScreen({
     super.key,
@@ -16,6 +17,7 @@ class LogEntryScreen extends StatefulWidget {
     this.content = const [],
     required this.buttonEnabled,
     required this.onSubmit,
+    this.onAddReminder,
   });
 
   @override
@@ -237,36 +239,30 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
                     const SizedBox(height: 25),
 
                     /// ADD REMINDER BUTTON
-                    GestureDetector(
-                      onTap: () {
-
-                      },
-                      child: Container(
-                        height: 35,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.white),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-
-                            Image.asset("assets/icons/bell.png",
-                            width: 18,height: 18,),
-                            const SizedBox(width: 6),
-
-                            Center(
-                              child: Text(
+                    if (widget.onAddReminder != null) ...[
+                      GestureDetector(
+                        onTap: widget.onAddReminder,
+                        child: Container(
+                          height: 35,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.white),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset("assets/icons/bell.png", width: 18, height: 18),
+                              const SizedBox(width: 6),
+                              Text(
                                 "Add reminder",
-                                style: GoogleFonts.arimo(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                ),
+                                style: GoogleFonts.arimo(color: Colors.white, fontSize: 14),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 25),
+                    ],
 
                     const Spacer(),
 
