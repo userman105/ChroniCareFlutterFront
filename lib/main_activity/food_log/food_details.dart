@@ -22,16 +22,17 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
   String _formatTime(DateTime dt) =>
       '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
 
-  String _formatDate(DateTime dt) =>
-      '${dt.day}/${dt.month}/${dt.year}';
+  String _formatDate(DateTime dt) => '${dt.day}/${dt.month}/${dt.year}';
 
   String _dateLabel(String lang) {
-    final now       = DateTime.now();
+    final now = DateTime.now();
     final yesterday = now.subtract(const Duration(days: 1));
-    final isToday   = _viewingDate.year == now.year &&
+    final isToday =
+        _viewingDate.year == now.year &&
         _viewingDate.month == now.month &&
         _viewingDate.day == now.day;
-    final isYesterday = _viewingDate.year == yesterday.year &&
+    final isYesterday =
+        _viewingDate.year == yesterday.year &&
         _viewingDate.month == yesterday.month &&
         _viewingDate.day == yesterday.day;
 
@@ -44,7 +45,8 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
   }
 
   void _goToPreviousDay() => setState(
-          () => _viewingDate = _viewingDate.subtract(const Duration(days: 1)));
+    () => _viewingDate = _viewingDate.subtract(const Duration(days: 1)),
+  );
 
   void _goToNextDay() {
     final next = _viewingDate.add(const Duration(days: 1));
@@ -59,36 +61,40 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
       .where((e) => e.calories != null)
       .fold(0, (sum, e) => sum + e.calories!);
 
-  double _totalMacro(List<FoodEntry> entries,
-      double? Function(FoodEntry) getter) =>
-      entries.fold(0.0, (sum, e) => sum + (getter(e) ?? 0.0));
+  double _totalMacro(
+    List<FoodEntry> entries,
+    double? Function(FoodEntry) getter,
+  ) => entries.fold(0.0, (sum, e) => sum + (getter(e) ?? 0.0));
 
   /// Maps the internal English meal key to a localised display name.
   String _localMeal(String meal, String lang) {
     const keyMap = {
       'Breakfast': 'meal_breakfast',
-      'Lunch':     'meal_lunch',
-      'Dinner':    'meal_dinner',
-      'Snack':     'meal_snack',
-      'Other':     'meal_other',
+      'Lunch': 'meal_lunch',
+      'Dinner': 'meal_dinner',
+      'Snack': 'meal_snack',
+      'Other': 'meal_other',
     };
     return AppStrings.get(keyMap[meal] ?? 'meal_other', lang);
   }
 
   @override
   Widget build(BuildContext context) {
-    final lang       = context.watch<LocaleCubit>().state;
-    final c          = context.colors;
-    final isRtl      = lang == 'ar';
+    final lang = context.watch<LocaleCubit>().state;
+    final c = context.colors;
+    final isRtl = lang == 'ar';
     final allEntries = context.watch<HealthCubit>().getFoodEntries();
 
-    final dayEntries = allEntries
-        .where((e) =>
-    e.dateTime.year == _viewingDate.year &&
-        e.dateTime.month == _viewingDate.month &&
-        e.dateTime.day == _viewingDate.day)
-        .toList()
-      ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
+    final dayEntries =
+        allEntries
+            .where(
+              (e) =>
+                  e.dateTime.year == _viewingDate.year &&
+                  e.dateTime.month == _viewingDate.month &&
+                  e.dateTime.day == _viewingDate.day,
+            )
+            .toList()
+          ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
 
     // Keep internal keys English for ordering; localise at display only
     const mealOrder = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Other'];
@@ -97,10 +103,10 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
       grouped.putIfAbsent(e.mealType ?? 'Other', () => []).add(e);
     }
 
-    final totalCals    = _totalCalories(dayEntries);
-    final totalCarbs   = _totalMacro(dayEntries, (e) => e.carbs);
+    final totalCals = _totalCalories(dayEntries);
+    final totalCarbs = _totalMacro(dayEntries, (e) => e.carbs);
     final totalProtein = _totalMacro(dayEntries, (e) => e.protein);
-    final totalFat     = _totalMacro(dayEntries, (e) => e.fat);
+    final totalFat = _totalMacro(dayEntries, (e) => e.fat);
     final hasMacroData = dayEntries.any((e) => e.hasMacros);
 
     return Directionality(
@@ -110,7 +116,6 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
         body: SafeArea(
           child: Column(
             children: [
-
               // ── Top bar ──────────────────────────────────
               Container(
                 height: 46,
@@ -129,19 +134,24 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                     Text(
                       AppStrings.get('food', lang),
                       style: GoogleFonts.arimo(
-                          color: c.primaryText,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500),
+                        color: c.primaryText,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     const Spacer(),
                     GestureDetector(
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) => const FoodLogScreen()),
+                          builder: (_) => const FoodLogScreen(),
+                        ),
                       ),
-                      child: Image.asset('assets/icons/add.png',
-                          width: 26, height: 26),
+                      child: Image.asset(
+                        'assets/icons/add.png',
+                        width: 26,
+                        height: 26,
+                      ),
                     ),
                   ],
                 ),
@@ -151,16 +161,16 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
               Container(
                 color: c.sectionBg,
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 10),
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     GestureDetector(
                       onTap: _goToPreviousDay,
                       child: Icon(
-                        isRtl
-                            ? Icons.chevron_right
-                            : Icons.chevron_left,
+                        isRtl ? Icons.chevron_right : Icons.chevron_left,
                         color: c.primaryText,
                         size: 26,
                       ),
@@ -168,16 +178,15 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                     Text(
                       _dateLabel(lang),
                       style: GoogleFonts.arimo(
-                          color: c.primaryText,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600),
+                        color: c.primaryText,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     GestureDetector(
                       onTap: _canGoNext ? _goToNextDay : null,
                       child: Icon(
-                        isRtl
-                            ? Icons.chevron_left
-                            : Icons.chevron_right,
+                        isRtl ? Icons.chevron_left : Icons.chevron_right,
                         color: _canGoNext ? c.primaryText : c.ghostText,
                         size: 26,
                       ),
@@ -190,62 +199,72 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                 child: dayEntries.isEmpty
                     ? _emptyState(context, lang)
                     : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (hasMacroData)
+                              _summaryCard(
+                                context,
+                                totalCals,
+                                totalCarbs,
+                                totalProtein,
+                                totalFat,
+                                dayEntries.length,
+                                lang,
+                              ),
 
-                      if (hasMacroData)
-                        _summaryCard(context, totalCals,
-                            totalCarbs, totalProtein, totalFat,
-                            dayEntries.length, lang),
+                            if (hasMacroData) const SizedBox(height: 20),
 
-                      if (hasMacroData) const SizedBox(height: 20),
+                            ...mealOrder
+                                .where((m) => grouped.containsKey(m))
+                                .map(
+                                  (meal) => _mealGroup(
+                                    context,
+                                    meal,
+                                    grouped[meal]!,
+                                    lang,
+                                  ),
+                                ),
 
-                      ...mealOrder
-                          .where((m) => grouped.containsKey(m))
-                          .map((meal) => _mealGroup(
-                          context, meal,
-                          grouped[meal]!, lang)),
+                            const SizedBox(height: 20),
 
-                      const SizedBox(height: 20),
-
-                      Center(
-                        child: GestureDetector(
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => AllFoodEntriesScreen(
-                                  entries: allEntries),
-                            ),
-                          ),
-                          child: Container(
-                            width: 105,
-                            height: 31,
-                            clipBehavior: Clip.antiAlias,
-                            decoration: ShapeDecoration(
-                              color: c.reminderTileBg,
-                              shape: RoundedRectangleBorder(
-                                borderRadius:
-                                BorderRadius.circular(21),
+                            Center(
+                              child: GestureDetector(
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => AllFoodEntriesScreen(
+                                      entries: allEntries,
+                                    ),
+                                  ),
+                                ),
+                                child: Container(
+                                  width: 105,
+                                  height: 31,
+                                  clipBehavior: Clip.antiAlias,
+                                  decoration: ShapeDecoration(
+                                    color: c.reminderTileBg,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(21),
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      AppStrings.get('all_entries_food', lang),
+                                      style: GoogleFonts.arimo(
+                                        color: c.primaryText,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
-                            child: Center(
-                              child: Text(
-                                AppStrings.get(
-                                    'all_entries_food', lang),
-                                style: GoogleFonts.arimo(
-                                    color: c.primaryText,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500),
-                              ),
-                            ),
-                          ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
               ),
             ],
           ),
@@ -262,13 +281,11 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.restaurant_outlined,
-              color: c.ghostText, size: 48),
+          Icon(Icons.restaurant_outlined, color: c.ghostText, size: 48),
           const SizedBox(height: 12),
           Text(
             '${AppStrings.get('no_food_logged', lang)} ${_dateLabel(lang)}',
-            style:
-            GoogleFonts.arimo(color: c.subtleText, fontSize: 14),
+            style: GoogleFonts.arimo(color: c.subtleText, fontSize: 14),
           ),
           const SizedBox(height: 16),
           GestureDetector(
@@ -277,20 +294,19 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
               MaterialPageRoute(builder: (_) => const FoodLogScreen()),
             ),
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
                 color: AppColors.primary.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: AppColors.primary.withOpacity(0.4)),
+                border: Border.all(color: AppColors.primary.withOpacity(0.4)),
               ),
               child: Text(
                 AppStrings.get('log_something', lang),
                 style: GoogleFonts.arimo(
-                    color: AppColors.primary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500),
+                  color: AppColors.primary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ),
@@ -301,10 +317,17 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
 
   // ── Summary card ──────────────────────────────────────────
 
-  Widget _summaryCard(BuildContext context, int cals, double carbs,
-      double protein, double fat, int count, String lang) {
-    final c      = context.colors;
-    final isRtl  = lang == 'ar';
+  Widget _summaryCard(
+    BuildContext context,
+    int cals,
+    double carbs,
+    double protein,
+    double fat,
+    int count,
+    String lang,
+  ) {
+    final c = context.colors;
+    final isRtl = lang == 'ar';
     final countLabel = count == 1
         ? '1 ${AppStrings.get('item', lang)}'
         : '$count ${AppStrings.get('items', lang)}';
@@ -323,20 +346,25 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.bar_chart_rounded,
-                  color: AppColors.primary, size: 18),
+              const Icon(
+                Icons.bar_chart_rounded,
+                color: AppColors.primary,
+                size: 18,
+              ),
               const SizedBox(width: 6),
               Text(
                 AppStrings.get('daily_summary', lang),
                 style: GoogleFonts.arimo(
-                    color: c.primaryText,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600),
+                  color: c.primaryText,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const Spacer(),
-              Text(countLabel,
-                  style: GoogleFonts.arimo(
-                      color: c.subtleText, fontSize: 12)),
+              Text(
+                countLabel,
+                style: GoogleFonts.arimo(color: c.subtleText, fontSize: 12),
+              ),
             ],
           ),
 
@@ -349,17 +377,17 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                 Text(
                   '$cals',
                   style: GoogleFonts.arimo(
-                      color: c.primaryText,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold),
+                    color: c.primaryText,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(width: 4),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
                     AppStrings.get('kcal', lang),
-                    style: GoogleFonts.arimo(
-                        color: c.hintText, fontSize: 14),
+                    style: GoogleFonts.arimo(color: c.hintText, fontSize: 14),
                   ),
                 ),
               ],
@@ -373,18 +401,24 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _macroChip(context,
-                    AppStrings.get('macro_carbs', lang),
-                    '${carbs.toStringAsFixed(1)}g',
-                    const Color(0xFF3B82F6)),
-                _macroChip(context,
-                    AppStrings.get('macro_protein', lang),
-                    '${protein.toStringAsFixed(1)}g',
-                    AppColors.primary),
-                _macroChip(context,
-                    AppStrings.get('macro_fat', lang),
-                    '${fat.toStringAsFixed(1)}g',
-                    const Color(0xFFF59E0B)),
+                _macroChip(
+                  context,
+                  AppStrings.get('macro_carbs', lang),
+                  '${carbs.toStringAsFixed(1)}g',
+                  const Color(0xFF3B82F6),
+                ),
+                _macroChip(
+                  context,
+                  AppStrings.get('macro_protein', lang),
+                  '${protein.toStringAsFixed(1)}g',
+                  AppColors.primary,
+                ),
+                _macroChip(
+                  context,
+                  AppStrings.get('macro_fat', lang),
+                  '${fat.toStringAsFixed(1)}g',
+                  const Color(0xFFF59E0B),
+                ),
               ],
             ),
           ],
@@ -402,8 +436,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
         children: [
           Flexible(
             flex: (carbs / total * 100).round(),
-            child: Container(
-                height: 8, color: const Color(0xFF3B82F6)),
+            child: Container(height: 8, color: const Color(0xFF3B82F6)),
           ),
           Flexible(
             flex: (protein / total * 100).round(),
@@ -411,36 +444,47 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
           ),
           Flexible(
             flex: (fat / total * 100).round(),
-            child: Container(
-                height: 8, color: const Color(0xFFF59E0B)),
+            child: Container(height: 8, color: const Color(0xFFF59E0B)),
           ),
         ],
       ),
     );
   }
 
-  Widget _macroChip(BuildContext context, String label,
-      String value, Color color) {
+  Widget _macroChip(
+    BuildContext context,
+    String label,
+    String value,
+    Color color,
+  ) {
     final c = context.colors;
     return Column(
       children: [
-        Text(value,
-            style: GoogleFonts.arimo(
-                color: color,
-                fontSize: 14,
-                fontWeight: FontWeight.w600)),
-        Text(label,
-            style: GoogleFonts.arimo(
-                color: c.subtleText, fontSize: 11)),
+        Text(
+          value,
+          style: GoogleFonts.arimo(
+            color: color,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        Text(
+          label,
+          style: GoogleFonts.arimo(color: c.subtleText, fontSize: 11),
+        ),
       ],
     );
   }
 
   // ── Meal group ────────────────────────────────────────────
 
-  Widget _mealGroup(BuildContext context, String meal,
-      List<FoodEntry> entries, String lang) {
-    final c       = context.colors;
+  Widget _mealGroup(
+    BuildContext context,
+    String meal,
+    List<FoodEntry> entries,
+    String lang,
+  ) {
+    final c = context.colors;
     final mealCals = entries
         .where((e) => e.calories != null)
         .fold(0, (sum, e) => sum + e.calories!);
@@ -455,16 +499,16 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
               Text(
                 _localMeal(meal, lang),
                 style: GoogleFonts.arimo(
-                    color: c.primaryText,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600),
+                  color: c.primaryText,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(width: 8),
               if (mealCals > 0)
                 Text(
                   '$mealCals ${AppStrings.get('kcal', lang)}',
-                  style: GoogleFonts.arimo(
-                      color: c.subtleText, fontSize: 12),
+                  style: GoogleFonts.arimo(color: c.subtleText, fontSize: 12),
                 ),
             ],
           ),
@@ -477,8 +521,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
 
   // ── Food tile ─────────────────────────────────────────────
 
-  Widget _foodTile(
-      BuildContext context, FoodEntry e, String lang) {
+  Widget _foodTile(BuildContext context, FoodEntry e, String lang) {
     final c = context.colors;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -495,28 +538,38 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: e.hasImage && File(e.imagePath!).existsSync()
-                  ? Image.file(File(e.imagePath!),
-                  width: 56, height: 56,
-                  fit: BoxFit.cover, cacheWidth: 112)
+                  ? Image.file(
+                      File(e.imagePath!),
+                      width: 56,
+                      height: 56,
+                      fit: BoxFit.cover,
+                      cacheWidth: 112,
+                    )
                   : Container(
-                width: 56,
-                height: 56,
-                color: c.sectionBg,
-                child: Icon(Icons.restaurant_outlined,
-                    color: c.ghostText, size: 24),
-              ),
+                      width: 56,
+                      height: 56,
+                      color: c.sectionBg,
+                      child: Icon(
+                        Icons.restaurant_outlined,
+                        color: c.ghostText,
+                        size: 24,
+                      ),
+                    ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(e.name,
-                      style: GoogleFonts.arimo(
-                          color: c.primaryText,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600),
-                      overflow: TextOverflow.ellipsis),
+                  Text(
+                    e.name,
+                    style: GoogleFonts.arimo(
+                      color: c.primaryText,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   const SizedBox(height: 2),
                   if (e.hasMacros)
                     Text(
@@ -527,20 +580,18 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                           'C ${e.carbs!.toStringAsFixed(0)}g',
                         if (e.protein != null)
                           'P ${e.protein!.toStringAsFixed(0)}g',
-                        if (e.fat != null)
-                          'F ${e.fat!.toStringAsFixed(0)}g',
+                        if (e.fat != null) 'F ${e.fat!.toStringAsFixed(0)}g',
                       ].join('  ·  '),
-                      style: GoogleFonts.arimo(
-                          color: c.hintText, fontSize: 11),
+                      style: GoogleFonts.arimo(color: c.hintText, fontSize: 11),
                     ),
-                  Text(_formatTime(e.dateTime),
-                      style: GoogleFonts.arimo(
-                          color: c.subtleText, fontSize: 11)),
+                  Text(
+                    _formatTime(e.dateTime),
+                    style: GoogleFonts.arimo(color: c.subtleText, fontSize: 11),
+                  ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right,
-                color: c.ghostText, size: 18),
+            Icon(Icons.chevron_right, color: c.ghostText, size: 18),
           ],
         ),
       ),
@@ -549,8 +600,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
 
   // ── Entry detail sheet ────────────────────────────────────
 
-  void _showEntryDetails(
-      BuildContext context, FoodEntry e, String lang) {
+  void _showEntryDetails(BuildContext context, FoodEntry e, String lang) {
     final c = context.colors;
     showModalBottomSheet(
       context: context,
@@ -563,8 +613,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
         builder: (_, ctrl) => Container(
           decoration: BoxDecoration(
             color: c.bottomSheet,
-            borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(22)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
           ),
           child: ListView(
             controller: ctrl,
@@ -575,8 +624,9 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                      color: c.subtleText,
-                      borderRadius: BorderRadius.circular(2)),
+                    color: c.subtleText,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -584,11 +634,13 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
               if (e.hasImage && File(e.imagePath!).existsSync()) ...[
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.file(File(e.imagePath!),
-                      width: double.infinity,
-                      height: 200,
-                      fit: BoxFit.cover,
-                      cacheWidth: 512),
+                  child: Image.file(
+                    File(e.imagePath!),
+                    width: double.infinity,
+                    height: 200,
+                    fit: BoxFit.cover,
+                    cacheWidth: 512,
+                  ),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -597,30 +649,36 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Text(e.name,
-                        style: GoogleFonts.arimo(
-                            color: c.primaryText,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold)),
+                    child: Text(
+                      e.name,
+                      style: GoogleFonts.arimo(
+                        color: c.primaryText,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                   if (e.mealType != null) ...[
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                            color:
-                            AppColors.primary.withOpacity(0.3)),
+                          color: AppColors.primary.withOpacity(0.3),
+                        ),
                       ),
                       child: Text(
                         _localMeal(e.mealType!, lang),
                         style: GoogleFonts.arimo(
-                            color: AppColors.primary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500),
+                          color: AppColors.primary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],
@@ -634,75 +692,86 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                   children: [
                     if (e.calories != null)
                       _detailChip(
-                          context,
-                          AppStrings.get('macro_calories', lang),
-                          '${e.calories} ${AppStrings.get('kcal', lang)}',
-                          const Color(0xFFF59E0B)),
+                        context,
+                        AppStrings.get('macro_calories', lang),
+                        '${e.calories} ${AppStrings.get('kcal', lang)}',
+                        const Color(0xFFF59E0B),
+                      ),
                   ],
                 ),
                 if (e.calories != null) const SizedBox(height: 8),
-                if (e.carbs != null ||
-                    e.protein != null ||
-                    e.fat != null)
+                if (e.carbs != null || e.protein != null || e.fat != null)
                   Row(
                     children: [
                       if (e.carbs != null) ...[
                         Expanded(
                           child: _detailChip(
-                              context,
-                              AppStrings.get('macro_carbs', lang),
-                              '${e.carbs!.toStringAsFixed(1)}g',
-                              const Color(0xFF3B82F6)),
+                            context,
+                            AppStrings.get('macro_carbs', lang),
+                            '${e.carbs!.toStringAsFixed(1)}g',
+                            const Color(0xFF3B82F6),
+                          ),
                         ),
                         const SizedBox(width: 8),
                       ],
                       if (e.protein != null) ...[
                         Expanded(
                           child: _detailChip(
-                              context,
-                              AppStrings.get('macro_protein', lang),
-                              '${e.protein!.toStringAsFixed(1)}g',
-                              AppColors.primary),
+                            context,
+                            AppStrings.get('macro_protein', lang),
+                            '${e.protein!.toStringAsFixed(1)}g',
+                            AppColors.primary,
+                          ),
                         ),
                         const SizedBox(width: 8),
                       ],
                       if (e.fat != null)
                         Expanded(
                           child: _detailChip(
-                              context,
-                              AppStrings.get('macro_fat', lang),
-                              '${e.fat!.toStringAsFixed(1)}g',
-                              const Color(0xFFF59E0B)),
+                            context,
+                            AppStrings.get('macro_fat', lang),
+                            '${e.fat!.toStringAsFixed(1)}g',
+                            const Color(0xFFF59E0B),
+                          ),
                         ),
                     ],
                   ),
                 const SizedBox(height: 16),
               ],
 
-              Row(children: [
-                Icon(Icons.calendar_today_outlined,
-                    color: c.subtleText, size: 16),
-                const SizedBox(width: 8),
-                Text(
-                  '${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}',
-                  style: GoogleFonts.arimo(
-                      color: c.secondaryText, fontSize: 14),
-                ),
-              ]),
+              Row(
+                children: [
+                  Icon(
+                    Icons.calendar_today_outlined,
+                    color: c.subtleText,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}',
+                    style: GoogleFonts.arimo(
+                      color: c.secondaryText,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
 
               if (e.notes != null && e.notes!.trim().isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.notes_outlined,
-                        color: c.subtleText, size: 16),
+                    Icon(Icons.notes_outlined, color: c.subtleText, size: 16),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(e.notes!,
-                          style: GoogleFonts.arimo(
-                              color: c.secondaryText,
-                              fontSize: 14)),
+                      child: Text(
+                        e.notes!,
+                        style: GoogleFonts.arimo(
+                          color: c.secondaryText,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -720,22 +789,25 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                   decoration: BoxDecoration(
                     color: Colors.red.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border:
-                    Border.all(color: Colors.red.withOpacity(0.3)),
+                    border: Border.all(color: Colors.red.withOpacity(0.3)),
                   ),
                   child: Center(
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.delete_outline,
-                            color: Colors.redAccent, size: 18),
+                        const Icon(
+                          Icons.delete_outline,
+                          color: Colors.redAccent,
+                          size: 18,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           AppStrings.get('delete_entry', lang),
                           style: GoogleFonts.arimo(
-                              color: Colors.redAccent,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500),
+                            color: Colors.redAccent,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),
@@ -749,12 +821,15 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
     );
   }
 
-  Widget _detailChip(BuildContext context, String label,
-      String value, Color color) {
+  Widget _detailChip(
+    BuildContext context,
+    String label,
+    String value,
+    Color color,
+  ) {
     final c = context.colors;
     return Container(
-      padding:
-      const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       decoration: BoxDecoration(
         color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(12),
@@ -763,15 +838,19 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style:
-              GoogleFonts.arimo(color: c.hintText, fontSize: 11)),
+          Text(
+            label,
+            style: GoogleFonts.arimo(color: c.hintText, fontSize: 11),
+          ),
           const SizedBox(height: 2),
-          Text(value,
-              style: GoogleFonts.arimo(
-                  color: color,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600)),
+          Text(
+            value,
+            style: GoogleFonts.arimo(
+              color: color,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -788,20 +867,18 @@ class AllFoodEntriesScreen extends StatefulWidget {
   const AllFoodEntriesScreen({super.key, required this.entries});
 
   @override
-  State<AllFoodEntriesScreen> createState() =>
-      _AllFoodEntriesScreenState();
+  State<AllFoodEntriesScreen> createState() => _AllFoodEntriesScreenState();
 }
 
 class _AllFoodEntriesScreenState extends State<AllFoodEntriesScreen> {
   DateTime? _filterStart;
   DateTime? _filterEnd;
-  String?   _filterMeal; // always stored as the English key
+  String? _filterMeal; // always stored as the English key
 
   String _formatTime(DateTime dt) =>
       '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
 
-  String _formatDate(DateTime dt) =>
-      '${dt.day}/${dt.month}/${dt.year}';
+  String _formatDate(DateTime dt) => '${dt.day}/${dt.month}/${dt.year}';
 
   String _formatShort(DateTime dt) {
     final m = dt.month.toString().padLeft(2, '0');
@@ -816,12 +893,19 @@ class _AllFoodEntriesScreenState extends State<AllFoodEntriesScreen> {
       ..sort((a, b) => b.dateTime.compareTo(a.dateTime));
 
     if (_hasFilter) {
-      final end = DateTime(_filterEnd!.year, _filterEnd!.month,
-          _filterEnd!.day, 23, 59, 59);
+      final end = DateTime(
+        _filterEnd!.year,
+        _filterEnd!.month,
+        _filterEnd!.day,
+        23,
+        59,
+        59,
+      );
       sorted = sorted
-          .where((e) =>
-      !e.dateTime.isBefore(_filterStart!) &&
-          !e.dateTime.isAfter(end))
+          .where(
+            (e) =>
+                !e.dateTime.isBefore(_filterStart!) && !e.dateTime.isAfter(end),
+          )
           .toList();
     }
 
@@ -849,11 +933,10 @@ class _AllFoodEntriesScreenState extends State<AllFoodEntriesScreen> {
         child: DateRangePickerWidget(
           initialStart: _filterStart,
           initialEnd: _filterEnd,
-          onApply: (s, e) =>
-              setState(() {
-                _filterStart = s;
-                _filterEnd   = e;
-              }),
+          onApply: (s, e) => setState(() {
+            _filterStart = s;
+            _filterEnd = e;
+          }),
         ),
       ),
     );
@@ -862,19 +945,19 @@ class _AllFoodEntriesScreenState extends State<AllFoodEntriesScreen> {
   String _localMeal(String meal, String lang) {
     const keyMap = {
       'Breakfast': 'meal_breakfast',
-      'Lunch':     'meal_lunch',
-      'Dinner':    'meal_dinner',
-      'Snack':     'meal_snack',
-      'Other':     'meal_other',
+      'Lunch': 'meal_lunch',
+      'Dinner': 'meal_dinner',
+      'Snack': 'meal_snack',
+      'Other': 'meal_other',
     };
     return AppStrings.get(keyMap[meal] ?? 'meal_other', lang);
   }
 
   @override
   Widget build(BuildContext context) {
-    final lang    = context.watch<LocaleCubit>().state;
-    final c       = context.colors;
-    final isRtl   = lang == 'ar';
+    final lang = context.watch<LocaleCubit>().state;
+    final c = context.colors;
+    final isRtl = lang == 'ar';
     final entries = _filtered;
 
     // English keys used for filtering logic; localised only for display
@@ -887,7 +970,6 @@ class _AllFoodEntriesScreenState extends State<AllFoodEntriesScreen> {
         body: SafeArea(
           child: Column(
             children: [
-
               // ── Top bar ────────────────────────────────
               Container(
                 height: 46,
@@ -906,15 +988,15 @@ class _AllFoodEntriesScreenState extends State<AllFoodEntriesScreen> {
                     Text(
                       AppStrings.get('all_entries_food', lang),
                       style: GoogleFonts.arimo(
-                          color: c.primaryText,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500),
+                        color: c.primaryText,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     const Spacer(),
                     Text(
                       '${entries.length} ${entries.length == 1 ? AppStrings.get('item', lang) : AppStrings.get('items', lang)}',
-                      style: GoogleFonts.arimo(
-                          color: c.hintText, fontSize: 13),
+                      style: GoogleFonts.arimo(color: c.hintText, fontSize: 13),
                     ),
                   ],
                 ),
@@ -925,7 +1007,9 @@ class _AllFoodEntriesScreenState extends State<AllFoodEntriesScreen> {
               // ── Date filter pill ────────────────────────
               Padding(
                 padding: EdgeInsets.only(
-                    left: isRtl ? 0 : 16, right: isRtl ? 16 : 0),
+                  left: isRtl ? 0 : 16,
+                  right: isRtl ? 16 : 0,
+                ),
                 child: Align(
                   alignment: isRtl
                       ? Alignment.centerRight
@@ -933,62 +1017,69 @@ class _AllFoodEntriesScreenState extends State<AllFoodEntriesScreen> {
                   child: GestureDetector(
                     onTap: _hasFilter
                         ? () => setState(() {
-                      _filterStart = null;
-                      _filterEnd   = null;
-                    })
+                            _filterStart = null;
+                            _filterEnd = null;
+                          })
                         : _openPicker,
                     child: _hasFilter
                         ? Container(
-                      height: 32,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14),
-                      decoration: ShapeDecoration(
-                        color: c.reminderTileBg,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '${_formatShort(_filterStart!)} – ${_formatShort(_filterEnd!)}',
-                            style: GoogleFonts.arimo(
-                                color: c.primaryText,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500),
-                          ),
-                          const SizedBox(width: 6),
-                          Icon(Icons.close,
-                              color: c.primaryText, size: 14),
-                        ],
-                      ),
-                    )
+                            height: 32,
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            decoration: ShapeDecoration(
+                              color: c.reminderTileBg,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  '${_formatShort(_filterStart!)} – ${_formatShort(_filterEnd!)}',
+                                  style: GoogleFonts.arimo(
+                                    color: c.primaryText,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Icon(
+                                  Icons.close,
+                                  color: c.primaryText,
+                                  size: 14,
+                                ),
+                              ],
+                            ),
+                          )
                         : Container(
-                      width: 118,
-                      height: 32,
-                      decoration: ShapeDecoration(
-                        color: c.surface,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 12),
-                          Image.asset('assets/icons/calendar.png',
-                              height: 20, width: 20),
-                          const SizedBox(width: 10),
-                          Text(
-                            AppStrings.get('all_time', lang),
-                            style: GoogleFonts.arimo(
-                                color: c.primaryText,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500),
+                            width: 118,
+                            height: 32,
+                            decoration: ShapeDecoration(
+                              color: c.surface,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const SizedBox(width: 12),
+                                Image.asset(
+                                  'assets/icons/calendar.png',
+                                  height: 20,
+                                  width: 20,
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  AppStrings.get('all_time', lang),
+                                  style: GoogleFonts.arimo(
+                                    color: c.primaryText,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
-                      ),
-                    ),
                   ),
                 ),
               ),
@@ -1006,15 +1097,18 @@ class _AllFoodEntriesScreenState extends State<AllFoodEntriesScreen> {
                       context,
                       AppStrings.get('all_filter', lang),
                       _filterMeal == null,
-                          () => setState(() => _filterMeal = null),
+                      () => setState(() => _filterMeal = null),
                     ),
-                    ...meals.map((m) => _mealPill(
-                      context,
-                      _localMeal(m, lang),
-                      _filterMeal == m,
-                          () => setState(() =>
-                      _filterMeal = _filterMeal == m ? null : m),
-                    )),
+                    ...meals.map(
+                      (m) => _mealPill(
+                        context,
+                        _localMeal(m, lang),
+                        _filterMeal == m,
+                        () => setState(
+                          () => _filterMeal = _filterMeal == m ? null : m,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1025,102 +1119,103 @@ class _AllFoodEntriesScreenState extends State<AllFoodEntriesScreen> {
               Expanded(
                 child: entries.isEmpty
                     ? Center(
-                  child: Text(
-                    AppStrings.get('no_entries_found', lang),
-                    style: GoogleFonts.arimo(color: c.hintText),
-                  ),
-                )
-                    : ListView.builder(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: entries.length,
-                  itemBuilder: (context, index) {
-                    final e = entries[index];
-                    return GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () =>
-                          _showEntryDetails(context, e, lang),
-                      child: Container(
-                        margin:
-                        const EdgeInsets.only(bottom: 10),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: c.surface,
-                          borderRadius:
-                          BorderRadius.circular(12),
+                        child: Text(
+                          AppStrings.get('no_entries_found', lang),
+                          style: GoogleFonts.arimo(color: c.hintText),
                         ),
-                        child: Row(
-                          children: [
-                            ClipRRect(
-                              borderRadius:
-                              BorderRadius.circular(8),
-                              child: e.hasImage &&
-                                  File(e.imagePath!)
-                                      .existsSync()
-                                  ? Image.file(
-                                  File(e.imagePath!),
-                                  width: 50,
-                                  height: 50,
-                                  fit: BoxFit.cover,
-                                  cacheWidth: 100)
-                                  : Container(
-                                width: 50,
-                                height: 50,
-                                color: c.sectionBg,
-                                child: Icon(
-                                    Icons
-                                        .restaurant_outlined,
-                                    color: c.ghostText,
-                                    size: 22),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: entries.length,
+                        itemBuilder: (context, index) {
+                          final e = entries[index];
+                          return GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => _showEntryDetails(context, e, lang),
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: c.surface,
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment:
-                                CrossAxisAlignment.start,
+                              child: Row(
                                 children: [
-                                  Text(e.name,
-                                      style: GoogleFonts.arimo(
-                                          color: c.primaryText,
-                                          fontSize: 14,
-                                          fontWeight:
-                                          FontWeight.w600),
-                                      overflow:
-                                      TextOverflow.ellipsis),
-                                  if (e.mealType != null)
-                                    Text(
-                                      _localMeal(
-                                          e.mealType!, lang),
-                                      style: GoogleFonts.arimo(
-                                          color:
-                                          AppColors.primary,
-                                          fontSize: 11),
-                                    ),
-                                  Text(
-                                    '${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}',
-                                    style: GoogleFonts.arimo(
-                                        color: c.subtleText,
-                                        fontSize: 11),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child:
+                                        e.hasImage &&
+                                            File(e.imagePath!).existsSync()
+                                        ? Image.file(
+                                            File(e.imagePath!),
+                                            width: 50,
+                                            height: 50,
+                                            fit: BoxFit.cover,
+                                            cacheWidth: 100,
+                                          )
+                                        : Container(
+                                            width: 50,
+                                            height: 50,
+                                            color: c.sectionBg,
+                                            child: Icon(
+                                              Icons.restaurant_outlined,
+                                              color: c.ghostText,
+                                              size: 22,
+                                            ),
+                                          ),
                                   ),
-                                  if (e.calories != null)
-                                    Text(
-                                      '${e.calories} ${AppStrings.get('kcal', lang)}',
-                                      style: GoogleFonts.arimo(
-                                          color: c.hintText,
-                                          fontSize: 11),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          e.name,
+                                          style: GoogleFonts.arimo(
+                                            color: c.primaryText,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        if (e.mealType != null)
+                                          Text(
+                                            _localMeal(e.mealType!, lang),
+                                            style: GoogleFonts.arimo(
+                                              color: AppColors.primary,
+                                              fontSize: 11,
+                                            ),
+                                          ),
+                                        Text(
+                                          '${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}',
+                                          style: GoogleFonts.arimo(
+                                            color: c.subtleText,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                        if (e.calories != null)
+                                          Text(
+                                            '${e.calories} ${AppStrings.get('kcal', lang)}',
+                                            style: GoogleFonts.arimo(
+                                              color: c.hintText,
+                                              fontSize: 11,
+                                            ),
+                                          ),
+                                      ],
                                     ),
+                                  ),
+                                  Icon(
+                                    Icons.chevron_right,
+                                    color: c.ghostText,
+                                    size: 18,
+                                  ),
                                 ],
                               ),
                             ),
-                            Icon(Icons.chevron_right,
-                                color: c.ghostText, size: 18),
-                          ],
-                        ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
             ],
           ),
@@ -1131,36 +1226,40 @@ class _AllFoodEntriesScreenState extends State<AllFoodEntriesScreen> {
 
   // ── Meal filter pill ────────────────────────────────────
 
-  Widget _mealPill(BuildContext context, String label,
-      bool active, VoidCallback onTap) {
+  Widget _mealPill(
+    BuildContext context,
+    String label,
+    bool active,
+    VoidCallback onTap,
+  ) {
     final c = context.colors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(right: 8),
-        padding:
-        const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: active
-              ? AppColors.primary.withOpacity(0.15)
-              : c.surface,
+          color: active ? AppColors.primary.withOpacity(0.15) : c.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: active ? AppColors.primary : Colors.transparent),
+            color: active ? AppColors.primary : Colors.transparent,
+          ),
         ),
-        child: Text(label,
-            style: GoogleFonts.arimo(
-                color: active ? AppColors.primary : c.hintText,
-                fontSize: 12,
-                fontWeight: FontWeight.w500)),
+        child: Text(
+          label,
+          style: GoogleFonts.arimo(
+            color: active ? AppColors.primary : c.hintText,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ),
     );
   }
 
   // ── Entry detail sheet ──────────────────────────────────
 
-  void _showEntryDetails(
-      BuildContext context, FoodEntry e, String lang) {
+  void _showEntryDetails(BuildContext context, FoodEntry e, String lang) {
     final c = context.colors;
     showModalBottomSheet(
       context: context,
@@ -1173,8 +1272,7 @@ class _AllFoodEntriesScreenState extends State<AllFoodEntriesScreen> {
         builder: (_, ctrl) => Container(
           decoration: BoxDecoration(
             color: c.bottomSheet,
-            borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(22)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
           ),
           child: ListView(
             controller: ctrl,
@@ -1185,8 +1283,9 @@ class _AllFoodEntriesScreenState extends State<AllFoodEntriesScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                      color: c.subtleText,
-                      borderRadius: BorderRadius.circular(2)),
+                    color: c.subtleText,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -1194,26 +1293,33 @@ class _AllFoodEntriesScreenState extends State<AllFoodEntriesScreen> {
               if (e.hasImage && File(e.imagePath!).existsSync()) ...[
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.file(File(e.imagePath!),
-                      width: double.infinity,
-                      height: 200,
-                      fit: BoxFit.cover,
-                      cacheWidth: 512),
+                  child: Image.file(
+                    File(e.imagePath!),
+                    width: double.infinity,
+                    height: 200,
+                    fit: BoxFit.cover,
+                    cacheWidth: 512,
+                  ),
                 ),
                 const SizedBox(height: 16),
               ],
 
-              Text(e.name,
-                  style: GoogleFonts.arimo(
-                      color: c.primaryText,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold)),
+              Text(
+                e.name,
+                style: GoogleFonts.arimo(
+                  color: c.primaryText,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 6),
               if (e.mealType != null)
                 Text(
                   _localMeal(e.mealType!, lang),
                   style: GoogleFonts.arimo(
-                      color: AppColors.primary, fontSize: 13),
+                    color: AppColors.primary,
+                    fontSize: 13,
+                  ),
                 ),
 
               const SizedBox(height: 16),
@@ -1222,9 +1328,10 @@ class _AllFoodEntriesScreenState extends State<AllFoodEntriesScreen> {
                 Text(
                   '${e.calories} ${AppStrings.get('kcal', lang)}',
                   style: GoogleFonts.arimo(
-                      color: c.primaryText,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold),
+                    color: c.primaryText,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 12),
               ],
@@ -1234,57 +1341,73 @@ class _AllFoodEntriesScreenState extends State<AllFoodEntriesScreen> {
                   children: [
                     if (e.carbs != null) ...[
                       Expanded(
-                          child: _chip(
-                              context,
-                              AppStrings.get('macro_carbs', lang),
-                              '${e.carbs!.toStringAsFixed(1)}g',
-                              const Color(0xFF3B82F6))),
+                        child: _chip(
+                          context,
+                          AppStrings.get('macro_carbs', lang),
+                          '${e.carbs!.toStringAsFixed(1)}g',
+                          const Color(0xFF3B82F6),
+                        ),
+                      ),
                       const SizedBox(width: 8),
                     ],
                     if (e.protein != null) ...[
                       Expanded(
-                          child: _chip(
-                              context,
-                              AppStrings.get('macro_protein', lang),
-                              '${e.protein!.toStringAsFixed(1)}g',
-                              AppColors.primary)),
+                        child: _chip(
+                          context,
+                          AppStrings.get('macro_protein', lang),
+                          '${e.protein!.toStringAsFixed(1)}g',
+                          AppColors.primary,
+                        ),
+                      ),
                       const SizedBox(width: 8),
                     ],
                     if (e.fat != null)
                       Expanded(
-                          child: _chip(
-                              context,
-                              AppStrings.get('macro_fat', lang),
-                              '${e.fat!.toStringAsFixed(1)}g',
-                              const Color(0xFFF59E0B))),
+                        child: _chip(
+                          context,
+                          AppStrings.get('macro_fat', lang),
+                          '${e.fat!.toStringAsFixed(1)}g',
+                          const Color(0xFFF59E0B),
+                        ),
+                      ),
                   ],
                 ),
 
               const SizedBox(height: 16),
 
-              Row(children: [
-                Icon(Icons.calendar_today_outlined,
-                    color: c.subtleText, size: 16),
-                const SizedBox(width: 8),
-                Text(
-                  '${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}',
-                  style: GoogleFonts.arimo(
-                      color: c.secondaryText, fontSize: 14),
-                ),
-              ]),
+              Row(
+                children: [
+                  Icon(
+                    Icons.calendar_today_outlined,
+                    color: c.subtleText,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}',
+                    style: GoogleFonts.arimo(
+                      color: c.secondaryText,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
 
               if (e.notes != null && e.notes!.trim().isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.notes_outlined,
-                        color: c.subtleText, size: 16),
+                    Icon(Icons.notes_outlined, color: c.subtleText, size: 16),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(e.notes!,
-                          style: GoogleFonts.arimo(
-                              color: c.secondaryText, fontSize: 14)),
+                      child: Text(
+                        e.notes!,
+                        style: GoogleFonts.arimo(
+                          color: c.secondaryText,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -1302,22 +1425,25 @@ class _AllFoodEntriesScreenState extends State<AllFoodEntriesScreen> {
                   decoration: BoxDecoration(
                     color: Colors.red.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border:
-                    Border.all(color: Colors.red.withOpacity(0.3)),
+                    border: Border.all(color: Colors.red.withOpacity(0.3)),
                   ),
                   child: Center(
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.delete_outline,
-                            color: Colors.redAccent, size: 18),
+                        const Icon(
+                          Icons.delete_outline,
+                          color: Colors.redAccent,
+                          size: 18,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           AppStrings.get('delete_entry', lang),
                           style: GoogleFonts.arimo(
-                              color: Colors.redAccent,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500),
+                            color: Colors.redAccent,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),
@@ -1331,12 +1457,10 @@ class _AllFoodEntriesScreenState extends State<AllFoodEntriesScreen> {
     );
   }
 
-  Widget _chip(BuildContext context, String label,
-      String value, Color color) {
+  Widget _chip(BuildContext context, String label, String value, Color color) {
     final c = context.colors;
     return Container(
-      padding:
-      const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       decoration: BoxDecoration(
         color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(12),
@@ -1345,14 +1469,18 @@ class _AllFoodEntriesScreenState extends State<AllFoodEntriesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style:
-              GoogleFonts.arimo(color: c.hintText, fontSize: 11)),
-          Text(value,
-              style: GoogleFonts.arimo(
-                  color: color,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: GoogleFonts.arimo(color: c.hintText, fontSize: 11),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.arimo(
+              color: color,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );

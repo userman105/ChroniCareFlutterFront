@@ -49,8 +49,18 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
 
   String _monthName(int month) {
     const months = [
-      "Jan","Feb","Mar","Apr","May","Jun",
-      "Jul","Aug","Sep","Oct","Nov","Dec"
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
     return months[month - 1];
   }
@@ -68,7 +78,6 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
       body: SafeArea(
         child: Column(
           children: [
-
             /// HEADER
             Container(
               height: 46,
@@ -76,13 +85,8 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Row(
                 children: [
-
                   IconButton(
-                    icon: Icon(
-                      Icons.arrow_back_ios_new,
-                      color: text,
-                      size: 20,
-                    ),
+                    icon: Icon(Icons.arrow_back_ios_new, color: text, size: 20),
                     onPressed: () => Navigator.pop(context),
                   ),
 
@@ -106,34 +110,36 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     const SizedBox(height: 25),
 
                     Text(
                       "Date/Time:",
-                      style: GoogleFonts.arimo(
-                        color: text,
-                        fontSize: 16,
-                      ),
+                      style: GoogleFonts.arimo(color: text, fontSize: 16),
                     ),
 
                     const SizedBox(height: 14),
 
                     Row(
                       children: [
-
                         /// DATE CHIP
                         GestureDetector(
                           onTap: _pickDate,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
                               color: card,
                               borderRadius: BorderRadius.circular(30),
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.calendar_month, size: 14, color: hint),
+                                Icon(
+                                  Icons.calendar_month,
+                                  size: 14,
+                                  color: hint,
+                                ),
                                 const SizedBox(width: 6),
                                 Text(
                                   currentDate,
@@ -153,7 +159,10 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
                         GestureDetector(
                           onTap: _pickTime,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
                               color: card,
                               borderRadius: BorderRadius.circular(30),
@@ -184,10 +193,7 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
 
                     Text(
                       "Notes",
-                      style: GoogleFonts.arimo(
-                        color: text,
-                        fontSize: 14,
-                      ),
+                      style: GoogleFonts.arimo(color: text, fontSize: 14),
                     ),
 
                     const SizedBox(height: 8),
@@ -227,7 +233,10 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
                               const SizedBox(width: 6),
                               Text(
                                 "Add reminder",
-                                style: GoogleFonts.arimo(color: text, fontSize: 14),
+                                style: GoogleFonts.arimo(
+                                  color: text,
+                                  fontSize: 14,
+                                ),
                               ),
                             ],
                           ),
@@ -319,9 +328,7 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
     final now = DateTime.now();
 
     final isToday =
-        date.year == now.year &&
-            date.month == now.month &&
-            date.day == now.day;
+        date.year == now.year && date.month == now.month && date.day == now.day;
 
     setState(() {
       currentDate = isToday
@@ -335,10 +342,7 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
     final period = time.period == DayPeriod.pm ? "pm" : "am";
 
     setState(() {
-      currentTime =
-      "$hour:${time.minute.toString().padLeft(2, '0')}$period";
+      currentTime = "$hour:${time.minute.toString().padLeft(2, '0')}$period";
     });
   }
 }
-
-

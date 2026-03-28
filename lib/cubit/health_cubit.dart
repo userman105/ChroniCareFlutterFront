@@ -16,7 +16,6 @@ import '../widgets/alarm_screen.dart';
 import '../models/glucose_entry.dart';
 import '../widgets/components.dart';
 
-
 class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   static const _bpKey = 'blood_pressure_entries';
   static const _weightKey = 'weight_entries';
@@ -28,8 +27,6 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   static const _labKey = 'lab_test_entries';
   static const _appointmentsKey = 'appointments';
   static const _tilesKey = 'health_tiles';
-
-
 
   HealthCubit() : super([]) {
     tiles = List.from(allTiles);
@@ -46,9 +43,7 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
 
   DateTime selectedDate = DateTime.now();
 
-
   /// BLOOD PRESSURE
-
 
   Future<void> _loadEntries() async {
     final prefs = await SharedPreferences.getInstance();
@@ -71,9 +66,7 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     await _saveEntries(updated);
   }
 
-
   /// WEIGHT
-
 
   List<WeightEntry> _weightEntries = [];
 
@@ -98,21 +91,17 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     emit(List.from(state));
   }
 
-
   /// GLUCOSE
-
 
   List<GlucoseEntry> _glucoseEntries = [];
 
   List<GlucoseEntry> getGlucoseEntries() => _glucoseEntries;
 
-
   Future<void> _loadGlucoseEntries() async {
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList(_glucoseKey) ?? [];
 
-    _glucoseEntries =
-        list.map((e) => GlucoseEntry.fromJson(e)).toList();
+    _glucoseEntries = list.map((e) => GlucoseEntry.fromJson(e)).toList();
   }
 
   Future<void> _saveGlucoseEntries() async {
@@ -184,6 +173,7 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
 
     emit(List.from(state)); // triggers UI rebuild
   }
+
   Future<void> deleteSymptom(SymptomEntry entry) async {
     _symptomEntries.remove(entry);
 
@@ -192,17 +182,20 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     emit(List.from(state));
   }
 
-
   /// FOOD LOG
 
   List<FoodEntry> _foodEntries = [];
   List<FoodEntry> getFoodEntries() => _foodEntries;
 
   Map<String, List<FoodEntry>> getFoodEntriesByMeal(DateTime date) {
-    final dayEntries = _foodEntries.where((e) =>
-    e.dateTime.year == date.year &&
-        e.dateTime.month == date.month &&
-        e.dateTime.day == date.day).toList();
+    final dayEntries = _foodEntries
+        .where(
+          (e) =>
+              e.dateTime.year == date.year &&
+              e.dateTime.month == date.month &&
+              e.dateTime.day == date.day,
+        )
+        .toList();
 
     final Map<String, List<FoodEntry>> grouped = {};
     for (final e in dayEntries) {
@@ -255,8 +248,6 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
 
   /// REMINDERS
 
-
-
   final Map<String, String> _reminderLogStatus = {};
   Map<String, String> get reminderLogStatus => _reminderLogStatus;
 
@@ -279,7 +270,6 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
 
   bool isResolved(ReminderEntry entry, int timeIndex, DateTime date) =>
       _reminderLogStatus[_logKey(entry, timeIndex, date)] == 'logged';
-
 
   Future<void> addReminder(ReminderEntry entry) async {
     _reminders.add(entry);
@@ -312,9 +302,7 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList(_reminderKey) ?? [];
     _reminders.clear();
-    _reminders.addAll(
-      list.map((e) => ReminderEntry.fromJson(e)).toList(),
-    );
+    _reminders.addAll(list.map((e) => ReminderEntry.fromJson(e)).toList());
 
     for (final r in _reminders) {
       NotificationService.scheduleReminder(r);
@@ -367,7 +355,8 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     await _saveLabTests();
     emit(List.from(state));
   }
-/// Doctor appointment
+
+  /// Doctor appointment
 
   List<AppointmentEntry> _appointments = [];
   List<AppointmentEntry> getAppointments() => _appointments;
@@ -382,7 +371,9 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   Future<void> _saveAppointments() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(
-        _appointmentsKey, _appointments.map((e) => e.toJson()).toList());
+      _appointmentsKey,
+      _appointments.map((e) => e.toJson()).toList(),
+    );
   }
 
   Future<void> addAppointment(AppointmentEntry entry) async {
@@ -396,7 +387,6 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     await _saveAppointments();
     emit(List.from(state));
   }
-
 
   Future<Map<String, dynamic>> uploadLabTest(File imageFile) async {
     final token = await TokenStorage.getAccessToken();
@@ -449,8 +439,6 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   List<String> _tileKeys = []; // store ONLY labelKey (important!)
   List<String> get tileKeys => _tileKeys;
 
-
-
   Future<void> _loadTiles() async {
     final prefs = await SharedPreferences.getInstance();
     _tileKeys = prefs.getStringList(_tilesKey) ?? [];
@@ -474,17 +462,12 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
 
   List<HealthTile> getTiles() {
     return _tileKeys
-        .map((key) => allTiles.firstWhere(
-          (t) => t.labelKey == key,
-      orElse: () => allTiles.first,
-    ))
+        .map(
+          (key) => allTiles.firstWhere(
+            (t) => t.labelKey == key,
+            orElse: () => allTiles.first,
+          ),
+        )
         .toList();
   }
-
-
 }
-
-
-
-
-
