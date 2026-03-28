@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/blood_pressure_entry.dart';
 import '../models/weight_entry.dart';
+import '../services/notification_service.dart';
 import '../widgets/alarm_screen.dart';
 
 class HealthCubit extends Cubit<List<BloodPressureEntry>> {
@@ -83,6 +84,7 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   /// REMINDERS
   void addReminder(ReminderEntry entry) {
     _reminders.add(entry);
+    NotificationService.scheduleReminder(entry);
     emit(List.from(state));
   }
 
@@ -90,12 +92,15 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     final index = _reminders.indexOf(old);
     if (index != -1) {
       _reminders[index] = updated;
+      NotificationService.cancelReminder(old);
+      NotificationService.scheduleReminder(updated);
       emit(List.from(state));
     }
   }
 
   void deleteReminder(ReminderEntry entry) {
     _reminders.remove(entry);
+    NotificationService.cancelReminder(entry);
     emit(List.from(state));
   }
 }

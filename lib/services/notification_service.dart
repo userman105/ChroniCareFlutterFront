@@ -7,7 +7,6 @@ import '../widgets/alarm_screen.dart';
 class NotificationService {
   static final _plugin = FlutterLocalNotificationsPlugin();
 
-  // ── Init ───────────────────────────────────────────────────────────────────
   static Future<void> init() async {
     tz_data.initializeTimeZones();
 
@@ -23,13 +22,13 @@ class NotificationService {
     );
 
     // Request Android 13+ permission
-    await _plugin
-        .resolvePlatformSpecificImplementation
-    AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestNotificationsPermission();
+    final androidPlugin =
+    _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+
+    await androidPlugin?.requestNotificationsPermission();
   }
 
-  // ── Notification details ───────────────────────────────────────────────────
   static NotificationDetails _details(String title) {
     return NotificationDetails(
       android: AndroidNotificationDetails(
@@ -51,7 +50,6 @@ class NotificationService {
     );
   }
 
-  // ── Schedule all times for a reminder ─────────────────────────────────────
   static Future<void> scheduleReminder(ReminderEntry entry) async {
     // Cancel any existing notifications for this reminder first
     await cancelReminder(entry);
@@ -61,7 +59,7 @@ class NotificationService {
       final id = _idFor(entry, i);
 
       if (entry.schedule == 'Once') {
-        // ── One-time notification ──────────────────────────────
+
         final scheduled = _nextInstanceOf(time, entry.startDate);
 
         await _plugin.zonedSchedule(
@@ -75,7 +73,7 @@ class NotificationService {
           UILocalNotificationDateInterpretation.absoluteTime,
         );
       } else {
-        // ── Recurring notification ─────────────────────────────
+
         DateTimeComponents? matchComponent;
 
         switch (entry.frequency) {
@@ -109,16 +107,13 @@ class NotificationService {
     }
   }
 
-  // ── Cancel all notifications for a reminder ────────────────────────────────
   static Future<void> cancelReminder(ReminderEntry entry) async {
     for (int i = 0; i < entry.times.length; i++) {
       await _plugin.cancel(_idFor(entry, i));
     }
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
 
-  // Unique ID per reminder+time slot using hashCode
   static int _idFor(ReminderEntry entry, int timeIndex) {
     return (entry.createdAt.millisecondsSinceEpoch + timeIndex) % 0x7FFFFFFF;
   }
@@ -134,7 +129,6 @@ class NotificationService {
         : '${entry.medicineName} ($type)';
   }
 
-  // Returns the next DateTime at the given TimeOfDay on or after startDate
   static DateTime _nextInstanceOf(TimeOfDay time, DateTime startDate) {
     final now = DateTime.now();
     var candidate = DateTime(
@@ -145,7 +139,6 @@ class NotificationService {
       time.minute,
     );
 
-    // If that time has already passed today, push to tomorrow
     if (candidate.isBefore(now)) {
       candidate = candidate.add(const Duration(days: 1));
     }
