@@ -33,22 +33,6 @@ class ReminderEntry {
     required this.createdAt,
   });
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Add to HealthCubit — paste these into your existing cubit
-// ─────────────────────────────────────────────────────────────────────────────
-//
-//   final List<ReminderEntry> _reminders = [];
-//   List<ReminderEntry> getReminders() => _reminders;
-//
-//   void addReminder(ReminderEntry entry) {
-//     _reminders.add(entry);
-//     emit(List.from(state));
-//   }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Reusable Reminder Template Screen
-// ─────────────────────────────────────────────────────────────────────────────
 class ReminderTemplateScreen extends StatefulWidget {
   final String headerTitle;
   final String reminderType;

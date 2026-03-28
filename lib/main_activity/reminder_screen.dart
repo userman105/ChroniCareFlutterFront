@@ -14,8 +14,6 @@ class RemindersScreen extends StatefulWidget {
 }
 
 class _RemindersScreenState extends State<RemindersScreen> {
-  bool _measurementsExpanded = false;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,6 +22,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
         child: Column(
           children: [
 
+            // ── Header ────────────────────────────────────────────
             Container(
               height: 46,
               width: double.infinity,
@@ -42,6 +41,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
               ),
             ),
 
+            // ── Body ──────────────────────────────────────────────
             Expanded(
               child: BlocBuilder<HealthCubit, List<BloodPressureEntry>>(
                 builder: (context, _) {
@@ -54,110 +54,88 @@ class _RemindersScreenState extends State<RemindersScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
 
-                        GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () => setState(() =>
-                          _measurementsExpanded = !_measurementsExpanded),
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 14),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2D2D2D),
-                              borderRadius: BorderRadius.only(
-                                topLeft: const Radius.circular(12),
-                                topRight: const Radius.circular(12),
-                                bottomLeft: Radius.circular(
-                                    _measurementsExpanded ? 0 : 12),
-                                bottomRight: Radius.circular(
-                                    _measurementsExpanded ? 0 : 12),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                AnimatedRotation(
-                                  turns:
-                                  _measurementsExpanded ? 0.5 : 0,
-                                  duration:
-                                  const Duration(milliseconds: 250),
-                                  child: const Icon(
-                                    Icons.keyboard_arrow_down,
-                                    color: Colors.white,
-                                    size: 22,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Text(
-                                  'Measurements',
-                                  style: GoogleFonts.arimo(
-                                    color: Colors.white,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const Spacer(),
-                                Text(
-                                  '${reminders.length} reminder${reminders.length == 1 ? '' : 's'}',
-                                  style: GoogleFonts.arimo(
-                                    color: Colors.white38,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
+                        // ── Measurements drawer (always open) ──────────────
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2D2D2D),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(12),
+                              topRight: Radius.circular(12),
+                              bottomLeft: Radius.circular(12),
+                              bottomRight: Radius.circular(12),
                             ),
                           ),
-                        ),
-                        AnimatedCrossFade(
-                          duration: const Duration(milliseconds: 250),
-                          crossFadeState: _measurementsExpanded
-                              ? CrossFadeState.showFirst
-                              : CrossFadeState.showSecond,
-                          firstChild: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1E1E1E),
-                              borderRadius: const BorderRadius.only(
-                                bottomLeft: Radius.circular(12),
-                                bottomRight: Radius.circular(12),
-                              ),
-                              border: Border.all(
-                                  color: Colors.white12, width: 0.5),
-                            ),
-                            child: reminders.isEmpty
-                                ? Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 20),
-                              child: Center(
-                                child: Text(
-                                  'No reminders yet',
-                                  style: GoogleFonts.arimo(
-                                      color: Colors.white38,
-                                      fontSize: 14),
+                          child: Row(
+                            children: [
+                              Text(
+                                'Measurements',
+                                style: GoogleFonts.arimo(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                            )
-                                : Column(
-                              children: reminders
-                                  .map((r) => ReminderTile(entry: r))
-                                  .toList(),
-                            ),
+                              const Spacer(),
+                              Text(
+                                '${reminders.length} reminder${reminders.length == 1 ? '' : 's'}',
+                                style: GoogleFonts.arimo(
+                                  color: Colors.white38,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
                           ),
-                          secondChild: const SizedBox(width: double.infinity),
                         ),
+
+                        const SizedBox(height: 8),
+
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1E1E1E),
+                            borderRadius: const BorderRadius.only(
+                              bottomLeft: Radius.circular(12),
+                              bottomRight: Radius.circular(12),
+                            ),
+                            border: Border.all(color: Colors.white12, width: 0.5),
+                          ),
+                          child: reminders.isEmpty
+                              ? Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 20),
+                            child: Center(
+                              child: Text(
+                                'No reminders yet',
+                                style: GoogleFonts.arimo(
+                                    color: Colors.white38, fontSize: 14),
+                              ),
+                            ),
+                          )
+                              : Column(
+                            children: reminders
+                                .map((r) => ReminderTile(entry: r))
+                                .toList(),
+                          ),
+                        ),
+
                         const SizedBox(height: 24),
+
+                        // ── Add reminder button ────────────────────
                         Center(
                           child: GestureDetector(
                             onTap: () => Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) =>
-                                const ReminderTemplateScreen(
+                                builder: (_) => const ReminderTemplateScreen(
                                   headerTitle: 'Add Reminder',
                                   reminderType: 'meds',
                                 ),
                               ),
                             ),
+
                           ),
                         ),
                       ],
