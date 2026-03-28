@@ -1948,7 +1948,6 @@ class ReminderTile extends StatefulWidget {
 
 class _ReminderTileState extends State<ReminderTile> {
 
-  // ── Editable state (mirrors ReminderEntry fields) ──────────────────────────
   late String _frequency;
   late bool _isRecurring;
   late List<TimeOfDay> _times;
@@ -1980,7 +1979,6 @@ class _ReminderTileState extends State<ReminderTile> {
     super.dispose();
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
   String get _iconAsset {
     switch (widget.entry.type) {
       case 'blood_pressure': return 'assets/icons/bloodPressure.png';
@@ -2016,7 +2014,6 @@ class _ReminderTileState extends State<ReminderTile> {
     return '$h:$m $period';
   }
 
-  // ── Pickers ────────────────────────────────────────────────────────────────
   Future<void> _pickTime(int index, StateSetter sheetSetState) async {
     final picked = await showTimePicker(
       context: context,
@@ -2125,7 +2122,6 @@ class _ReminderTileState extends State<ReminderTile> {
     );
   }
 
-  // ── Save ───────────────────────────────────────────────────────────────────
   void _save() {
     final updated = ReminderEntry(
       type: widget.entry.type,
@@ -2148,7 +2144,6 @@ class _ReminderTileState extends State<ReminderTile> {
     Navigator.pop(context);
   }
 
-  // ── Edit bottom sheet ──────────────────────────────────────────────────────
   void _openEditSheet() {
     showModalBottomSheet(
       context: context,
@@ -2168,7 +2163,6 @@ class _ReminderTileState extends State<ReminderTile> {
             child: Column(
               children: [
 
-                // ── Handle ───────────────────────────────────────
                 const SizedBox(height: 12),
                 Center(
                   child: Container(
@@ -2180,7 +2174,6 @@ class _ReminderTileState extends State<ReminderTile> {
                 ),
                 const SizedBox(height: 12),
 
-                // ── Sheet header ──────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
@@ -2204,7 +2197,6 @@ class _ReminderTileState extends State<ReminderTile> {
 
                 const SizedBox(height: 16),
 
-                // ── Scrollable content ────────────────────────────
                 Expanded(
                   child: ListView(
                     controller: scrollCtrl,
@@ -2235,7 +2227,6 @@ class _ReminderTileState extends State<ReminderTile> {
 
                       const SizedBox(height: 20),
 
-                      // ── Schedule card ─────────────────────────
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 12),
@@ -2369,7 +2360,6 @@ class _ReminderTileState extends State<ReminderTile> {
 
                       const SizedBox(height: 24),
 
-                      // ── Save button ───────────────────────────
                       MainButton(
                         text: 'Save',
                         enabled: _nameCtrl.text.trim().isNotEmpty,
@@ -2388,7 +2378,6 @@ class _ReminderTileState extends State<ReminderTile> {
     );
   }
 
-  // ── Helper widgets ─────────────────────────────────────────────────────────
   Widget _toggleOption(
       String label, bool active, VoidCallback onTap, StateSetter ss) {
     return GestureDetector(
@@ -2493,7 +2482,6 @@ class _ReminderTileState extends State<ReminderTile> {
   Widget _divider() =>
       Container(height: 0.5, color: Colors.white12);
 
-  // ── Build ──────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Container(

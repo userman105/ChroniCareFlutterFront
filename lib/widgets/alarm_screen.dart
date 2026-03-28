@@ -72,12 +72,10 @@ class ReminderTemplateScreen extends StatefulWidget {
 
 class _ReminderTemplateScreenState
     extends State<ReminderTemplateScreen> {
-  // ── Controllers ────────────────────────────────────────────────────────────
   final _nameCtrl = TextEditingController();
   final _reminderNameCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
 
-  // ── State ──────────────────────────────────────────────────────────────────
   bool _isRecurring = true;
   String _frequency = 'Daily';
   final List<TimeOfDay> _times = [const TimeOfDay(hour: 8, minute: 0)];
@@ -86,7 +84,6 @@ class _ReminderTemplateScreenState
 
   bool get _canSave => _nameCtrl.text.trim().isNotEmpty;
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
   String _formatDate(DateTime dt) {
     final months = [
       'Jan','Feb','Mar','Apr','May','Jun',
@@ -102,7 +99,6 @@ class _ReminderTemplateScreenState
     return '$h:$m $period';
   }
 
-  // ── Date range picker ──────────────────────────────────────────────────────
   void _openDateRange() {
     showModalBottomSheet(
       context: context,
@@ -123,7 +119,6 @@ class _ReminderTemplateScreenState
     );
   }
 
-  // ── Time picker ────────────────────────────────────────────────────────────
   Future<void> _pickTime(int index) async {
     final picked = await showTimePicker(
       context: context,
@@ -143,7 +138,6 @@ class _ReminderTemplateScreenState
     }
   }
 
-  // ── Frequency picker ───────────────────────────────────────────────────────
   void _pickFrequency() {
     final options = ['Daily', 'Weekly', 'Every 2 days', 'Monthly'];
     showModalBottomSheet(
@@ -207,7 +201,6 @@ class _ReminderTemplateScreenState
     );
   }
 
-  // ── Save ───────────────────────────────────────────────────────────────────
   void _save() {
     final entry = ReminderEntry(
       type: widget.reminderType,
@@ -228,7 +221,6 @@ class _ReminderTemplateScreenState
     Navigator.pop(context);
   }
 
-  // ── Build ──────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -237,7 +229,6 @@ class _ReminderTemplateScreenState
         child: Column(
           children: [
 
-            // ── Header bar ───────────────────────────────────────
             Container(
               height: 46,
               padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -258,7 +249,6 @@ class _ReminderTemplateScreenState
               ),
             ),
 
-            // ── Body ─────────────────────────────────────────────
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
@@ -266,7 +256,6 @@ class _ReminderTemplateScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
 
-                    // ── Medicine name field ───────────────────────
                     _label(widget.medicineLabel),
                     const SizedBox(height: 6),
                     _textField(
@@ -401,7 +390,6 @@ class _ReminderTemplateScreenState
 
                     const SizedBox(height: 32),
 
-                    // ── Add button ────────────────────────────────
                     const SizedBox(height: 125),
                     Center(
                       child: MainButton(
@@ -422,7 +410,6 @@ class _ReminderTemplateScreenState
     );
   }
 
-  // ── Sub-widgets ────────────────────────────────────────────────────────────
 
   Widget _label(String text) => Text(text,
       style: GoogleFonts.arimo(
