@@ -104,4 +104,3 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     emit(List.from(state));
   }
 }
-
