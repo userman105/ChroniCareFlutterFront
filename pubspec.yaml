@@ -115,7 +115,10 @@ flutter:
      - assets/icons/bell.png
      - assets/icons/insights_active.png
      - assets/icons/profile_active.png
+ 
      - assets/data/medications.csv
+
+     - assets/icons/settings.png
 
 
 

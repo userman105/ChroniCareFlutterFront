@@ -5,6 +5,8 @@ import '../cubit/health_cubit.dart';
 import '../models/blood_pressure_entry.dart';
 import '../widgets/components.dart';
 
+/*
+
 class RemindersScreen extends StatefulWidget {
   const RemindersScreen({super.key});
 
@@ -153,6 +155,174 @@ class _RemindersScreenState extends State<RemindersScreen> {
             ),
             )],
         ),
+      ),
+    );
+  }
+}
+*/
+
+class RemindersScreen extends StatelessWidget {
+  const RemindersScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.white),
+        title: Text(
+          'Reminder',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+            icon: Image.asset(
+              'assets/icons/settings.png',
+              width: 24,
+              height: 24,
+              colorBlendMode: BlendMode.multiply,
+            ),
+            onPressed: null,
+          ),
+        ],
+        backgroundColor: const Color.fromARGB(255, 45, 45, 45),
+      ),
+
+      body: ListView(
+        children: [
+          SizedBox(height: 20),
+          //
+          ExpansionTile(
+            collapsedIconColor: Colors.white,
+            iconColor: Colors.white,
+            title: Text(
+              "Measurements",
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            children: [
+              Card(
+                color: const Color.fromARGB(255, 68, 68, 68),
+                child: ListTile(
+                  leading: Image.asset(
+                    'assets/icons/bloodPressure.png',
+                    width: 24,
+                    height: 24,
+                    colorBlendMode: BlendMode.multiply,
+                  ),
+                  title: Text(
+                    "Blood Pressure",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  subtitle: Text(
+                    "Daily - 2:00 pm",
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  trailing: Image.asset(
+                    'assets/icons/calendarEdit.png',
+                    width: 24,
+                    height: 24,
+                    colorBlendMode: BlendMode.multiply,
+                  ),
+                ),
+              ),
+
+              Card(
+                color: const Color.fromARGB(255, 68, 68, 68),
+                child: ListTile(
+                  leading: Image.asset(
+                    'assets/icons/diabetes.png',
+                    width: 24,
+                    height: 24,
+                    colorBlendMode: BlendMode.multiply,
+                  ),
+                  title: Text("Glucose", style: TextStyle(color: Colors.white)),
+                  subtitle: Text(
+                    "Daily - 4:00 pm",
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  trailing: Image.asset(
+                    'assets/icons/calendarEdit.png',
+                    width: 24,
+                    height: 24,
+                    colorBlendMode: BlendMode.multiply,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 20),
+
+          ExpansionTile(
+            collapsedIconColor: Colors.white,
+            iconColor: Colors.white,
+            title: Text(
+              "Meds",
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            children: [
+              Card(
+                color: const Color.fromARGB(255, 68, 68, 68),
+                child: ListTile(
+                  leading: Image.asset(
+                    'assets/icons/capsule.png',
+                    width: 24,
+                    height: 24,
+                    colorBlendMode: BlendMode.multiply,
+                  ),
+                  title: Text(
+                    "Cordarone 200 mg",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  subtitle: Text(
+                    "Daily - 8:00 am",
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  trailing: Image.asset(
+                    'assets/icons/calendarEdit.png',
+                    width: 24,
+                    height: 24,
+                    colorBlendMode: BlendMode.multiply,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(height: 20),
+
+          ExpansionTile(
+            collapsedIconColor: Colors.white,
+            iconColor: Colors.white,
+            title: Text(
+              "Other",
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            children: [
+              Card(
+                color: const Color.fromARGB(255, 68, 68, 68),
+                child: ListTile(
+                  title: Text(
+                    "None added yet",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
