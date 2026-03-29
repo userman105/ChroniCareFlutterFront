@@ -1,3 +1,4 @@
+import 'package:chronic_care/main_activity/weight_log/weight_reminder_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../widgets/log_screen.dart';
@@ -51,6 +52,13 @@ class _WeightLogScreenState extends State<WeightLogScreen> {
       title: "Log Weight",
 
       buttonEnabled: buttonEnabled,
+
+      onAddReminder: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const WeightReminderScreen(),
+        ),
+      ),
 
       onSubmit: (selectedDateTime, notes) {
 

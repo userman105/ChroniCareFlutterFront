@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:chronic_care/main_activity/glucose_log/glucose_log_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -1077,7 +1078,8 @@ class _AddEntryPopupState extends State<AddEntryPopup> {
                               break;
 
                             case "Glucose":
-                            // TODO
+                              Navigator.push(context,
+                                  MaterialPageRoute(builder: (_)=>GlucoseScreen()));
                               break;
                           }
                         });
@@ -2582,6 +2584,116 @@ class _ReminderTileState extends State<ReminderTile> {
                     color: Colors.redAccent, fontWeight: FontWeight.w600)),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class GlucoseInput extends StatefulWidget {
+  final TextEditingController controller;
+  final Function(String unit) onUnitChanged;
+
+  const GlucoseInput({
+    super.key,
+    required this.controller,
+    required this.onUnitChanged,
+  });
+
+  @override
+  State<GlucoseInput> createState() => _GlucoseInputState();
+}
+
+class _GlucoseInputState extends State<GlucoseInput> {
+  String selectedUnit = 'mg/dl';
+
+  void _switchUnit(String unit) {
+    setState(() {
+      selectedUnit = unit;
+    });
+    widget.onUnitChanged(unit);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+
+        const Text(
+          'Glucose',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        Row(
+          children: [
+
+            Container(
+              width: 90,
+              height: 40,
+              decoration: BoxDecoration(
+                color: const Color(0xFF111111),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: TextField(
+                controller: widget.controller,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 10),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 10),
+
+            Container(
+              height: 40,
+              decoration: BoxDecoration(
+                color: const Color(0xFF111111),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                children: [
+
+                  _unitButton('mg/dl'),
+                  _unitButton('mmol'),
+
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _unitButton(String unit) {
+    final isSelected = selectedUnit == unit;
+
+    return GestureDetector(
+      onTap: () => _switchUnit(unit),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isSelected
+              ? const Color(0xFF00C950)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          unit,
+          style: TextStyle(
+            color: isSelected ? Colors.black : Colors.white70,
+            fontSize: 13,
+          ),
+        ),
       ),
     );
   }

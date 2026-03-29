@@ -1,3 +1,4 @@
+import 'package:chronic_care/main_activity/glucose_log/glucose_details_screen.dart';
 import 'package:chronic_care/main_activity/weight_log/weight_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -84,8 +85,21 @@ class InsightsScreen extends StatelessWidget {
                           break;
 
                         case HealthMetricType.glucose:
-                          value = "--";
-                          subtitle = "No data";
+                          final glucoseEntries = List.from(
+                            context.read<HealthCubit>().getGlucoseEntries(),
+                          )..sort((a, b) => a.dateTime.compareTo(b.dateTime));
+
+                          if (glucoseEntries.isNotEmpty) {
+                            final latest = glucoseEntries.last;
+                            final mgDl = latest.unit == 'mmol/L'
+                                ? latest.value * 18.0182
+                                : latest.value;
+                            value = "${mgDl.toStringAsFixed(0)} mg/dL";
+                            subtitle = timeAgo(latest.dateTime);
+                          } else {
+                            value = "--";
+                            subtitle = "No data";
+                          }
                           break;
 
                         case HealthMetricType.weight:
@@ -149,6 +163,15 @@ class InsightsScreen extends StatelessWidget {
               ),
             );
           }
+          else if(tile.type == HealthMetricType.glucose) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => GlucoseDetailsScreen(),
+              ),
+            );
+          }
+
         },
         child: Container(
           width: double.infinity,

@@ -4,14 +4,18 @@ import '../models/blood_pressure_entry.dart';
 import '../models/weight_entry.dart';
 import '../services/notification_service.dart';
 import '../widgets/alarm_screen.dart';
+import '../models/glucose_entry.dart';
 
 class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   static const _bpKey = 'blood_pressure_entries';
   static const _weightKey = 'weight_entries';
+  static const _glucoseKey = 'glucose_entries';
+
 
   HealthCubit() : super([]) {
     _loadEntries();
     _loadWeightEntries();
+    _loadGlucoseEntries();
   }
 
   DateTime selectedDate = DateTime.now();
@@ -68,6 +72,37 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     emit(List.from(state));
   }
 
+
+  /// GLUCOSE
+
+
+  List<GlucoseEntry> _glucoseEntries = [];
+
+  List<GlucoseEntry> getGlucoseEntries() => _glucoseEntries;
+
+
+  Future<void> _loadGlucoseEntries() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList(_glucoseKey) ?? [];
+
+    _glucoseEntries =
+        list.map((e) => GlucoseEntry.fromJson(e)).toList();
+  }
+
+  Future<void> _saveGlucoseEntries() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = _glucoseEntries.map((e) => e.toJson()).toList();
+
+    await prefs.setStringList(_glucoseKey, list);
+  }
+
+  Future<void> addGlucose(GlucoseEntry entry) async {
+    _glucoseEntries.add(entry);
+
+    await _saveGlucoseEntries();
+
+    emit(List.from(state)); // triggers UI rebuild
+  }
 
   /// DATE (SHARED)
 
