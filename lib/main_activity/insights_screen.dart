@@ -1,4 +1,5 @@
 import 'package:chronic_care/main_activity/glucose_log/glucose_details_screen.dart';
+import 'package:chronic_care/main_activity/med_log/medication_details_screen.dart';
 import 'package:chronic_care/main_activity/weight_log/weight_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -168,6 +169,14 @@ class InsightsScreen extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (_) => GlucoseDetailsScreen(),
+              ),
+            );
+          }
+          else if(tile.type == HealthMetricType.meds) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => MedicationDetailsScreen(),
               ),
             );
           }

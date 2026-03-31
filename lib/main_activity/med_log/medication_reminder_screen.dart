@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import '../../widgets/alarm_screen.dart';
 
 
-class WeightReminderScreen extends StatelessWidget {
-  const WeightReminderScreen({super.key});
+class MedicationReminderScreen extends StatelessWidget {
+  const MedicationReminderScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return const ReminderTemplateScreen(
-      headerTitle: 'Weight Reminder',
-      reminderType: 'weight',
+      headerTitle: 'Medications Reminder',
+      reminderType: 'meds',
       medicineLabel: 'Reminder label',
-      medicineHint: 'eg. Morning weight check',
+      medicineHint: 'eg. Take after food',
       showAddMore: false,
     );
   }

@@ -4,9 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../cubit/health_cubit.dart';
 import 'components.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Reminder Model
-// ─────────────────────────────────────────────────────────────────────────────
 class ReminderEntry {
   final String type;         // e.g. "Blood Pressure", "Meds"
   final String medicineName; // primary name field
@@ -271,7 +268,6 @@ class _ReminderTemplateScreenState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
 
-                          // Recurring / Once toggle
                           Center(child: _scheduleToggle()),
 
                           const SizedBox(height: 16),

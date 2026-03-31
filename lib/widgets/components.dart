@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:chronic_care/main_activity/glucose_log/glucose_log_screen.dart';
+import 'package:chronic_care/main_activity/med_log/medication_log_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -1061,7 +1062,12 @@ class _AddEntryPopupState extends State<AddEntryPopup> {
                               break;
 
                             case "Meds":
-                            // TODO
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const MedicationLogScreen(),
+                                ),
+                              );
                               break;
 
                             case "Symptoms":

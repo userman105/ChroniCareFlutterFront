@@ -11,7 +11,7 @@ class GlucoseReminderScreen extends StatelessWidget {
       headerTitle: 'Glucose Reminder',
       reminderType: 'glucose',
       medicineLabel: 'Reminder label',
-      medicineHint: 'eg. Morning BP check',
+      medicineHint: 'eg. Fasting Today',
       showAddMore: false,
     );
   }

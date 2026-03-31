@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/blood_pressure_entry.dart';
+import '../models/med_entry.dart';
 import '../models/weight_entry.dart';
 import '../services/notification_service.dart';
 import '../widgets/alarm_screen.dart';
@@ -10,12 +11,14 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   static const _bpKey = 'blood_pressure_entries';
   static const _weightKey = 'weight_entries';
   static const _glucoseKey = 'glucose_entries';
+  static const _medsKey = 'medication_entries';
 
 
   HealthCubit() : super([]) {
     _loadEntries();
     _loadWeightEntries();
     _loadGlucoseEntries();
+    _loadMedicationEntries();
   }
 
   DateTime selectedDate = DateTime.now();
@@ -102,6 +105,36 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     await _saveGlucoseEntries();
 
     emit(List.from(state)); // triggers UI rebuild
+  }
+
+  /// MEDICATION
+
+  List<MedicationEntry> _medicationEntries = [];
+  List<MedicationEntry> getMedicationEntries() => _medicationEntries;
+
+  Future<void> _loadMedicationEntries() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList(_medsKey) ?? [];
+    _medicationEntries = list.map((e) => MedicationEntry.fromJson(e)).toList();
+    emit(List.from(state));
+  }
+
+  Future<void> _saveMedicationEntries() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = _medicationEntries.map((e) => e.toJson()).toList();
+    await prefs.setStringList(_medsKey, list);
+  }
+
+  Future<void> addMedication(MedicationEntry entry) async {
+    _medicationEntries.add(entry);
+    await _saveMedicationEntries();
+    emit(List.from(state));
+  }
+
+  Future<void> deleteMedication(MedicationEntry entry) async {
+    _medicationEntries.remove(entry);
+    await _saveMedicationEntries();
+    emit(List.from(state));
   }
 
   /// DATE (SHARED)

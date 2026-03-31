@@ -236,6 +236,8 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
                       ),
                     ),
 
+
+
                     const SizedBox(height: 25),
 
                     /// ADD REMINDER BUTTON
