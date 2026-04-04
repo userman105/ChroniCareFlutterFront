@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/blood_pressure_entry.dart';
 import '../models/med_entry.dart';
+import '../models/symptom_entry.dart';
 import '../models/weight_entry.dart';
 import '../services/notification_service.dart';
 import '../widgets/alarm_screen.dart';
@@ -12,6 +13,7 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   static const _weightKey = 'weight_entries';
   static const _glucoseKey = 'glucose_entries';
   static const _medsKey = 'medication_entries';
+  static const _symptomKey = 'symptom_entries';
 
 
   HealthCubit() : super([]) {
@@ -19,6 +21,7 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     _loadWeightEntries();
     _loadGlucoseEntries();
     _loadMedicationEntries();
+    _loadSymptomEntries();
   }
 
   DateTime selectedDate = DateTime.now();
@@ -136,6 +139,41 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     await _saveMedicationEntries();
     emit(List.from(state));
   }
+
+  /// Symptoms
+
+  List<SymptomEntry> _symptomEntries = [];
+
+  List<SymptomEntry> getSymptomEntries() => _symptomEntries;
+
+  Future<void> _loadSymptomEntries() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList(_symptomKey) ?? [];
+    _symptomEntries = list.map((e) => SymptomEntry.fromJson(e)).toList();
+  }
+
+  Future<void> _saveSymptomEntries() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = _symptomEntries.map((e) => e.toJson()).toList();
+    await prefs.setStringList(_symptomKey, list);
+  }
+
+  Future<void> addSymptom(SymptomEntry entry) async {
+    _symptomEntries.add(entry);
+    await _saveSymptomEntries();
+
+    emit(List.from(state)); // triggers UI rebuild
+  }
+  Future<void> deleteSymptom(SymptomEntry entry) async {
+    _symptomEntries.remove(entry);
+
+    await _saveSymptomEntries();
+
+    emit(List.from(state));
+  }
+
+
+
 
   /// DATE (SHARED)
 

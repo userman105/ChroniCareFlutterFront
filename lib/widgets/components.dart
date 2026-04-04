@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:chronic_care/main_activity/glucose_log/glucose_log_screen.dart';
 import 'package:chronic_care/main_activity/med_log/medication_log_screen.dart';
+import 'package:chronic_care/main_activity/symptom_log/symptom_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -1071,7 +1072,12 @@ class _AddEntryPopupState extends State<AddEntryPopup> {
                               break;
 
                             case "Symptoms":
-                            // TODO
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const SymptomScreen(),
+                                ),
+                              );
                               break;
 
                             case "Food":
@@ -1993,6 +1999,7 @@ class _ReminderTileState extends State<ReminderTile> {
       case 'meds':           return 'assets/icons/capsule.png';
       case 'weight':         return 'assets/icons/weight.png';
       case 'glucose':        return 'assets/icons/diabetes.png';
+      case 'symptom':        return 'assets/icons/healthcare.png';
       default:               return 'assets/icons/bell.png';
     }
   }

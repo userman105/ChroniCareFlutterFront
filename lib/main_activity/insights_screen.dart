@@ -1,5 +1,6 @@
 import 'package:chronic_care/main_activity/glucose_log/glucose_details_screen.dart';
 import 'package:chronic_care/main_activity/med_log/medication_details_screen.dart';
+import 'package:chronic_care/main_activity/symptom_log/symptoms_details_screen.dart';
 import 'package:chronic_care/main_activity/weight_log/weight_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../cubit/health_cubit.dart';
 import '../models/blood_pressure_entry.dart';
+import '../models/symptom_entry.dart';
 import '../widgets/components.dart';
 import 'blood_log/blood_pressure_details_screen.dart';
 
@@ -114,6 +116,21 @@ class InsightsScreen extends StatelessWidget {
                             value = "${kg.toStringAsFixed(1)} kg";
                             subtitle = timeAgo(latest.dateTime);
                           }
+
+                          break;
+                        case HealthMetricType.symptoms:
+                          final symptomEntries = List.from(
+                            context.read<HealthCubit>().getSymptomEntries(),
+                          )..sort((a, b) => a.dateTime.compareTo(b.dateTime));
+
+                          if (symptomEntries.isNotEmpty) {
+                            final latest = symptomEntries.last as SymptomEntry;
+                            value = latest.symptom;
+                            subtitle = timeAgo(latest.dateTime);
+                          } else {
+                            value = "--";
+                            subtitle = "No data";
+                          }
                           break;
 
                         default:
@@ -177,6 +194,14 @@ class InsightsScreen extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (_) => MedicationDetailsScreen(),
+              ),
+            );
+          }
+          else if(tile.type == HealthMetricType.symptoms) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => SymptomsDetailsScreen(),
               ),
             );
           }
