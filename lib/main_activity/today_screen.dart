@@ -1,3 +1,4 @@
+import 'package:chronic_care/main_activity/food_log/food_log_screen.dart';
 import 'package:chronic_care/main_activity/glucose_log/glucose_log_screen.dart';
 import 'package:chronic_care/main_activity/med_log/medication_log_screen.dart';
 import 'package:chronic_care/main_activity/symptom_log/symptom_screen.dart';
@@ -133,6 +134,10 @@ class _TodayScreenState extends State<TodayScreen> {
                         case HealthMetricType.symptoms:
                           Navigator.push(context,
                               MaterialPageRoute(builder: (_)=>SymptomScreen()));
+                        case HealthMetricType.food:
+                          Navigator.push(context,
+                              MaterialPageRoute(builder: (_)=>FoodLogScreen()));
+
 
                         default:
                           break;

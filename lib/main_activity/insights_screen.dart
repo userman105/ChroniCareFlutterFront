@@ -1,3 +1,4 @@
+import 'package:chronic_care/main_activity/food_log/food_details.dart';
 import 'package:chronic_care/main_activity/glucose_log/glucose_details_screen.dart';
 import 'package:chronic_care/main_activity/med_log/medication_details_screen.dart';
 import 'package:chronic_care/main_activity/symptom_log/symptoms_details_screen.dart';
@@ -8,6 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../cubit/health_cubit.dart';
 import '../models/blood_pressure_entry.dart';
+import '../models/food_entry.dart';
 import '../models/symptom_entry.dart';
 import '../widgets/components.dart';
 import 'blood_log/blood_pressure_details_screen.dart';
@@ -133,6 +135,21 @@ class InsightsScreen extends StatelessWidget {
                           }
                           break;
 
+                        case HealthMetricType.food:
+                          final foodEntries = List.from(
+                            context.read<HealthCubit>().getFoodEntries(),
+                          )..sort((a, b) => a.dateTime.compareTo(b.dateTime));
+
+                          if (foodEntries.isNotEmpty) {
+                            final latest = foodEntries.last as FoodEntry;
+                            value = latest.name;
+                            subtitle = timeAgo(latest.dateTime);
+                          } else {
+                            value = "--";
+                            subtitle = "No data";
+                          }
+                          break;
+
                         default:
                           break;
                       }
@@ -202,6 +219,14 @@ class InsightsScreen extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (_) => SymptomsDetailsScreen(),
+              ),
+            );
+          }
+          else if(tile.type == HealthMetricType.food) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => FoodDetailsScreen(),
               ),
             );
           }

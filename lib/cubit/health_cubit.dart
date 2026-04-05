@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/blood_pressure_entry.dart';
+import '../models/food_entry.dart';
 import '../models/med_entry.dart';
 import '../models/symptom_entry.dart';
 import '../models/weight_entry.dart';
@@ -14,6 +17,8 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   static const _glucoseKey = 'glucose_entries';
   static const _medsKey = 'medication_entries';
   static const _symptomKey = 'symptom_entries';
+  static const _foodKey = 'food_entries';
+
 
 
   HealthCubit() : super([]) {
@@ -22,6 +27,7 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     _loadGlucoseEntries();
     _loadMedicationEntries();
     _loadSymptomEntries();
+    _loadFoodEntries();
   }
 
   DateTime selectedDate = DateTime.now();
@@ -173,7 +179,53 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   }
 
 
+  /// FOOD LOG
 
+  List<FoodEntry> _foodEntries = [];
+  List<FoodEntry> getFoodEntries() => _foodEntries;
+
+  Map<String, List<FoodEntry>> getFoodEntriesByMeal(DateTime date) {
+    final dayEntries = _foodEntries.where((e) =>
+    e.dateTime.year == date.year &&
+        e.dateTime.month == date.month &&
+        e.dateTime.day == date.day).toList();
+
+    final Map<String, List<FoodEntry>> grouped = {};
+    for (final e in dayEntries) {
+      final key = e.mealType ?? 'Other';
+      grouped.putIfAbsent(key, () => []).add(e);
+    }
+    return grouped;
+  }
+
+  Future<void> _loadFoodEntries() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList(_foodKey) ?? [];
+    _foodEntries = list.map((e) => FoodEntry.fromJson(e)).toList();
+    emit(List.from(state));
+  }
+
+  Future<void> _saveFoodEntries() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = _foodEntries.map((e) => e.toJson()).toList();
+    await prefs.setStringList(_foodKey, list);
+  }
+
+  Future<void> addFood(FoodEntry entry) async {
+    _foodEntries.add(entry);
+    await _saveFoodEntries();
+    emit(List.from(state));
+  }
+
+  Future<void> deleteFood(FoodEntry entry) async {
+    if (entry.hasImage) {
+      final file = File(entry.imagePath!);
+      if (await file.exists()) await file.delete();
+    }
+    _foodEntries.remove(entry);
+    await _saveFoodEntries();
+    emit(List.from(state));
+  }
 
   /// DATE (SHARED)
 

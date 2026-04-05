@@ -48,11 +48,6 @@ class _MainContainerState extends State<MainContainer> {
           child: Column(
             children: [
 
-              // TodayDateBar(
-              //   calendarIconAsset: 'assets/icons/calendar.png',
-              // ),
-              //
-              // const SizedBox(height: 10),
 
               Container(
                 width: 412,
