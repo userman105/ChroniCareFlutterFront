@@ -1,8 +1,12 @@
 import 'dart:math' as math;
+import 'package:chronic_care/main_activity/blood_log/blood_pressure_reminder_screen.dart';
 import 'package:chronic_care/main_activity/food_log/food_log_screen.dart';
 import 'package:chronic_care/main_activity/glucose_log/glucose_log_screen.dart';
+import 'package:chronic_care/main_activity/glucose_log/glucose_reminder_screen.dart';
 import 'package:chronic_care/main_activity/med_log/medication_log_screen.dart';
+import 'package:chronic_care/main_activity/med_log/medication_reminder_screen.dart';
 import 'package:chronic_care/main_activity/symptom_log/symptom_screen.dart';
+import 'package:chronic_care/main_activity/weight_log/weight_reminder_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,8 +28,9 @@ import 'alarm_screen.dart';
 /// HealthTile
 /// TodayDateBar
 /// BottomNavigationBar
-/// addEntrySlider
+/// addEventSlider
 /// addEntryPopup
+/// AddReminderPopup
 /// BloodPressureInputs
 /// DateRangePickerWidget
 /// WeightInputs
@@ -1114,6 +1119,150 @@ class _AddEntryPopupState extends State<AddEntryPopup> {
 }
 
 
+
+class AddReminderPopup extends StatefulWidget {
+  final List<HealthTile> currentTiles;
+
+  const AddReminderPopup({
+    super.key,
+    required this.currentTiles,
+  });
+
+  static Future<HealthTile?> show(
+      BuildContext context,
+      List<HealthTile> currentTiles,
+      ) {
+    return showModalBottomSheet<HealthTile>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => AddReminderPopup(currentTiles: currentTiles),
+    );
+  }
+
+  @override
+  State<AddReminderPopup> createState() => _AddReminderPopupState();
+}
+
+class _AddReminderPopupState extends State<AddReminderPopup> {
+  late List<HealthTile> tiles;
+  int? selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    const allowed = {'Blood Pressure', 'Meds', 'Weight', 'Glucose'};
+    tiles = allTiles.where((t) => allowed.contains(t.label)).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 420,
+      decoration: const BoxDecoration(
+        color: Color(0xFF212121),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(22),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Image.asset(
+                    "assets/icons/close.png",
+                    width: 22,
+                    height: 22,
+                  ),
+                ),
+
+                const SizedBox(width: 10),
+
+                Text(
+                  "Select Type",
+                  style: GoogleFonts.arimo(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            /// GRID
+            Expanded(
+              child: GridView.builder(
+                itemCount: tiles.length,
+                gridDelegate:
+                const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 3,
+                ),
+                itemBuilder: (context, index) {
+                  final tile = tiles[index];
+
+                  return HighlightableGridTile(
+                    iconAsset: tile.icon,
+                    label: tile.label,
+                    selected: selectedIndex == index,
+                    onTap: () {
+
+                      final selectedTile = tile;
+
+                      Navigator.pop(context, selectedTile);
+
+                      Future.microtask(() {
+                        switch (tile.label) {
+                          case "Blood Pressure":
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const BloodPressureReminderScreen(),
+                              ),
+                            );
+                            break;
+
+                          case "Meds":
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const MedicationReminderScreen(),
+                              ),
+                            );
+                            break;
+
+                          case "Weight":
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: (_)=>WeightReminderScreen()));
+                            break;
+
+                          case "Glucose":
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: (_)=>GlucoseReminderScreen()));
+                            break;
+                        }
+                      });
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class AddEventSlider {
   static void show(
       BuildContext context, {
@@ -1278,8 +1427,15 @@ class _AddEventSliderContent extends StatelessWidget {
               description:
               "Add medications and reminders for measurements, activities, symptoms and appointments.",
               icon: "assets/icons/bellCalendar.png",
-              onTap: (){
-                //TODO
+              onTap: () async {
+
+                final selectedTile =
+                await AddReminderPopup.show(context, allTiles);
+
+                if (selectedTile == null) return;
+
+                onTileSelected(selectedTile);
+
               },
             ),
 
