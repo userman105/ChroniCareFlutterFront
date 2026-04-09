@@ -35,7 +35,7 @@ import 'alarm_screen.dart';
 /// DateRangePickerWidget
 /// WeightInputs
 /// ReminderTile
-///
+/// _LogDrawers
 ///         ***///
 class RoundedInputBox extends StatelessWidget {
   final String hintTop;
@@ -2873,5 +2873,447 @@ class _GlucoseInputState extends State<GlucoseInput> {
       ),
     );
   }
+}
+
+class LogDrawers extends StatefulWidget {
+  final List<ReminderEntry> reminders;
+
+  const LogDrawers({required this.reminders});
+
+  @override
+  State<LogDrawers> createState() => LogDrawersState();
+}
+
+class LogDrawersState extends State<LogDrawers> {
+  bool _missedExpanded = true;
+  bool _upcomingExpanded = false;
+  bool _resolvedExpanded = false;
+
+  List<_LogInstance> _buildInstances(BuildContext context) {
+    final cubit = context.read<HealthCubit>();
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final instances = <_LogInstance>[];
+
+    for (final reminder in widget.reminders) {
+      if (reminder.startDate.isAfter(now)) continue;
+      if (reminder.endDate != null &&
+          reminder.endDate!.isBefore(today)) continue;
+
+      for (int i = 0; i < reminder.times.length; i++) {
+        final t = reminder.times[i];
+        final due = DateTime(
+            today.year, today.month, today.day, t.hour, t.minute);
+
+        final skipped = cubit.isSkipped(reminder, i, today);
+        final resolved = cubit.isResolved(reminder, i, today);
+
+        String status;
+        if (resolved) {
+          status = 'resolved';
+        } else if (skipped) {
+          status = 'skipped';
+        } else if (due.isBefore(now)) {
+          status = 'missed';
+        } else {
+          status = 'upcoming';
+        }
+
+        instances.add(_LogInstance(
+          reminder: reminder,
+          timeIndex: i,
+          due: due,
+          status: status,
+        ));
+      }
+    }
+
+    instances.sort((a, b) => a.due.compareTo(b.due));
+    return instances;
+  }
+
+  String _formatTime(TimeOfDay t) {
+    final h = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
+    final m = t.minute.toString().padLeft(2, '0');
+    final p = t.period == DayPeriod.am ? 'AM' : 'PM';
+    return '$h:$m $p';
+  }
+
+  String _iconAsset(String type) {
+    switch (type) {
+      case 'blood_pressure': return 'assets/icons/bloodPressure.png';
+      case 'meds':           return 'assets/icons/capsule.png';
+      case 'weight':         return 'assets/icons/weight.png';
+      case 'glucose':        return 'assets/icons/diabetes.png';
+      default:               return 'assets/icons/bell.png';
+    }
+  }
+
+  void _handleAddLog(BuildContext context, _LogInstance instance) {
+    final cubit = context.read<HealthCubit>();
+    final today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
+
+    switch (instance.reminder.type) {
+      case 'blood_pressure':
+        Navigator.push(context, MaterialPageRoute(
+          builder: (_) => const BloodPressureScreen(),
+        ));
+        break;
+      case 'meds':
+        Navigator.push(context, MaterialPageRoute(
+          builder: (_) => const MedicationLogScreen(),
+        ));
+        break;
+      case 'weight':
+        Navigator.push(context, MaterialPageRoute(
+          builder: (_) => const WeightLogScreen(),
+        ));
+        break;
+      case 'glucose':
+        Navigator.push(context, MaterialPageRoute(
+          builder: (_) => const GlucoseScreen(),
+        ));
+        break;
+    }
+
+    // Mark as resolved
+    cubit.resolveReminderLog(
+        instance.reminder, instance.timeIndex, today);
+  }
+
+  void _handleSkip(BuildContext context, _LogInstance instance) {
+    final today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
+    context.read<HealthCubit>().skipReminderLog(
+        instance.reminder, instance.timeIndex, today);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final instances = _buildInstances(context);
+
+    final missed = instances
+        .where((i) => i.status == 'missed')
+        .toList();
+    final upcoming = instances
+        .where((i) => i.status == 'upcoming')
+        .toList();
+    final resolved = instances
+        .where((i) =>
+    i.status == 'resolved' || i.status == 'skipped')
+        .toList();
+
+    if (instances.isEmpty) return const SizedBox();
+
+    return Column(
+      children: [
+
+        _drawer(
+          label: 'Missed logs',
+          count: missed.length,
+          expanded: _missedExpanded,
+          accentColor: Colors.redAccent,
+          onTap: () =>
+              setState(() => _missedExpanded = !_missedExpanded),
+          instances: missed,
+          context: context,
+        ),
+
+        const SizedBox(height: 12),
+
+        _drawer(
+          label: 'Upcoming logs',
+          count: upcoming.length,
+          expanded: _upcomingExpanded,
+          accentColor: const Color(0xFF00C950),
+          onTap: () => setState(
+                  () => _upcomingExpanded = !_upcomingExpanded),
+          instances: upcoming,
+          context: context,
+        ),
+
+        const SizedBox(height: 12),
+
+        _drawer(
+          label: 'Resolved logs',
+          count: resolved.length,
+          expanded: _resolvedExpanded,
+          accentColor: Colors.white38,
+          onTap: () => setState(
+                  () => _resolvedExpanded = !_resolvedExpanded),
+          instances: resolved,
+          context: context,
+        ),
+
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  Widget _drawer({
+    required String label,
+    required int count,
+    required bool expanded,
+    required Color accentColor,
+    required VoidCallback onTap,
+    required List<_LogInstance> instances,
+    required BuildContext context,
+  }) {
+    return Column(
+      children: [
+        // Header
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+                horizontal: 14, vertical: 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2D2D2D),
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(12),
+                topRight: const Radius.circular(12),
+                bottomLeft: Radius.circular(expanded ? 0 : 12),
+                bottomRight: Radius.circular(expanded ? 0 : 12),
+              ),
+            ),
+            child: Row(
+              children: [
+                AnimatedRotation(
+                  turns: expanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 250),
+                  child: Icon(Icons.keyboard_arrow_down,
+                      color: accentColor, size: 22),
+                ),
+                const SizedBox(width: 10),
+                Text(label,
+                    style: GoogleFonts.arimo(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600)),
+                const Spacer(),
+                if (count > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: accentColor.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text('$count',
+                        style: GoogleFonts.arimo(
+                            color: accentColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600)),
+                  ),
+              ],
+            ),
+          ),
+        ),
+
+        // Content
+        AnimatedCrossFade(
+          duration: const Duration(milliseconds: 250),
+          crossFadeState: expanded
+              ? CrossFadeState.showFirst
+              : CrossFadeState.showSecond,
+          firstChild: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E1E1E),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(12),
+                bottomRight: Radius.circular(12),
+              ),
+              border: Border.all(
+                  color: Colors.white12, width: 0.5),
+            ),
+            child: instances.isEmpty
+                ? Padding(
+              padding:
+              const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: Text('Nothing here',
+                    style: GoogleFonts.arimo(
+                        color: Colors.white38,
+                        fontSize: 13)),
+              ),
+            )
+                : Column(
+              children: instances
+                  .map((i) => _logTile(context, i))
+                  .toList(),
+            ),
+          ),
+          secondChild: const SizedBox(width: double.infinity),
+        ),
+      ],
+    );
+  }
+
+  Widget _logTile(BuildContext context, _LogInstance instance) {
+    final isResolved = instance.status == 'resolved';
+    final isSkipped = instance.status == 'skipped';
+    final isDone = isResolved || isSkipped;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(
+          horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A2A2A),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white12, width: 0.5),
+      ),
+      child: Row(
+        children: [
+          // Icon
+          Image.asset(_iconAsset(instance.reminder.type),
+              width: 20, height: 20),
+          const SizedBox(width: 10),
+
+          // Name + time
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  instance.reminder.medicineName,
+                  style: GoogleFonts.arimo(
+                    color: isDone
+                        ? Colors.white38
+                        : Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    decoration: isSkipped
+                        ? TextDecoration.lineThrough
+                        : null,
+                  ),
+                ),
+                Text(
+                  _formatTime(instance.reminder.times[
+                  instance.timeIndex]),
+                  style: GoogleFonts.arimo(
+                      color: Colors.white38, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+
+          // Status label for resolved/skipped
+          if (isResolved)
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: const Color(0xFF00C950).withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text('Logged',
+                  style: GoogleFonts.arimo(
+                      color: const Color(0xFF00C950),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500)),
+            ),
+
+          if (isSkipped)
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.white12,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text('Skipped',
+                  style: GoogleFonts.arimo(
+                      color: Colors.white38,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500)),
+            ),
+
+          if (!isDone) ...[
+            // Skip
+            GestureDetector(
+              onTap: () => _handleSkip(context, instance),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.white10,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.close,
+                        color: Colors.white38, size: 12),
+                    const SizedBox(width: 3),
+                    Text('Skip',
+                        style: GoogleFonts.arimo(
+                            color: Colors.white38,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 6),
+
+            // Add log
+            GestureDetector(
+              onTap: () => _handleAddLog(context, instance),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00C950).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                      color: const Color(0xFF00C950)
+                          .withOpacity(0.3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.add,
+                        color: Color(0xFF00C950), size: 12),
+                    const SizedBox(width: 3),
+                    Text('Add log',
+                        style: GoogleFonts.arimo(
+                            color: const Color(0xFF00C950),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+class _LogInstance {
+  final ReminderEntry reminder;
+  final int timeIndex;
+  final DateTime due;
+  final String status; // 'missed' | 'upcoming' | 'resolved' | 'skipped'
+
+  const _LogInstance({
+    required this.reminder,
+    required this.timeIndex,
+    required this.due,
+    required this.status,
+  });
 }
 

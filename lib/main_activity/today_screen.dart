@@ -4,7 +4,9 @@ import 'package:chronic_care/main_activity/med_log/medication_log_screen.dart';
 import 'package:chronic_care/main_activity/symptom_log/symptom_screen.dart';
 import 'package:chronic_care/main_activity/weight_log/weight_log_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../cubit/health_cubit.dart';
 import '../widgets/components.dart';
 import 'blood_log/blood_log_screen.dart';
 
@@ -148,46 +150,8 @@ class _TodayScreenState extends State<TodayScreen> {
               ),
 
               const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Text(
-                    //   "Metrics",
-                    //   style: GoogleFonts.arimo(
-                    //     color: Colors.white,
-                    //     fontSize: 16,
-                    //     fontWeight: FontWeight.w500,
-                    //   ),
-                    // ),
-                    // GestureDetector(
-                    //   onTap: () {
-                    //     Navigator.push(
-                    //       context,
-                    //       MaterialPageRoute(
-                    //         builder: (_) => MetricsScreen(tiles: widget.tiles),
-                    //       ),
-                    //     );
-                    //   },
-                    //   child: Row(
-                    //     children: [
-                    //       Text(
-                    //         "All",
-                    //         style: GoogleFonts.arimo(
-                    //           color: Colors.green,
-                    //           fontSize: 14,
-                    //           fontWeight: FontWeight.w600,
-                    //         ),
-                    //       ),
-                    //       const SizedBox(width: 4),
-                    //       const Icon(Icons.chevron_right, color: Colors.green),
-                    //     ],
-                    //   ),
-                    // ),
-                  ],
-                ),
-              ),
+              LogDrawers(reminders: context.watch<HealthCubit>().getReminders()),
+
             ],
           ),
         ),

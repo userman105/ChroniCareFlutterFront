@@ -42,7 +42,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
             ),
             Expanded(
               child: BlocListener<HealthCubit, List<BloodPressureEntry>>(
-                listener: (context, _) => setState(() {}), // rebuilds screen on cubit emit
+                listener: (context, _) => setState(() {}),
                 child: Builder(
                   builder: (context) {
                     final allReminders = context.read<HealthCubit>().getReminders();
@@ -58,7 +58,6 @@ class _RemindersScreenState extends State<RemindersScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // --- Measurements Header ---
                           GestureDetector(
                             behavior: HitTestBehavior.opaque,
                             onTap: () => setState(() =>
@@ -113,7 +112,6 @@ class _RemindersScreenState extends State<RemindersScreen> {
                             ),
                           ),
 
-                          // --- Measurements Content ---
                           AnimatedCrossFade(
                             duration: const Duration(milliseconds: 250),
                             crossFadeState: _measurementsExpanded
@@ -155,9 +153,8 @@ class _RemindersScreenState extends State<RemindersScreen> {
                             secondChild: const SizedBox(width: double.infinity),
                           ),
 
-                          const SizedBox(height: 16), // Adjusted from 100 to standard spacing
+                          const SizedBox(height: 16), 
 
-                          // --- Meds Header ---
                           GestureDetector(
                             behavior: HitTestBehavior.opaque,
                             onTap: () => setState(() => _medsExpanded = !_medsExpanded),
@@ -203,7 +200,6 @@ class _RemindersScreenState extends State<RemindersScreen> {
                             ),
                           ),
 
-                          // --- Meds Content ---
                           AnimatedCrossFade(
                             duration: const Duration(milliseconds: 250),
                             crossFadeState:

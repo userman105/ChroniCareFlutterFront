@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,17 +6,16 @@ import '../../cubit/health_cubit.dart';
 import 'components.dart';
 
 class ReminderEntry {
-  final String type;         // e.g. "Blood Pressure", "Meds"
-  final String medicineName; // primary name field
+  final String type;
+  final String medicineName;
   final String? reminderName;
-  final String schedule;     // "Recurring" | "Once"
-  final String frequency;    // "Daily", "Weekly", etc.
+  final String schedule;
+  final String frequency;
   final List<TimeOfDay> times;
   final DateTime startDate;
-  final DateTime? endDate;   // null = Never
+  final DateTime? endDate;
   final String? notes;
   final DateTime createdAt;
-
 
   ReminderEntry({
     required this.type,
@@ -29,6 +29,55 @@ class ReminderEntry {
     this.notes,
     required this.createdAt,
   });
+
+  static String _timeToString(TimeOfDay t) {
+    return '${t.hour}:${t.minute}';
+  }
+
+  static TimeOfDay _timeFromString(String s) {
+    final parts = s.split(':');
+    return TimeOfDay(
+      hour: int.parse(parts[0]),
+      minute: int.parse(parts[1]),
+    );
+  }
+
+  String toJson() {
+    final map = {
+      'type': type,
+      'medicineName': medicineName,
+      'reminderName': reminderName,
+      'schedule': schedule,
+      'frequency': frequency,
+      'times': times.map(_timeToString).toList(),
+      'startDate': startDate.toIso8601String(),
+      'endDate': endDate?.toIso8601String(),
+      'notes': notes,
+      'createdAt': createdAt.toIso8601String(),
+    };
+
+    return jsonEncode(map);
+  }
+
+  factory ReminderEntry.fromJson(String source) {
+    final map = jsonDecode(source);
+
+    return ReminderEntry(
+      type: map['type'],
+      medicineName: map['medicineName'],
+      reminderName: map['reminderName'],
+      schedule: map['schedule'],
+      frequency: map['frequency'],
+      times: (map['times'] as List)
+          .map((t) => _timeFromString(t))
+          .toList(),
+      startDate: DateTime.parse(map['startDate']),
+      endDate:
+      map['endDate'] != null ? DateTime.parse(map['endDate']) : null,
+      notes: map['notes'],
+      createdAt: DateTime.parse(map['createdAt']),
+    );
+  }
 }
 class ReminderTemplateScreen extends StatefulWidget {
   final String headerTitle;

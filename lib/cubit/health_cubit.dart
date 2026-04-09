@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'dart:convert';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/blood_pressure_entry.dart';
@@ -11,6 +11,7 @@ import '../services/notification_service.dart';
 import '../widgets/alarm_screen.dart';
 import '../models/glucose_entry.dart';
 
+
 class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   static const _bpKey = 'blood_pressure_entries';
   static const _weightKey = 'weight_entries';
@@ -18,6 +19,7 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   static const _medsKey = 'medication_entries';
   static const _symptomKey = 'symptom_entries';
   static const _foodKey = 'food_entries';
+  static const _reminderKey = 'reminder_entries';
 
 
 
@@ -28,6 +30,7 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     _loadMedicationEntries();
     _loadSymptomEntries();
     _loadFoodEntries();
+    _loadReminders();
   }
 
   DateTime selectedDate = DateTime.now();
@@ -240,25 +243,83 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   List<ReminderEntry> getReminders() => _reminders;
 
   /// REMINDERS
-  void addReminder(ReminderEntry entry) {
+
+
+
+  final Map<String, String> _reminderLogStatus = {};
+  Map<String, String> get reminderLogStatus => _reminderLogStatus;
+
+  String _logKey(ReminderEntry entry, int timeIndex, DateTime date) {
+    return '${entry.createdAt.millisecondsSinceEpoch}_${timeIndex}_${date.year}${date.month}${date.day}';
+  }
+
+  void skipReminderLog(ReminderEntry entry, int timeIndex, DateTime date) {
+    _reminderLogStatus[_logKey(entry, timeIndex, date)] = 'skipped';
+    emit(List.from(state));
+  }
+
+  void resolveReminderLog(ReminderEntry entry, int timeIndex, DateTime date) {
+    _reminderLogStatus[_logKey(entry, timeIndex, date)] = 'logged';
+    emit(List.from(state));
+  }
+
+  bool isSkipped(ReminderEntry entry, int timeIndex, DateTime date) =>
+      _reminderLogStatus[_logKey(entry, timeIndex, date)] == 'skipped';
+
+  bool isResolved(ReminderEntry entry, int timeIndex, DateTime date) =>
+      _reminderLogStatus[_logKey(entry, timeIndex, date)] == 'logged';
+
+
+  Future<void> addReminder(ReminderEntry entry) async {
     _reminders.add(entry);
+    await _saveReminders();
     NotificationService.scheduleReminder(entry);
     emit(List.from(state));
   }
 
-  void updateReminder(ReminderEntry old, ReminderEntry updated) {
+  Future<void> updateReminder(ReminderEntry old, ReminderEntry updated) async {
     final index = _reminders.indexOf(old);
+
     if (index != -1) {
       _reminders[index] = updated;
+      await _saveReminders();
       NotificationService.cancelReminder(old);
       NotificationService.scheduleReminder(updated);
+
       emit(List.from(state));
     }
   }
 
-  void deleteReminder(ReminderEntry entry) {
+  Future<void> deleteReminder(ReminderEntry entry) async {
     _reminders.remove(entry);
+    await _saveReminders();
     NotificationService.cancelReminder(entry);
     emit(List.from(state));
+  }
+
+  Future<void> _loadReminders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList(_reminderKey) ?? [];
+    _reminders.clear();
+    _reminders.addAll(
+      list.map((e) => ReminderEntry.fromJson(e)).toList(),
+    );
+
+    for (final r in _reminders) {
+      NotificationService.scheduleReminder(r);
+    }
+
+    emit(List.from(state));
+
+    for (final r in _reminders) {
+      await NotificationService.cancelReminder(r);
+      await NotificationService.scheduleReminder(r);
+    }
+  }
+
+  Future<void> _saveReminders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = _reminders.map((e) => e.toJson()).toList();
+    await prefs.setStringList(_reminderKey, list);
   }
 }
