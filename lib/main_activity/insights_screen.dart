@@ -13,6 +13,7 @@ import '../models/food_entry.dart';
 import '../models/symptom_entry.dart';
 import '../widgets/components.dart';
 import 'blood_log/blood_pressure_details_screen.dart';
+import 'lab_tests_log/lab_details.dart';
 
 class InsightsScreen extends StatelessWidget {
   final List<HealthTile> tiles;
@@ -150,6 +151,21 @@ class InsightsScreen extends StatelessWidget {
                           }
                           break;
 
+                        case HealthMetricType.testLogs:
+                          final testEntries = List.from(
+                            context.read<HealthCubit>().getLabTests(),
+                          )..sort((a, b) => a.testDate.compareTo(b.testDate));
+
+                          if (testEntries.isNotEmpty) {
+                            final latest = testEntries.last;
+                            value = latest.testName;
+                            subtitle = timeAgo(latest.testDate);
+                          } else {
+                            value = "--";
+                            subtitle = "No data";
+                          }
+                          break;
+
                         default:
                           break;
                       }
@@ -227,6 +243,14 @@ class InsightsScreen extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (_) => FoodDetailsScreen(),
+              ),
+            );
+          }
+          else if (tile.type == HealthMetricType.testLogs) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const LabTestDetailsScreen(),
               ),
             );
           }

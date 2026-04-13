@@ -13,46 +13,44 @@ class SignUpScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        backgroundColor: Color(0xFF1A1A1A),
+    final h = MediaQuery.of(context).size.height;
 
+    return Scaffold(
+      backgroundColor: const Color(0xFF1A1A1A),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 13),
           child: Column(
             children: [
 
-              const SizedBox(height: 20),
+              SizedBox(height: h * 0.025),
 
-              ChronicLogo(),
+              const ChronicLogo(),
 
-              const SizedBox(height: 40),
+              SizedBox(height: h * 0.04),
 
               Text(
                 "Welcome to ChroniCare",
                 style: GoogleFonts.bonaNova(
-                  fontSize: 28,
+                  fontSize: 26,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFFE4E4E4)
+                  color: const Color(0xFFE4E4E4),
                 ),
                 textAlign: TextAlign.center,
               ),
 
               const SizedBox(height: 8),
 
-
               Text(
                 "Your daily health companion",
                 style: GoogleFonts.bonaNova(
-                  fontSize: 16,
-                    color: Color(0xFFE4E4E4)
-
+                  fontSize: 15,
+                  color: const Color(0xFFE4E4E4),
                 ),
                 textAlign: TextAlign.center,
               ),
 
-              const SizedBox(height: 40),
-
+              SizedBox(height: h * 0.04),
 
               RoundedInputBox(
                 hintTop: "Full Name",
@@ -60,7 +58,7 @@ class SignUpScreen extends StatelessWidget {
                 controller: field1,
               ),
 
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
 
               RoundedInputBox(
                 hintTop: "Email",
@@ -68,7 +66,7 @@ class SignUpScreen extends StatelessWidget {
                 controller: field2,
               ),
 
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
 
               RoundedInputBox(
                 hintTop: "Password",
@@ -77,7 +75,7 @@ class SignUpScreen extends StatelessWidget {
                 isPassword: true,
               ),
 
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
 
               RoundedInputBox(
                 hintTop: "Repeat password",
@@ -85,44 +83,46 @@ class SignUpScreen extends StatelessWidget {
                 controller: field4,
               ),
 
-            const SizedBox(height: 35,),
+              SizedBox(height: h * 0.035),
+
               MainButton(
-               text: "Sign up",
-               onTap: (){//TODO
-                 },
+                text: "Sign up",
+                onTap: () {
+                  // TODO
+                },
               ),
-              const SizedBox(height: 18),
+
+              const SizedBox(height: 16),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
+                  const Text(
                     'Already have an account? ',
                     style: TextStyle(
-                      color: const Color(0xFFE4E4E4),
-                      fontSize: 16,
+                      color: Color(0xFFE4E4E4),
+                      fontSize: 15,
                       fontFamily: 'Arimo',
                       fontWeight: FontWeight.w400,
-                      height: 1.50,
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_)=>LoginScreen()));
-                    },
-                    child: Text(
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => LoginScreen())),
+                    child: const Text(
                       'Login',
                       style: TextStyle(
-                        color: const Color(0xFF2B7FFF),
-                        fontSize: 16,
+                        color: Color(0xFF2B7FFF),
+                        fontSize: 15,
                         fontFamily: 'Arimo',
                         fontWeight: FontWeight.w700,
-                        height: 1.50,
                       ),
                     ),
                   ),
                 ],
-              )
+              ),
+
+              SizedBox(height: h * 0.02),
             ],
           ),
         ),

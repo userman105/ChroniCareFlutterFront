@@ -3,6 +3,7 @@ import 'package:chronic_care/main_activity/blood_log/blood_pressure_reminder_scr
 import 'package:chronic_care/main_activity/food_log/food_log_screen.dart';
 import 'package:chronic_care/main_activity/glucose_log/glucose_log_screen.dart';
 import 'package:chronic_care/main_activity/glucose_log/glucose_reminder_screen.dart';
+import 'package:chronic_care/main_activity/lab_tests_log/lab_log.dart';
 import 'package:chronic_care/main_activity/med_log/medication_log_screen.dart';
 import 'package:chronic_care/main_activity/med_log/medication_reminder_screen.dart';
 import 'package:chronic_care/main_activity/symptom_log/symptom_screen.dart';
@@ -741,6 +742,7 @@ enum HealthMetricType {
   meds,
   symptoms,
   food,
+  testLogs,
   unknown,
 }
 
@@ -771,6 +773,8 @@ class HealthTile {
         return HealthMetricType.symptoms;
       case 'food':
         return HealthMetricType.food;
+      case 'test logs':
+        return HealthMetricType.testLogs;
       default:
         return HealthMetricType.unknown;
     }
@@ -783,6 +787,7 @@ List<HealthTile> allTiles = [
   HealthTile(icon: 'assets/icons/cutlery.png', label: 'Food',selected: false),
   HealthTile(icon: 'assets/icons/weight.png', label: 'Weight',selected: false),
   HealthTile(icon: 'assets/icons/diabetes.png', label: 'Glucose',selected: false),
+  HealthTile(icon: 'assets/icons/testImage.png', label: 'Test Logs',selected: false)
 ];
 
 
@@ -1104,6 +1109,11 @@ class _AddEntryPopupState extends State<AddEntryPopup> {
                               Navigator.push(context,
                                   MaterialPageRoute(builder: (_)=>GlucoseScreen()));
                               break;
+
+                            case "Test Logs":
+                              Navigator.push(context,
+                                  MaterialPageRoute(builder: (_)=>LabTestLogScreen()));
+                              break;
                           }
                         });
                       },
@@ -1372,7 +1382,7 @@ class _AddEventSliderContent extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      height: 380,
+      height: 475,
       decoration: const BoxDecoration(
         color: Color(0xFF212121),
         borderRadius: BorderRadius.vertical(
@@ -1457,6 +1467,21 @@ class _AddEventSliderContent extends StatelessWidget {
 
               },
             ),
+
+            const SizedBox(height: 12),
+
+            optionTile(
+              title: "Photograph medical tests",
+              description:
+              "Save medical information related to lab tests for feature insights.",
+              icon: "assets/icons/calendarSlider.png",
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_)=>
+                LabTestLogScreen()));
+
+              },
+            ),
+
           ],
         ),
       ),

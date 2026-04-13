@@ -5,107 +5,114 @@ import 'package:google_fonts/google_fonts.dart';
 import 'widgets/components.dart';
 
 class LoginScreen extends StatelessWidget {
-LoginScreen({super.key});
-final TextEditingController email = TextEditingController();
-final TextEditingController password = TextEditingController();
+  LoginScreen({super.key});
+
+  final TextEditingController email = TextEditingController();
+  final TextEditingController password = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+    final h = MediaQuery.of(context).size.height;
+
     return Scaffold(
-      backgroundColor: Color(0xFF1A1A1A),
-      body: SafeArea(child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 13),
-            child: Column(
-              children: [
+      backgroundColor: const Color(0xFF1A1A1A),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 13),
+          child: Column(
+            children: [
 
-              const SizedBox(height: 20),
+              SizedBox(height: h * 0.025),
 
-              ChronicLogo(),
+              const ChronicLogo(),
 
-              const SizedBox(height: 40),
+              SizedBox(height: h * 0.04),
 
-                Text(
-                  "Welcome to ChroniCare",
-                  style: GoogleFonts.bonaNova(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFFE4E4E4)
+              Text(
+                "Welcome to ChroniCare",
+                style: GoogleFonts.bonaNova(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFFE4E4E4),
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                "Your daily health companion",
+                style: GoogleFonts.bonaNova(
+                  fontSize: 15,
+                  color: const Color(0xFFE4E4E4),
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              SizedBox(height: h * 0.04),
+
+              RoundedInputBox(
+                hintTop: "Email",
+                centerPlaceholder: "Enter your email",
+                controller: email,
+              ),
+
+              const SizedBox(height: 14),
+
+              RoundedInputBox(
+                hintTop: "Password",
+                centerPlaceholder: "Enter your password",
+                controller: password,
+              ),
+
+              SizedBox(height: h * 0.035),
+
+              MainButton(
+                text: "Login",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => ChooseYourCondition()),
+                  );
+                },
+              ),
+
+              SizedBox(height: h * 0.035),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    "Don't have an account yet?",
+                    style: TextStyle(
+                      color: Color(0xFFE4E4E4),
+                      fontSize: 15,
+                      fontFamily: 'Arimo',
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  "Your daily health companion",
-                  style: GoogleFonts.bonaNova(
-                    fontSize: 16,
-                    color: Color(0xFFE4E4E4),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: 40),
-
-                RoundedInputBox(
-                  hintTop: "Email",
-                  centerPlaceholder: "Enter your email",
-                  controller: email,
-                ),
-
-                const SizedBox(height: 18),
-
-                RoundedInputBox(
-                  hintTop: "Password",
-                  centerPlaceholder: "Enter your password",
-                  controller: password,
-                ),
-
-                const SizedBox(height: 35),
-                
-                MainButton(text: "Login",
-                onTap: (){
-                  Navigator.push(context, MaterialPageRoute(builder: (_)=>ChooseYourCondition()));
-                   },),
-
-                const SizedBox(height: 35),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Don't have an account yet?",
+                  GestureDetector(
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => SignUpScreen())),
+                    child: const Text(
+                      ' Sign up',
                       style: TextStyle(
-                        color: const Color(0xFFE4E4E4),
-                        fontSize: 16,
+                        color: Color(0xFF2B7FFF),
+                        fontSize: 15,
                         fontFamily: 'Arimo',
-                        fontWeight: FontWeight.w400,
-                        height: 1.50,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (_)=>SignUpScreen()));
-                      },
-                      child: Text(
-                        'Sign up',
-                        style: TextStyle(
-                          color: const Color(0xFF2B7FFF),
-                          fontSize: 16,
-                          fontFamily: 'Arimo',
-                          fontWeight: FontWeight.w700,
-                          height: 1.50,
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              
-            ]),
-      )
+                  ),
+                ],
+              ),
 
-     ),
-      
+              SizedBox(height: h * 0.02),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

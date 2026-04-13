@@ -1,9 +1,9 @@
 import 'dart:io';
-import 'dart:convert';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/blood_pressure_entry.dart';
 import '../models/food_entry.dart';
+import '../models/labTest_entry.dart';
 import '../models/med_entry.dart';
 import '../models/symptom_entry.dart';
 import '../models/weight_entry.dart';
@@ -20,6 +20,7 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   static const _symptomKey = 'symptom_entries';
   static const _foodKey = 'food_entries';
   static const _reminderKey = 'reminder_entries';
+  static const _labKey = 'lab_test_entries';
 
 
 
@@ -116,7 +117,7 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
 
     await _saveGlucoseEntries();
 
-    emit(List.from(state)); // triggers UI rebuild
+    emit(List.from(state));
   }
 
   /// MEDICATION
@@ -322,4 +323,42 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     final list = _reminders.map((e) => e.toJson()).toList();
     await prefs.setStringList(_reminderKey, list);
   }
+
+  ///    Lab Tests
+
+  List<LabTestEntry> _labTests = [];
+  List<LabTestEntry> getLabTests() => _labTests;
+
+  Future<void> _loadLabTests() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList(_labKey) ?? [];
+
+    _labTests = list.map((e) => LabTestEntry.fromJson(e)).toList();
+  }
+
+  Future<void> _saveLabTests() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = _labTests.map((e) => e.toJson()).toList();
+
+    await prefs.setStringList(_labKey, list);
+  }
+
+  Future<void> addLabTest(LabTestEntry entry) async {
+    _labTests.add(entry);
+    await _saveLabTests();
+    emit(List.from(state));
+  }
+
+  Future<void> deleteLabTest(LabTestEntry entry) async {
+    final file = File(entry.imagePath);
+    if (await file.exists()) await file.delete();
+
+    _labTests.remove(entry);
+    await _saveLabTests();
+    emit(List.from(state));
+  }
+
 }
+
+
+
