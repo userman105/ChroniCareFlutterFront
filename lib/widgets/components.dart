@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:chronic_care/main_activity/blood_log/blood_pressure_reminder_screen.dart';
+import 'package:chronic_care/main_activity/doctor_log/appointment_log_screen.dart';
 import 'package:chronic_care/main_activity/food_log/food_log_screen.dart';
 import 'package:chronic_care/main_activity/glucose_log/glucose_log_screen.dart';
 import 'package:chronic_care/main_activity/glucose_log/glucose_reminder_screen.dart';
@@ -15,10 +16,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../cubit/health_cubit.dart';
 import '../main_activity/blood_log/blood_log_screen.dart';
-import '../main_activity/today_screen.dart';
 import '../main_activity/weight_log/weight_log_screen.dart';
+import '../models/appointment_entry.dart';
 import 'alarm_screen.dart';
 ///***
+///
 ///list of components
 ///
 /// RoundedInputBox
@@ -37,6 +39,7 @@ import 'alarm_screen.dart';
 /// WeightInputs
 /// ReminderTile
 /// LogDrawers
+///
 ///         ***///
 class RoundedInputBox extends StatelessWidget {
   final String hintTop;
@@ -1429,7 +1432,10 @@ class _AddEventSliderContent extends StatelessWidget {
               description: "Set reminders to help you for your appointments",
               icon: "assets/icons/calendarEdit.png",
               onTap: (){
-                //TODO
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => AppointmentLogScreen()),
+                );
               },
             ),
 
@@ -2921,7 +2927,6 @@ class _GlucoseInputState extends State<GlucoseInput> {
     );
   }
 }
-
 class LogDrawers extends StatefulWidget {
   final List<ReminderEntry> reminders;
 
@@ -2932,7 +2937,7 @@ class LogDrawers extends StatefulWidget {
 }
 
 class LogDrawersState extends State<LogDrawers> {
-  bool _missedExpanded = true;
+  bool _missedExpanded = false;
   bool _upcomingExpanded = false;
   bool _resolvedExpanded = false;
 
@@ -2949,8 +2954,7 @@ class LogDrawersState extends State<LogDrawers> {
 
       for (int i = 0; i < reminder.times.length; i++) {
         final t = reminder.times[i];
-        final due = DateTime(
-            today.year, today.month, today.day, t.hour, t.minute);
+        final due = DateTime(today.year, today.month, today.day, t.hour, t.minute);
 
         final skipped = cubit.isSkipped(reminder, i, today);
         final resolved = cubit.isResolved(reminder, i, today);
@@ -2975,6 +2979,18 @@ class LogDrawersState extends State<LogDrawers> {
       }
     }
 
+    final appointments = cubit.getAppointments();
+
+    for (final appt in appointments) {
+      final due = appt.appointmentDateTime;
+
+      instances.add(_LogInstance(
+        appointment: appt,
+        due: due,
+        status: due.isBefore(now) ? 'resolved' : 'upcoming',
+      ));
+    }
+
     instances.sort((a, b) => a.due.compareTo(b.due));
     return instances;
   }
@@ -2989,22 +3005,20 @@ class LogDrawersState extends State<LogDrawers> {
   String _iconAsset(String type) {
     switch (type) {
       case 'blood_pressure': return 'assets/icons/bloodPressure.png';
-      case 'meds':           return 'assets/icons/capsule.png';
-      case 'weight':         return 'assets/icons/weight.png';
-      case 'glucose':        return 'assets/icons/diabetes.png';
-      default:               return 'assets/icons/bell.png';
+      case 'meds': return 'assets/icons/capsule.png';
+      case 'weight': return 'assets/icons/weight.png';
+      case 'glucose': return 'assets/icons/diabetes.png';
+      default: return 'assets/icons/bell.png';
     }
   }
 
   void _handleAddLog(BuildContext context, _LogInstance instance) {
-    final cubit = context.read<HealthCubit>();
-    final today = DateTime(
-      DateTime.now().year,
-      DateTime.now().month,
-      DateTime.now().day,
-    );
+    if (instance.reminder == null) return;
 
-    switch (instance.reminder.type) {
+    final cubit = context.read<HealthCubit>();
+    final today = DateTime.now();
+
+    switch (instance.reminder!.type) {
       case 'blood_pressure':
         Navigator.push(context, MaterialPageRoute(
           builder: (_) => const BloodPressureScreen(),
@@ -3027,48 +3041,37 @@ class LogDrawersState extends State<LogDrawers> {
         break;
     }
 
-    // Mark as resolved
     cubit.resolveReminderLog(
-        instance.reminder, instance.timeIndex, today);
+        instance.reminder!, instance.timeIndex!, today);
   }
 
   void _handleSkip(BuildContext context, _LogInstance instance) {
-    final today = DateTime(
-      DateTime.now().year,
-      DateTime.now().month,
-      DateTime.now().day,
-    );
+    if (instance.reminder == null) return;
+
+    final today = DateTime.now();
+
     context.read<HealthCubit>().skipReminderLog(
-        instance.reminder, instance.timeIndex, today);
+        instance.reminder!, instance.timeIndex!, today);
   }
 
   @override
   Widget build(BuildContext context) {
     final instances = _buildInstances(context);
 
-    final missed = instances
-        .where((i) => i.status == 'missed')
-        .toList();
-    final upcoming = instances
-        .where((i) => i.status == 'upcoming')
-        .toList();
+    final missed = instances.where((i) => i.status == 'missed').toList();
+    final upcoming = instances.where((i) => i.status == 'upcoming').toList();
     final resolved = instances
-        .where((i) =>
-    i.status == 'resolved' || i.status == 'skipped')
+        .where((i) => i.status == 'resolved' || i.status == 'skipped')
         .toList();
-
-    // if (instances.isEmpty) return const SizedBox();
 
     return Column(
       children: [
-
         _drawer(
           label: 'Missed logs',
           count: missed.length,
           expanded: _missedExpanded,
           accentColor: Colors.redAccent,
-          onTap: () =>
-              setState(() => _missedExpanded = !_missedExpanded),
+          onTap: () => setState(() => _missedExpanded = !_missedExpanded),
           instances: missed,
           context: context,
         ),
@@ -3080,8 +3083,7 @@ class LogDrawersState extends State<LogDrawers> {
           count: upcoming.length,
           expanded: _upcomingExpanded,
           accentColor: const Color(0xFF00C950),
-          onTap: () => setState(
-                  () => _upcomingExpanded = !_upcomingExpanded),
+          onTap: () => setState(() => _upcomingExpanded = !_upcomingExpanded),
           instances: upcoming,
           context: context,
         ),
@@ -3093,8 +3095,7 @@ class LogDrawersState extends State<LogDrawers> {
           count: resolved.length,
           expanded: _resolvedExpanded,
           accentColor: Colors.white38,
-          onTap: () => setState(
-                  () => _resolvedExpanded = !_resolvedExpanded),
+          onTap: () => setState(() => _resolvedExpanded = !_resolvedExpanded),
           instances: resolved,
           context: context,
         ),
@@ -3115,22 +3116,14 @@ class LogDrawersState extends State<LogDrawers> {
   }) {
     return Column(
       children: [
-        // Header
         GestureDetector(
-          behavior: HitTestBehavior.opaque,
           onTap: onTap,
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-                horizontal: 14, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             decoration: BoxDecoration(
               color: const Color(0xFF2D2D2D),
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(12),
-                topRight: const Radius.circular(12),
-                bottomLeft: Radius.circular(expanded ? 0 : 12),
-                bottomRight: Radius.circular(expanded ? 0 : 12),
-              ),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [
@@ -3148,218 +3141,100 @@ class LogDrawersState extends State<LogDrawers> {
                         fontWeight: FontWeight.w600)),
                 const Spacer(),
                 if (count > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: accentColor.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text('$count',
-                        style: GoogleFonts.arimo(
-                            color: accentColor,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600)),
-                  ),
+                  Text('$count',
+                      style: GoogleFonts.arimo(color: accentColor)),
               ],
             ),
           ),
         ),
 
-        // Content
         AnimatedCrossFade(
           duration: const Duration(milliseconds: 250),
-          crossFadeState: expanded
-              ? CrossFadeState.showFirst
-              : CrossFadeState.showSecond,
-          firstChild: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E1E1E),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(12),
-                bottomRight: Radius.circular(12),
-              ),
-              border: Border.all(
-                  color: Colors.white12, width: 0.5),
-            ),
-            child: instances.isEmpty
-                ? Padding(
-              padding:
-              const EdgeInsets.symmetric(vertical: 16),
-              child: Center(
-                child: Text('Nothing here',
-                    style: GoogleFonts.arimo(
-                        color: Colors.white38,
-                        fontSize: 13)),
-              ),
-            )
-                : Column(
-              children: instances
-                  .map((i) => _logTile(context, i))
-                  .toList(),
-            ),
+          crossFadeState:
+          expanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+          firstChild: Column(
+            children: instances.map((i) => _logTile(context, i)).toList(),
           ),
-          secondChild: const SizedBox(width: double.infinity),
+          secondChild: const SizedBox(),
         ),
       ],
     );
   }
 
   Widget _logTile(BuildContext context, _LogInstance instance) {
+    final isAppointment = instance.appointment != null;
     final isResolved = instance.status == 'resolved';
     final isSkipped = instance.status == 'skipped';
     final isDone = isResolved || isSkipped;
 
+    final title = isAppointment
+        ? instance.appointment!.appointmentName
+        : instance.reminder!.medicineName;
+
+    final time = isAppointment
+        ? TimeOfDay.fromDateTime(instance.appointment!.appointmentDateTime)
+        : instance.reminder!.times[instance.timeIndex!];
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(
-          horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFF2A2A2A),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white12, width: 0.5),
       ),
       child: Row(
         children: [
-          // Icon
-          Image.asset(_iconAsset(instance.reminder.type),
+          isAppointment
+              ? const Icon(Icons.local_hospital, color: Colors.white)
+              : Image.asset(_iconAsset(instance.reminder!.type),
               width: 20, height: 20),
+
           const SizedBox(width: 10),
 
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  instance.reminder.medicineName,
-                  style: GoogleFonts.arimo(
-                    color: isDone
-                        ? Colors.white38
-                        : Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    decoration: isSkipped
-                        ? TextDecoration.lineThrough
-                        : null,
-                  ),
-                ),
-                Text(
-                  _formatTime(instance.reminder.times[
-                  instance.timeIndex]),
-                  style: GoogleFonts.arimo(
-                      color: Colors.white38, fontSize: 11),
-                ),
+                Text(title,
+                    style: GoogleFonts.arimo(
+                      color: isDone ? Colors.white38 : Colors.white,
+                      fontWeight: FontWeight.w600,
+                    )),
+                Text(_formatTime(time),
+                    style: GoogleFonts.arimo(color: Colors.white38)),
               ],
             ),
           ),
 
-          // Status label for resolved/skipped
-          if (isResolved)
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: const Color(0xFF00C950).withOpacity(0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text('Logged',
-                  style: GoogleFonts.arimo(
-                      color: const Color(0xFF00C950),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500)),
-            ),
-
-          if (isSkipped)
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: Colors.white12,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text('Skipped',
-                  style: GoogleFonts.arimo(
-                      color: Colors.white38,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500)),
-            ),
-
-          if (!isDone) ...[
-            // Skip
+          if (!isAppointment && !isDone) ...[
             GestureDetector(
               onTap: () => _handleSkip(context, instance),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 5),
-                decoration: BoxDecoration(
-                  color: Colors.white10,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.close,
-                        color: Colors.white38, size: 12),
-                    const SizedBox(width: 3),
-                    Text('Skip',
-                        style: GoogleFonts.arimo(
-                            color: Colors.white38,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500)),
-                  ],
-                ),
-              ),
+              child: const Icon(Icons.close, color: Colors.white38),
             ),
-
-            const SizedBox(width: 6),
-
-            // Add log
+            const SizedBox(width: 10),
             GestureDetector(
               onTap: () => _handleAddLog(context, instance),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 5),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF00C950).withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                      color: const Color(0xFF00C950)
-                          .withOpacity(0.3)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.add,
-                        color: Color(0xFF00C950), size: 12),
-                    const SizedBox(width: 3),
-                    Text('Add log',
-                        style: GoogleFonts.arimo(
-                            color: const Color(0xFF00C950),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500)),
-                  ],
-                ),
-              ),
+              child: const Icon(Icons.add, color: Color(0xFF00C950)),
             ),
-          ],
+          ]
         ],
       ),
     );
   }
 }
+
 class _LogInstance {
-  final ReminderEntry reminder;
-  final int timeIndex;
+  final ReminderEntry? reminder;
+  final AppointmentEntry? appointment;
+  final int? timeIndex;
   final DateTime due;
-  final String status; // 'missed' | 'upcoming' | 'resolved' | 'skipped'
+  final String status;
 
   const _LogInstance({
-    required this.reminder,
-    required this.timeIndex,
+    this.reminder,
+    this.appointment,
+    this.timeIndex,
     required this.due,
     required this.status,
   });
 }
-

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/appointment_entry.dart';
 import '../models/blood_pressure_entry.dart';
 import '../models/food_entry.dart';
 import '../models/labTest_entry.dart';
@@ -21,6 +22,7 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   static const _foodKey = 'food_entries';
   static const _reminderKey = 'reminder_entries';
   static const _labKey = 'lab_test_entries';
+  static const _appointmentsKey = 'appointments';
 
 
 
@@ -32,6 +34,7 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     _loadSymptomEntries();
     _loadFoodEntries();
     _loadReminders();
+    _loadAppointments();
   }
 
   DateTime selectedDate = DateTime.now();
@@ -355,6 +358,35 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
 
     _labTests.remove(entry);
     await _saveLabTests();
+    emit(List.from(state));
+  }
+/// Doctor appointment
+
+  List<AppointmentEntry> _appointments = [];
+  List<AppointmentEntry> getAppointments() => _appointments;
+
+  Future<void> _loadAppointments() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList(_appointmentsKey) ?? [];
+    _appointments = list.map((e) => AppointmentEntry.fromJson(e)).toList();
+    emit(List.from(state));
+  }
+
+  Future<void> _saveAppointments() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+        _appointmentsKey, _appointments.map((e) => e.toJson()).toList());
+  }
+
+  Future<void> addAppointment(AppointmentEntry entry) async {
+    _appointments.add(entry);
+    await _saveAppointments();
+    emit(List.from(state));
+  }
+
+  Future<void> deleteAppointment(AppointmentEntry entry) async {
+    _appointments.remove(entry);
+    await _saveAppointments();
     emit(List.from(state));
   }
 

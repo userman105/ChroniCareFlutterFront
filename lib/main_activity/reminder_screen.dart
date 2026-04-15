@@ -1,3 +1,4 @@
+import 'package:chronic_care/main_activity/doctor_log/appointment_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -14,7 +15,7 @@ class RemindersScreen extends StatefulWidget {
 
 class _RemindersScreenState extends State<RemindersScreen> {
   bool _measurementsExpanded = false;
-  bool _medsExpanded = true;
+  bool _medsExpanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -153,6 +154,8 @@ class _RemindersScreenState extends State<RemindersScreen> {
                             secondChild: const SizedBox(width: double.infinity),
                           ),
 
+
+
                           const SizedBox(height: 16), 
 
                           GestureDetector(
@@ -234,6 +237,57 @@ class _RemindersScreenState extends State<RemindersScreen> {
                             ),
                             secondChild: const SizedBox(width: double.infinity),
                           ),
+                          SizedBox(height: 16,),
+
+                          const SizedBox(height: 12),
+
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const AppointmentDetailsScreen(),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF2D2D2D),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.add_chart, color: Colors.white, size: 22),
+
+                                    const SizedBox(width: 10),
+
+                                    Text(
+                                      "View Doctor's appointments",
+                                      style: GoogleFonts.arimo(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+
+                                    const Spacer(),
+
+                                    const Icon(
+                                      Icons.folder,
+                                      color: Colors.white38,
+                                      size: 16,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+
                         ],
                       ),
                     );
