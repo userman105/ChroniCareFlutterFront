@@ -36,7 +36,7 @@ import 'alarm_screen.dart';
 /// DateRangePickerWidget
 /// WeightInputs
 /// ReminderTile
-/// _LogDrawers
+/// LogDrawers
 ///         ***///
 class RoundedInputBox extends StatelessWidget {
   final String hintTop;
@@ -1382,7 +1382,9 @@ class _AddEventSliderContent extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      height: 475,
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.75,
+        ),
       decoration: const BoxDecoration(
         color: Color(0xFF212121),
         borderRadius: BorderRadius.vertical(
@@ -1391,8 +1393,9 @@ class _AddEventSliderContent extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-        child: Column(
-          children: [
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
 
             /// Header
             Row(
@@ -1476,16 +1479,24 @@ class _AddEventSliderContent extends StatelessWidget {
               "Save medical information related to lab tests for feature insights.",
               icon: "assets/icons/calendarSlider.png",
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_)=>
-                LabTestLogScreen()));
+                final testTile = HealthTile(
+                  icon: 'assets/icons/testImage.png',
+                  label: 'Test Logs',
+                );
 
+                onTileSelected(testTile);
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => LabTestLogScreen()),
+                );
               },
             ),
 
           ],
         ),
       ),
-    );
+    ));
   }
 }
 // AddEntryPopup.show(context, allTiles);
@@ -1523,7 +1534,7 @@ class BloodPressureInputs extends StatelessWidget {
 
             Container(
               width: 68,
-              height: 27,
+              height: 30,
               decoration: BoxDecoration(
                 color: const Color(0xFF111111),
                 borderRadius: BorderRadius.circular(3),
@@ -1537,8 +1548,10 @@ class BloodPressureInputs extends StatelessWidget {
                 style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 7),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 7, vertical: 6),
                 ),
+                textAlignVertical: TextAlignVertical.center,
               ),
             ),
 
@@ -1556,7 +1569,7 @@ class BloodPressureInputs extends StatelessWidget {
 
             Container(
               width: 68,
-              height: 27,
+              height: 30,
               decoration: BoxDecoration(
                 color: const Color(0xFF111111),
                 borderRadius: BorderRadius.circular(3),
@@ -1570,8 +1583,10 @@ class BloodPressureInputs extends StatelessWidget {
                 style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 7),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 7, vertical: 6),
                 ),
+                textAlignVertical: TextAlignVertical.center,
               ),
             ),
 
@@ -1601,7 +1616,7 @@ class BloodPressureInputs extends StatelessWidget {
 
         Container(
           width: 79,
-          height: 27,
+          height: 30,
           decoration: BoxDecoration(
             color: const Color(0xFF111111),
             borderRadius: BorderRadius.circular(3),
@@ -1612,8 +1627,10 @@ class BloodPressureInputs extends StatelessWidget {
             style: const TextStyle(color: Colors.white),
             decoration: const InputDecoration(
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 7),
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 7, vertical: 6),
             ),
+            textAlignVertical: TextAlignVertical.center,
           ),
         ),
       ],
@@ -2069,7 +2086,7 @@ class _WeightInputsState extends State<WeightInputs> {
 
             Container(
               width: 80,
-              height: 27,
+              height: 30,
               decoration: BoxDecoration(
                 color: const Color(0xFF111111),
                 borderRadius: BorderRadius.circular(3),
@@ -2082,8 +2099,10 @@ class _WeightInputsState extends State<WeightInputs> {
                   hintText: "kg",
                   hintStyle: TextStyle(color: Colors.white38),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 7),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 7, vertical: 6),
                 ),
+                textAlignVertical: TextAlignVertical.center,
               ),
             ),
 
@@ -2101,7 +2120,7 @@ class _WeightInputsState extends State<WeightInputs> {
 
             Container(
               width: 80,
-              height: 27,
+              height: 30,
               decoration: BoxDecoration(
                 color: const Color(0xFF111111),
                 borderRadius: BorderRadius.circular(3),
@@ -2114,8 +2133,10 @@ class _WeightInputsState extends State<WeightInputs> {
                   hintText: "lbs",
                   hintStyle: TextStyle(color: Colors.white38),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 7),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 7, vertical: 6),
                 ),
+                textAlignVertical: TextAlignVertical.center,
               ),
             ),
 
@@ -2241,6 +2262,7 @@ class _ReminderTileState extends State<ReminderTile> {
     final options = ['Daily', 'Weekly', 'Every 2 days', 'Monthly'];
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         padding: const EdgeInsets.all(24),
@@ -3035,7 +3057,7 @@ class LogDrawersState extends State<LogDrawers> {
     i.status == 'resolved' || i.status == 'skipped')
         .toList();
 
-    if (instances.isEmpty) return const SizedBox();
+    // if (instances.isEmpty) return const SizedBox();
 
     return Column(
       children: [
@@ -3206,7 +3228,6 @@ class LogDrawersState extends State<LogDrawers> {
               width: 20, height: 20),
           const SizedBox(width: 10),
 
-          // Name + time
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

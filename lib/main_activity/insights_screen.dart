@@ -11,6 +11,7 @@ import '../cubit/health_cubit.dart';
 import '../models/blood_pressure_entry.dart';
 import '../models/food_entry.dart';
 import '../models/symptom_entry.dart';
+import '../models/med_entry.dart';
 import '../widgets/components.dart';
 import 'blood_log/blood_pressure_details_screen.dart';
 import 'lab_tests_log/lab_details.dart';
@@ -88,6 +89,10 @@ class InsightsScreen extends StatelessWidget {
                             value = "${latest.systolic}/${latest.diastolic}";
                             subtitle = timeAgo(latest.dateTime);
                           }
+                          else {
+                            value = "--";
+                            subtitle = "No data";
+                          }
                           break;
 
                         case HealthMetricType.glucose:
@@ -119,7 +124,10 @@ class InsightsScreen extends StatelessWidget {
                             value = "${kg.toStringAsFixed(1)} kg";
                             subtitle = timeAgo(latest.dateTime);
                           }
-
+                          else {
+                            value = "--";
+                            subtitle = "No data";
+                          }
                           break;
                         case HealthMetricType.symptoms:
                           final symptomEntries = List.from(
@@ -129,6 +137,22 @@ class InsightsScreen extends StatelessWidget {
                           if (symptomEntries.isNotEmpty) {
                             final latest = symptomEntries.last as SymptomEntry;
                             value = latest.symptom;
+                            subtitle = timeAgo(latest.dateTime);
+                          } else {
+                            value = "--";
+                            subtitle = "No data";
+                          }
+                          break;
+
+                        case HealthMetricType.meds:
+                          final medicationEntries = List.from(
+                            context.read<HealthCubit>().getMedicationEntries(),
+                          )..sort((a, b) => a.dateTime.compareTo(b.dateTime));
+
+                          if (medicationEntries.isNotEmpty) {
+                            final latest = medicationEntries.last as MedicationEntry;
+                            final name = latest.medicationName;
+                            value = name.length > 7 ? "${name.substring(0, 7)}..." : name;
                             subtitle = timeAgo(latest.dateTime);
                           } else {
                             value = "--";

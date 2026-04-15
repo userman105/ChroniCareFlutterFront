@@ -25,7 +25,7 @@ class TodayScreen extends StatefulWidget {
 class _TodayScreenState extends State<TodayScreen> {
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(  // ✅ wrap everything
+    return SingleChildScrollView(
       child: Column(
         children: [
           TodayDateBar(
@@ -148,7 +148,7 @@ class _TodayScreenState extends State<TodayScreen> {
                 LogDrawers(
                     reminders: context.watch<HealthCubit>().getReminders()),
 
-                const SizedBox(height: 20), // ✅ bottom breathing room
+                const SizedBox(height: 20),
               ],
             ),
           ),
