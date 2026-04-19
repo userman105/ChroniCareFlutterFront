@@ -61,41 +61,45 @@ class RoundedInputBox extends StatelessWidget {
       controller: controller,
       obscureText: isPassword,
       textAlign: TextAlign.start,
+
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 16,
+      ),
+
+      cursorColor: Colors.white,
       decoration: InputDecoration(
         labelText: hintTop,
         labelStyle: const TextStyle(
-          color: Color(0xFFFFFFFF),
+          color: Colors.white,
           fontSize: 14,
         ),
+
         hintText: centerPlaceholder,
         hintStyle: const TextStyle(
-          color: Color(0xFF4A5565),
+          color: Colors.white54,
         ),
 
         alignLabelWithHint: true,
         floatingLabelAlignment: FloatingLabelAlignment.start,
 
         filled: true,
-        fillColor: Colors.transparent,
+        fillColor: const Color(0xFF2A2A2A),
 
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
-          borderSide: const BorderSide(
-            color: Color(0xFFFFFFFF),
-          ),
+          borderSide: const BorderSide(color: Colors.white),
         ),
 
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
-          borderSide: const BorderSide(
-            color: Color(0xFFFFFFFF),
-          ),
+          borderSide: const BorderSide(color: Colors.white),
         ),
 
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(
-            color: Color(0xFFFFFFFF),
+            color: Colors.white,
             width: 1.5,
           ),
         ),
