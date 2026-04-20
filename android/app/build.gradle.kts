@@ -9,7 +9,7 @@ android {
     namespace = "com.example.chronic_care"
     compileSdk = 36
     ndkVersion = "29.0.14033849"
-    buildToolsVersion = "36.1.0"
+    buildToolsVersion = "36.0.0"
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true

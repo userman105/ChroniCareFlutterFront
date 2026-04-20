@@ -70,6 +70,13 @@ class AuthCubit extends Cubit<AuthState> {
       );
 
       if (res.statusCode == 201) {
+        final prefs = await SharedPreferences.getInstance();
+
+        await prefs.setString("email", email);
+        await prefs.setString("name", fullName);
+        await prefs.setString("gender", gender);
+        await prefs.setString("dob", dateOfBirth);
+
         emit(AuthOtpSent(email));
       } else {
         emit(AuthError(_extractMessage(res.data)));
@@ -148,14 +155,17 @@ class AuthCubit extends Cubit<AuthState> {
           refreshToken: "guest_refresh_token",
         );
 
+        await prefs.setString("name", "Guest User");
+        await prefs.setString("email", "guest@local");
+        await prefs.setString("gender", "N/A");
+        await prefs.setString("birthday", "-- / -- / ----");
+
         await prefs.setBool("is_logged_in", true);
         await prefs.setBool("is_guest", true);
 
         emit(AuthSuccess());
-        return;
+        return; // 🚨 VERY IMPORTANT (prevents API call)
       }
-
-      ///  NORMAL LOGIN (BACKEND)
 
       final res = await dio.post(
         "/auth/login",
@@ -165,27 +175,76 @@ class AuthCubit extends Cubit<AuthState> {
         },
       );
 
-      if (res.statusCode == 200) {
-        await TokenStorage.saveTokens(
-          accessToken: res.data["access_token"],
-          refreshToken: res.data["refresh_token"],
-        );
+      await TokenStorage.saveTokens(
+        accessToken: res.data["access_token"],
+        refreshToken: res.data["refresh_token"],
+      );
 
-        await prefs.setBool("is_logged_in", true);
-        await prefs.setBool("is_guest", false);
+      final user = res.data["user"];
 
-        emit(AuthSuccess());
-      } else {
-        emit(AuthError(res.data["message"] ?? "Login failed"));
+      await prefs.setString(
+        "name",
+        "${user["first_name"]} ${user["last_name"]}",
+      );
+
+      await prefs.setString("email", user["email"]);
+
+      await prefs.setString(
+        "gender",
+        user["gender"] == true ? "Male" : "Female",
+      );
+
+      if (user["date_of_birth"] != null) {
+        final dob = DateTime.parse(user["date_of_birth"]);
+        final formatted =
+            "${dob.month.toString().padLeft(2, '0')} / "
+            "${dob.day.toString().padLeft(2, '0')} / "
+            "${dob.year}";
+
+        await prefs.setString("birthday", formatted);
       }
+
+      /// flags
+      await prefs.setBool("is_logged_in", true);
+      await prefs.setBool("is_guest", false);
+
+      emit(AuthSuccess());
+
     } on DioException catch (e) {
       final msg = e.response?.data is Map
           ? e.response?.data["message"]
           : e.message;
 
       emit(AuthError(msg ?? "Network error"));
-    } catch (e) {
-      emit(AuthError("Unexpected error occurred"));
+    } catch (_) {
+      emit(AuthError("Login failed"));
     }
+  }
+
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    try {
+      final refreshToken = await TokenStorage.getRefreshToken();
+
+      if ((prefs.getBool("is_guest") ?? false) == false &&
+          refreshToken != null) {
+        await dio.post(
+          "/auth/logout",
+          data: {
+            "refresh_token": refreshToken,
+          },
+        );
+      }
+    } catch (e) {
+      print("Logout API failed: $e");
+
+    }
+
+
+    await TokenStorage.clear();
+    await prefs.clear();
+
+    emit(AuthInitial());
   }
 }

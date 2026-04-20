@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../cubit/auth_cubit.dart';
+import '../sign_up_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -10,13 +14,221 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  String _name = 'ZizO El Maestro';
-  String _birthday = '04 / 14 / 2002';
-  String _gender = 'Male';
-  final String _email = 'example@mail.com';
+  String _name = '';
+  String _birthday = '';
+  String _gender = '';
+  String _email = '';
+  bool _isGuest = false;
   bool _notificationsOn = true;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      _name = prefs.getString('name') ?? 'User';
+      _email = prefs.getString('email') ?? 'example@mail.com';
+      _gender = prefs.getString('gender') ?? 'Male';
+
+      // Check both 'birthday' and 'dob' keys
+      final birthday = prefs.getString('birthday');
+      final dob = prefs.getString('dob');
+
+      if (birthday != null && birthday.isNotEmpty) {
+        _birthday = birthday;
+      } else if (dob != null && dob.isNotEmpty) {
+        // Convert YYYY-MM-DD to MM / DD / YYYY format
+        _birthday = _formatDob(dob);
+      } else {
+        _birthday = '-- / -- / ----';
+      }
+
+      _isGuest = prefs.getBool('is_guest') ?? false;
+      _isLoading = false;
+    });
+  }
+
+  String _formatDob(String dob) {
+    try {
+      // dob is in YYYY-MM-DD format
+      final parts = dob.split('-');
+      if (parts.length == 3) {
+        return '${parts[1]} / ${parts[2]} / ${parts[0]}';
+      }
+    } catch (_) {}
+    return dob;
+  }
+
+  Future<void> _saveToPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('name', _name);
+    await prefs.setString('gender', _gender);
+    await prefs.setString('birthday', _birthday);
+  }
+
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: const Color(0xFF212121),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.logout,
+                color: Color(0xFFFF3030),
+                size: 48,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Logout',
+                style: GoogleFonts.arimo(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _isGuest
+                    ? 'Exit guest mode?'
+                    : 'Are you sure you want to logout?',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.arimo(
+                  color: Colors.white70,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2D2D2D),
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Cancel',
+                            style: GoogleFonts.arimo(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () async {
+                        Navigator.pop(context); // Close dialog
+
+                        if (_isGuest) {
+                          _handleGuestLogout();
+                        } else {
+                          _handleRegularLogout();
+                        }
+                      },
+                      child: Container(
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF3030),
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Logout',
+                            style: GoogleFonts.arimo(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleGuestLogout() async {
+    // Show brief loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(
+        child: CircularProgressIndicator(
+          color: Color(0xFF00C950),
+        ),
+      ),
+    );
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    if (!mounted) return;
+    Navigator.of(context, rootNavigator: true).pop(); // Close loading
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const SignUpScreen()),
+          (route) => false,
+    );
+  }
+
+  Future<void> _handleRegularLogout() async {
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(
+        child: CircularProgressIndicator(
+          color: Color(0xFF00C950),
+        ),
+      ),
+    );
+
+    await context.read<AuthCubit>().logout();
+    if (!mounted) return;
+    Navigator.of(context, rootNavigator: true).pop();
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const SignUpScreen()),
+          (route) => false,
+    );
+  }
 
   void _pickBirthday() {
+    if (_isGuest) {
+      _showGuestModeMessage();
+      return;
+    }
+
     final parts = _birthday.replaceAll(' ', '').split('/');
     final mmCtrl = TextEditingController(text: parts.isNotEmpty ? parts[0] : '');
     final ddCtrl = TextEditingController(text: parts.length > 1 ? parts[1] : '');
@@ -40,7 +252,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Handle
               Center(
                 child: Container(
                   width: 40,
@@ -61,7 +272,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               const SizedBox(height: 20),
 
-              // MM / DD / YY fields
               Row(
                 children: [
                   _dateField('MM', mmCtrl, 2),
@@ -74,14 +284,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               const SizedBox(height: 28),
 
-              // Save button
               GestureDetector(
-                onTap: () {
+                onTap: () async {
                   final mm = mmCtrl.text.padLeft(2, '0');
                   final dd = ddCtrl.text.padLeft(2, '0');
                   final yy = yyCtrl.text;
                   if (mm.isNotEmpty && dd.isNotEmpty && yy.isNotEmpty) {
                     setState(() => _birthday = '$mm / $dd / $yy');
+                    await _saveToPrefs();
                   }
                   Navigator.pop(context);
                 },
@@ -135,6 +345,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+
   Widget _slash() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -145,7 +356,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               fontWeight: FontWeight.w300)),
     );
   }
+
   void _pickGender() {
+    // Disable editing for guest users
+    if (_isGuest) {
+      _showGuestModeMessage();
+      return;
+    }
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -175,8 +393,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     fontWeight: FontWeight.w600)),
             const SizedBox(height: 16),
             ...['Male', 'Female', 'Other'].map((g) => GestureDetector(
-              onTap: () {
+              onTap: () async {
                 setState(() => _gender = g);
+                await _saveToPrefs();
                 Navigator.pop(context);
               },
               child: Container(
@@ -211,7 +430,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+
   void _editName() {
+    // Disable editing for guest users
+    if (_isGuest) {
+      _showGuestModeMessage();
+      return;
+    }
+
     final ctrl = TextEditingController(text: _name);
     showModalBottomSheet(
       context: context,
@@ -262,9 +488,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 20),
               GestureDetector(
-                onTap: () {
+                onTap: () async {
                   if (ctrl.text.trim().isNotEmpty) {
                     setState(() => _name = ctrl.text.trim());
+                    await _saveToPrefs();
                   }
                   Navigator.pop(context);
                 },
@@ -291,6 +518,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+
+  void _showGuestModeMessage() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Guest users cannot edit profile information',
+          style: GoogleFonts.arimo(),
+        ),
+        backgroundColor: const Color(0xFF2D2D2D),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   Widget _settingsRow({
     required String label,
     required String value,
@@ -344,6 +585,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+
   Widget _sectionHeader(String title) {
     return Container(
       width: double.infinity,
@@ -354,19 +596,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
           side: BorderSide(width: 0.5, color: Colors.white24),
         ),
       ),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(title,
-            style: GoogleFonts.arimo(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w500)),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(title,
+                style: GoogleFonts.arimo(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500)),
+          ),
+          if (_isGuest)
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 4,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.orange,
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                'Guest Mode',
+                style: GoogleFonts.arimo(
+                  fontSize: 11,
+                  color: Colors.orange,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF111111),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF00C950)),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFF111111),
       body: SafeArea(
@@ -444,11 +721,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             value: _email,
                             onTap: () {},
                           ),
-                          _settingsRow(
-                            label: 'Password',
-                            value: '',
-                            onTap: () {},
-                          ),
+                          if (!_isGuest)
+                            _settingsRow(
+                              label: 'Password',
+                              value: '',
+                              onTap: () {},
+                            ),
                           _settingsRow(
                             label: 'Notifications',
                             value: _notificationsOn ? 'On' : 'Off',
@@ -461,12 +739,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           _settingsRow(
-                            label: 'Delete Account',
+                            label: 'Logout',
                             value: '',
                             isDestructive: true,
                             showChevron: false,
-                            onTap: () {},
+                            onTap: _showLogoutDialog,
                           ),
+                          if (!_isGuest)
+                            _settingsRow(
+                              label: 'Delete Account',
+                              value: '',
+                              isDestructive: true,
+                              showChevron: false,
+                              onTap: () {},
+                            ),
                         ],
                       ),
                     ),

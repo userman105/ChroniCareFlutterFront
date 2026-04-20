@@ -89,23 +89,33 @@ class RootDecider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _checkLogin(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+    return BlocListener<AuthCubit, AuthState>(
+      listener: (context, state) {
+        if (state is AuthInitial) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const SignUpScreen()),
+                (route) => false,
           );
         }
-
-        final loggedIn = snapshot.data as bool;
-
-        if (loggedIn) {
-          return const MainContainer(tiles: []);
-        }
-
-        return const SignUpScreen();
       },
+      child: FutureBuilder(
+        future: _checkLogin(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          final loggedIn = snapshot.data as bool;
+
+          if (loggedIn) {
+            return const MainContainer(tiles: []);
+          }
+
+          return const SignUpScreen();
+        },
+      ),
     );
   }
 }
