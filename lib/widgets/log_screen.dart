@@ -25,7 +25,6 @@ class LogEntryScreen extends StatefulWidget {
 }
 
 class _LogEntryScreenState extends State<LogEntryScreen> {
-
   final TextEditingController notesController = TextEditingController();
 
   String currentTime = "";
@@ -46,16 +45,6 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
     _updateTimeLabel(selectedTime);
   }
 
-  void _setDateTime() {
-    final now = DateTime.now();
-
-    selectedDate = now;
-    selectedTime = TimeOfDay.fromDateTime(now);
-
-    _updateDateLabel(now);
-    _updateTimeLabel(selectedTime);
-  }
-
   String _monthName(int month) {
     const months = [
       "Jan","Feb","Mar","Apr","May","Jun",
@@ -66,9 +55,13 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bg = Theme.of(context).scaffoldBackgroundColor;
+    final card = Theme.of(context).cardColor;
+    final text = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
+    final hint = Theme.of(context).hintColor;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF212121),
+      backgroundColor: bg,
 
       body: SafeArea(
         child: Column(
@@ -77,15 +70,15 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
             /// HEADER
             Container(
               height: 46,
-              color: const Color(0xFF2D2D2D),
+              color: card,
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Row(
                 children: [
 
                   IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.arrow_back_ios_new,
-                      color: Colors.white,
+                      color: text,
                       size: 20,
                     ),
                     onPressed: () => Navigator.pop(context),
@@ -95,7 +88,7 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
                     child: Text(
                       widget.title,
                       style: GoogleFonts.arimo(
-                        color: Colors.white,
+                        color: text,
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
@@ -114,18 +107,16 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
 
                     const SizedBox(height: 25),
 
-                    /// DATE / TIME LABEL
                     Text(
                       "Date/Time:",
                       style: GoogleFonts.arimo(
-                        color: Colors.white,
+                        color: text,
                         fontSize: 16,
                       ),
                     ),
 
                     const SizedBox(height: 14),
 
-                    /// DATE TIME CHIPS
                     Row(
                       children: [
 
@@ -135,28 +126,20 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF313131),
+                              color: card,
                               borderRadius: BorderRadius.circular(30),
                             ),
                             child: Row(
                               children: [
-
-                                Image.asset(
-                                  "assets/icons/calendar.png",
-                                  width: 14,
-                                  height: 14,
-                                ),
-
+                                Icon(Icons.calendar_month, size: 14, color: hint),
                                 const SizedBox(width: 6),
-
                                 Text(
                                   currentDate,
                                   style: GoogleFonts.arimo(
-                                    color: Colors.white,
+                                    color: text,
                                     fontSize: 12,
                                   ),
                                 ),
-
                               ],
                             ),
                           ),
@@ -170,94 +153,79 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF313131),
+                              color: card,
                               borderRadius: BorderRadius.circular(30),
                             ),
                             child: Row(
                               children: [
-
-                                Image.asset(
-                                  "assets/icons/clock.png",
-                                  width: 14,
-                                  height: 14,
-                                ),
-
+                                Icon(Icons.access_time, size: 14, color: hint),
                                 const SizedBox(width: 6),
-
                                 Text(
                                   currentTime,
                                   style: GoogleFonts.arimo(
-                                    color: Colors.white,
+                                    color: text,
                                     fontSize: 12,
                                   ),
                                 ),
-
                               ],
                             ),
                           ),
                         ),
-
                       ],
                     ),
 
                     const SizedBox(height: 25),
 
-                    /// CUSTOM CONTENT SLOT
                     ...widget.content,
 
                     const SizedBox(height: 25),
 
-                    /// NOTES LABEL
                     Text(
                       "Notes",
                       style: GoogleFonts.arimo(
-                        color: Colors.white,
+                        color: text,
                         fontSize: 14,
                       ),
                     ),
 
                     const SizedBox(height: 8),
 
-                    /// NOTES FIELD
                     TextField(
                       controller: notesController,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: text),
                       decoration: InputDecoration(
                         hintText: "eg. take after food",
-                        hintStyle: GoogleFonts.arimo(
-                          color: const Color(0xFFB4B4B4),
-                        ),
+                        hintStyle: GoogleFonts.arimo(color: hint),
+
                         filled: true,
-                        fillColor: const Color(0xFF0C0C0C),
+                        fillColor: card,
+
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide.none,
                         ),
                       ),
                     ),
 
-
-
                     const SizedBox(height: 25),
 
-                    /// ADD REMINDER BUTTON
                     if (widget.onAddReminder != null) ...[
                       GestureDetector(
                         onTap: widget.onAddReminder,
                         child: Container(
-                          height: 35,
+                          height: 40,
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.white),
+                            border: Border.all(color: hint),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Image.asset("assets/icons/bell.png", width: 18, height: 18),
+                              Icon(Icons.notifications, size: 18, color: text),
                               const SizedBox(width: 6),
                               Text(
                                 "Add reminder",
-                                style: GoogleFonts.arimo(color: Colors.white, fontSize: 14),
+                                style: GoogleFonts.arimo(color: text, fontSize: 14),
                               ),
                             ],
                           ),
@@ -268,7 +236,6 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
 
                     const Spacer(),
 
-                    /// MAIN BUTTON
                     MainButton(
                       text: "Add",
                       enabled: widget.buttonEnabled,
@@ -286,7 +253,6 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
                     ),
 
                     const SizedBox(height: 20),
-
                   ],
                 ),
               ),
@@ -296,6 +262,7 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
       ),
     );
   }
+
   Future<void> _pickDate() async {
     final now = DateTime.now();
 
@@ -303,7 +270,7 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
       context: context,
       initialDate: selectedDate,
       firstDate: DateTime(2020),
-      lastDate: now, // prevents selecting future dates
+      lastDate: now,
     );
 
     if (picked != null) {
@@ -335,23 +302,17 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
 
     if (selectedDateTime.isAfter(now)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Future time cannot be selected"),
-        ),
+        const SnackBar(content: Text("Future time cannot be selected")),
       );
       return;
     }
 
     setState(() {
       selectedTime = picked;
-
-      final hour = picked.hourOfPeriod == 0 ? 12 : picked.hourOfPeriod;
-      final period = picked.period == DayPeriod.pm ? "pm" : "am";
-
-      currentTime =
-      "$hour:${picked.minute.toString().padLeft(2, '0')}$period";
+      _updateTimeLabel(picked);
     });
   }
+
   void _updateDateLabel(DateTime date) {
     final now = DateTime.now();
 
@@ -364,7 +325,6 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
       currentDate = isToday
           ? "Today: ${_monthName(date.month)} ${date.day}"
           : "${_monthName(date.month)} ${date.day}";
-
     });
   }
 
@@ -377,6 +337,4 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
       "$hour:${time.minute.toString().padLeft(2, '0')}$period";
     });
   }
-
 }
-

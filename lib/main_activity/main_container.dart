@@ -16,15 +16,11 @@ class MainContainer extends StatefulWidget {
 }
 
 class _MainContainerState extends State<MainContainer> {
-
   final PageController _pageController = PageController();
   int currentIndex = 0;
 
   void changePage(int index) {
-    setState(() {
-      currentIndex = index;
-    });
-
+    setState(() => currentIndex = index);
     _pageController.animateToPage(
       index,
       duration: const Duration(milliseconds: 300),
@@ -34,45 +30,38 @@ class _MainContainerState extends State<MainContainer> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDark; // from AppThemeX in components.dart
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+      value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness:     isDark ? Brightness.dark  : Brightness.light,
       ),
-
       child: Scaffold(
-        backgroundColor: const Color(0xFF111111),
-
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: SafeArea(
           child: Column(
             children: [
 
-
               Container(
                 width: 412,
-                decoration: const ShapeDecoration(
+                decoration: ShapeDecoration(
                   shape: RoundedRectangleBorder(
                     side: BorderSide(
                       width: 1,
-                      color: Color(0xFF8A8A8A),
+                      color: context.colors.divider, // adaptive
                     ),
                   ),
                 ),
               ),
 
-
               Expanded(
                 child: PageView(
                   controller: _pageController,
                   physics: const BouncingScrollPhysics(),
-
-                  onPageChanged: (index) {
-                    setState(() {
-                      currentIndex = index;
-                    });
-                  },
-
+                  onPageChanged: (index) =>
+                      setState(() => currentIndex = index),
                   children: [
                     TodayScreen(tiles: widget.tiles),
                     InsightsScreen(tiles: widget.tiles),
@@ -89,10 +78,7 @@ class _MainContainerState extends State<MainContainer> {
         bottomNavigationBar: BottomNavigationBarCustom(
           currentIndex: currentIndex,
           onTabSelected: (index) {
-            setState(() {
-              currentIndex = index;
-            });
-
+            setState(() => currentIndex = index);
             _pageController.animateToPage(
               index,
               duration: const Duration(milliseconds: 300),
@@ -101,21 +87,15 @@ class _MainContainerState extends State<MainContainer> {
           },
           onTileSelected: (selectedTile) {
             setState(() {
-
-              final exists = widget.tiles.any(
-                    (t) => t.label == selectedTile.label,
-              );
-
+              final exists =
+              widget.tiles.any((t) => t.label == selectedTile.label);
               if (!exists) {
-                widget.tiles.add(
-                  HealthTile(
-                    icon: selectedTile.icon,
-                    label: selectedTile.label,
-                    selected: false,
-                  ),
-                );
+                widget.tiles.add(HealthTile(
+                  icon:     selectedTile.icon,
+                  label:    selectedTile.label,
+                  selected: false,
+                ));
               }
-
             });
           },
         ),

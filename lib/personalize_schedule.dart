@@ -26,19 +26,21 @@ class _PersonalizeScheduleState extends State<PersonalizeSchedule> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF1A1A1A),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           child: Column(
             children: [
+
               SizedBox(
                 width: 352,
                 child: Text(
                   'Select what you want us to help you with',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.arimo(
-                    color: Color(0xFFFFFFFF),
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                     fontSize: 24,
                     fontWeight: FontWeight.w500,
                   ),

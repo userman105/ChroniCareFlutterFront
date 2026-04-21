@@ -11,13 +11,15 @@ class ChooseYourCondition extends StatefulWidget {
 }
 
 class _ChooseYourConditionState extends State<ChooseYourCondition> {
-
   int selectedCondition = -1;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Color(0xFF1A1A1A),
+      backgroundColor: theme.scaffoldBackgroundColor,
+
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -32,7 +34,7 @@ class _ChooseYourConditionState extends State<ChooseYourCondition> {
                     'Choose Your Condition',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.arimo(
-                      color: const Color(0xFFE4E4E4),
+                      color: theme.textTheme.bodyLarge?.color,
                       fontSize: 30,
                       fontWeight: FontWeight.w700,
                     ),
@@ -44,7 +46,7 @@ class _ChooseYourConditionState extends State<ChooseYourCondition> {
                     "Select the condition you'd like to manage",
                     textAlign: TextAlign.center,
                     style: GoogleFonts.arimo(
-                      color: const Color(0xFFE4E4E4),
+                      color: theme.textTheme.bodyMedium?.color,
                       fontSize: 16,
                       fontWeight: FontWeight.w400,
                       height: 1.5,
@@ -62,9 +64,7 @@ class _ChooseYourConditionState extends State<ChooseYourCondition> {
                 enabled: true,
                 selected: selectedCondition == 0,
                 onTap: () {
-                  setState(() {
-                    selectedCondition = 0;
-                  });
+                  setState(() => selectedCondition = 0);
                 },
               ),
 
@@ -77,9 +77,7 @@ class _ChooseYourConditionState extends State<ChooseYourCondition> {
                 enabled: true,
                 selected: selectedCondition == 1,
                 onTap: () {
-                  setState(() {
-                    selectedCondition = 1;
-                  });
+                  setState(() => selectedCondition = 1);
                 },
               ),
 
@@ -92,24 +90,24 @@ class _ChooseYourConditionState extends State<ChooseYourCondition> {
                 enabled: true,
                 selected: selectedCondition == 2,
                 onTap: () {
-                  setState(() {
-                    selectedCondition = 2;
-                  });
+                  setState(() => selectedCondition = 2);
                 },
               ),
-            
-              const SizedBox(height: 80,),
+
+              const SizedBox(height: 80),
 
               MainButton(
                 text: "Continue",
                 enabled: selectedCondition != -1,
                 onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_)=>MotivationScreen()));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MotivationScreen(),
+                    ),
+                  );
                 },
-              )
-
-
-
+              ),
             ],
           ),
         ),

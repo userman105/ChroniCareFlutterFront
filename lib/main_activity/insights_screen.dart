@@ -34,24 +34,25 @@ class InsightsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: const Color(0xFF111111),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
-
             Container(
               width: double.infinity,
               height: 46,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              color: const Color(0xFF2D2D2D),
+              color: isDark ? const Color(0xFF2D2D2D) : Colors.grey[100],
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     "Insights",
                     style: GoogleFonts.arimo(
-                      color: Colors.white,
+                      color: isDark ? Colors.white : Colors.black,
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
@@ -60,13 +61,12 @@ class InsightsScreen extends StatelessWidget {
                     'assets/icons/insights.png',
                     width: 30,
                     height: 30,
+                    color: isDark ? Colors.white : Colors.black,
                   ),
                 ],
               ),
             ),
-
             const SizedBox(height: 16),
-
             Expanded(
               child: BlocBuilder<HealthCubit, List<BloodPressureEntry>>(
                 builder: (context, bpEntries) {
@@ -199,6 +199,7 @@ class InsightsScreen extends StatelessWidget {
                         tile: tile,
                         value: value,
                         subtitle: subtitle,
+                        isDark: isDark,
                       );
                     },
                   );
@@ -216,6 +217,7 @@ class InsightsScreen extends StatelessWidget {
     required HealthTile tile,
     required String value,
     required String subtitle,
+    required bool isDark,
   }) {
     return Material(
       color: Colors.transparent,
@@ -286,14 +288,14 @@ class InsightsScreen extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: ShapeDecoration(
-            color: const Color(0xFF2D2D2D),
+            color: isDark ? const Color(0xFF2D2D2D) : Colors.grey[100],
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
           ),
           child: Row(
             children: [
-              Image.asset(tile.icon, width: 28, height: 28),
+              Image.asset(tile.icon, width: 28, height: 28, color: isDark ? Colors.white : Colors.black,),
 
               const SizedBox(width: 12),
 
@@ -305,7 +307,7 @@ class InsightsScreen extends StatelessWidget {
                     Text(
                       tile.label,
                       style: GoogleFonts.arimo(
-                        color: Colors.white,
+                        color: isDark ? Colors.white : Colors.black,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -314,7 +316,7 @@ class InsightsScreen extends StatelessWidget {
                       Text(
                         subtitle,
                         style: GoogleFonts.arimo(
-                          color: Colors.white.withOpacity(0.52),
+                          color: isDark ? Colors.white.withOpacity(0.52) : Colors.black54,
                           fontSize: 15,
                           fontWeight: FontWeight.w300,
                         ),
@@ -327,7 +329,7 @@ class InsightsScreen extends StatelessWidget {
                 Text(
                   value,
                   style: GoogleFonts.arimo(
-                    color: Colors.white,
+                    color: isDark ? Colors.white : Colors.black,
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                   ),

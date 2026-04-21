@@ -79,6 +79,7 @@ class ReminderEntry {
     );
   }
 }
+
 class ReminderTemplateScreen extends StatefulWidget {
   final String headerTitle;
   final String reminderType;
@@ -129,7 +130,7 @@ class _ReminderTemplateScreenState
     return '$h:$m $period';
   }
 
-  void _openDateRange() {
+  void _openDateRange(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -149,15 +150,30 @@ class _ReminderTemplateScreenState
     );
   }
 
-  Future<void> _pickTime(int index) async {
+  Future<void> _pickTime(int index, BuildContext context) async {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final picked = await showTimePicker(
       context: context,
       initialTime: _times[index],
       builder: (ctx, child) => Theme(
-        data: ThemeData.dark().copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: Color(0xFF00C950),
-            surface: Color(0xFF2D2D2D),
+        data: isDark ? ThemeData.dark().copyWith(
+          colorScheme: ColorScheme.dark(
+            primary: theme.primaryColor,
+            surface: theme.scaffoldBackgroundColor,
+            onSurface: Colors.white,
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(foregroundColor: theme.primaryColor),
+          ),
+        ) : ThemeData.light().copyWith(
+          colorScheme: ColorScheme.light(
+            primary: theme.primaryColor,
+            surface: theme.scaffoldBackgroundColor,
+            onSurface: Colors.black,
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(foregroundColor: theme.primaryColor),
           ),
         ),
         child: child!,
@@ -168,16 +184,18 @@ class _ReminderTemplateScreenState
     }
   }
 
-  void _pickFrequency() {
+  void _pickFrequency(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final options = ['Daily', 'Weekly', 'Every 2 days', 'Monthly'];
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Color(0xFF212121),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF212121) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -186,14 +204,14 @@ class _ReminderTemplateScreenState
               child: Container(
                 width: 40, height: 4,
                 decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: isDark ? Colors.white24 : Colors.grey[300],
                     borderRadius: BorderRadius.circular(2)),
               ),
             ),
             const SizedBox(height: 20),
             Text('Frequency',
                 style: GoogleFonts.arimo(
-                    color: Colors.white,
+                    color: isDark ? Colors.white : Colors.black,
                     fontSize: 18,
                     fontWeight: FontWeight.w600)),
             const SizedBox(height: 16),
@@ -205,20 +223,20 @@ class _ReminderTemplateScreenState
                 margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
                   color: _frequency == o
-                      ? const Color(0xFF00C950).withOpacity(0.15)
-                      : const Color(0xFF2D2D2D),
+                      ? theme.primaryColor.withOpacity(0.15)
+                      : (isDark ? const Color(0xFF2D2D2D) : Colors.grey[100]),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                       color: _frequency == o
-                          ? const Color(0xFF00C950)
+                          ? theme.primaryColor
                           : Colors.transparent),
                 ),
                 child: Center(
                   child: Text(o,
                       style: GoogleFonts.arimo(
                           color: _frequency == o
-                              ? const Color(0xFF00C950)
-                              : Colors.white,
+                              ? theme.primaryColor
+                              : (isDark ? Colors.white : Colors.black),
                           fontSize: 16,
                           fontWeight: FontWeight.w500)),
                 ),
@@ -253,181 +271,159 @@ class _ReminderTemplateScreenState
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: const Color(0xFF212121),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
-
             Container(
               height: 46,
               padding: const EdgeInsets.symmetric(horizontal: 14),
-              color: const Color(0xFF2D2D2D),
+              color: isDark ? const Color(0xFF2D2D2D) : Colors.grey[100],
               child: Row(
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: const Icon(Icons.arrow_back, color: Colors.white),
+                    child: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black),
                   ),
                   const SizedBox(width: 16),
                   Text(widget.headerTitle,
                       style: GoogleFonts.arimo(
-                          color: Colors.white,
+                          color: isDark ? Colors.white : Colors.black,
                           fontSize: 16,
                           fontWeight: FontWeight.w500)),
                 ],
               ),
             ),
-
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
-                    _label(widget.medicineLabel),
+                    _label(widget.medicineLabel, isDark),
                     const SizedBox(height: 6),
                     _textField(
                       controller: _nameCtrl,
                       hint: widget.medicineHint,
                       onChanged: (_) => setState(() {}),
+                      isDark: isDark,
                     ),
-
                     const SizedBox(height: 6),
-
-
                     if (widget.showAddMore) ...[
                       const SizedBox(height: 6),
                       Center(
                         child: Text('+ Add More Meds',
                             style: GoogleFonts.arimo(
-                                color: const Color(0xFFA0A0A0),
+                                color: isDark ? const Color(0xFFA0A0A0) : Colors.grey[600],
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500)),
                       ),
                       const SizedBox(height: 20),
                     ],
-
                     const SizedBox(height: 20),
-
-
                     _sectionCard(
+                      isDark: isDark,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-
-                          Center(child: _scheduleToggle()),
-
+                          Center(child: _scheduleToggle(theme, isDark)),
                           const SizedBox(height: 16),
-
-                          // Schedule / frequency row
+                          _label('Schedule', isDark),
                           _infoRow(
                             label: 'Schedule',
                             value: _isRecurring ? _frequency : 'Once',
-                            onTap: _isRecurring ? _pickFrequency : null,
+                            onTap: _isRecurring
+                                ? () => _pickFrequency(context)
+                                : null,
+                            isDark: isDark,
+                            theme: theme,
                           ),
-
-                          _divider(),
-
-                          // Times
-                          ..._times.asMap().entries.map((entry) {
-                            final i = entry.key;
-                            final t = entry.value;
-                            return Column(
-                              children: [
-                                _infoRow(
-                                  label: i == 0 ? 'Times' : '',
-                                  value: _formatTime(t),
-                                  onTap: () => _pickTime(i),
-                                  trailing: i > 0
-                                      ? GestureDetector(
+                          _divider(isDark),
+                          ..._times.asMap().entries.map((e) {
+                            final i = e.key;
+                            final t = e.value;
+                            return Column(children: [
+                              _infoRow(
+                                label: i == 0 ? 'Times' : '',
+                                value: _formatTime(t),
+                                onTap: () => _pickTime(i, context),
+                                trailing: i > 0
+                                    ? GestureDetector(
                                     onTap: () => setState(
                                             () => _times.removeAt(i)),
-                                    child: const Icon(Icons.close,
-                                        color: Colors.white38,
-                                        size: 16),
-                                  )
-                                      : null,
-                                ),
-                                _divider(),
-                              ],
-                            );
+                                    child: Icon(Icons.close,
+                                        color: isDark ? Colors.white38 : Colors.grey,
+                                        size: 16))
+                                    : null,
+                                isDark: isDark,
+                                theme: theme,
+                              ),
+                              _divider(isDark),
+                            ]);
                           }),
-
-                          // Add time
                           GestureDetector(
-                            onTap: () => setState(() =>
-                                _times.add(const TimeOfDay(hour: 8, minute: 0))),
+                            onTap: () => setState(
+                                    () => _times.add(const TimeOfDay(hour: 8, minute: 0))),
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 6),
+                              padding:
+                              const EdgeInsets.symmetric(vertical: 6),
                               child: Text('+ Add time',
                                   style: GoogleFonts.arimo(
-                                      color: const Color(0xFF00C950),
+                                      color: theme.primaryColor,
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500)),
                             ),
                           ),
-
-                          _divider(),
-
-                          // Start & End date — one button opens DateRangePicker
+                          _divider(isDark),
                           GestureDetector(
                             behavior: HitTestBehavior.opaque,
-                            onTap: _openDateRange,
-                            child: Column(
-                              children: [
-                                _infoRow(
+                            onTap: () => _openDateRange(context),
+                            child: Column(children: [
+                              _infoRow(
                                   label: 'Start date',
                                   value: _formatDate(_startDate),
-                                  onTap: null, // handled by parent
-                                ),
-                                _divider(),
-                                _infoRow(
+                                  onTap: null,
+                                  isDark: isDark,
+                                  theme: theme),
+                              _divider(isDark),
+                              _infoRow(
                                   label: 'End date',
                                   value: _endDate != null
                                       ? _formatDate(_endDate!)
                                       : 'Never',
                                   onTap: null,
-                                ),
-                              ],
-                            ),
+                                  isDark: isDark,
+                                  theme: theme),
+                            ]),
                           ),
-
-                          _divider(),
-
-                          // Reminder name (optional)
+                          _divider(isDark),
                           _infoRowField(
                             label: 'Reminder name',
                             hint: 'eg. Morning meds',
                             controller: _reminderNameCtrl,
                             optional: true,
+                            isDark: isDark,
                           ),
-
-                          _divider(),
-
-                          // Notes (optional)
+                          _divider(isDark),
                           _infoRowField(
                             label: 'Notes',
                             hint: 'eg. take after food',
                             controller: _notesCtrl,
                             optional: true,
+                            isDark: isDark,
                           ),
                         ],
                       ),
                     ),
-
-                    const SizedBox(height: 32),
-
-                    const SizedBox(height: 125),
-                    Center(
-                      child: MainButton(
-                        text: 'Add',
-                        enabled: _canSave,
-                        onTap: _canSave ? _save : null,
-                      ),
+                    const SizedBox(height: 24),
+                    MainButton(
+                      text: 'Save',
+                      enabled: _canSave,
+                      onTap: _save,
                     ),
-
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -439,82 +435,83 @@ class _ReminderTemplateScreenState
     );
   }
 
-
-  Widget _label(String text) => Text(text,
+  Widget _label(String text, bool isDark) {
+    return Text(
+      text,
       style: GoogleFonts.arimo(
-          color: Colors.white54, fontSize: 13, fontWeight: FontWeight.w400));
-
-  Widget _textField({
-    required TextEditingController controller,
-    required String hint,
-    void Function(String)? onChanged,
-  }) {
-    return TextField(
-      controller: controller,
-      onChanged: onChanged,
-      style: GoogleFonts.arimo(color: Colors.white, fontSize: 16),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: GoogleFonts.arimo(
-            color: const Color(0xFFCDCDCD), fontSize: 16),
-        filled: true,
-        fillColor: const Color(0xFF4F4F4F),
-        contentPadding:
-        const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
-        ),
+        color: isDark ? Colors.white : Colors.black,
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
       ),
     );
   }
 
-  Widget _sectionCard({required Widget child}) {
+  Widget _textField({
+    required TextEditingController controller,
+    required String hint,
+    required ValueChanged<String> onChanged,
+    required bool isDark,
+  }) {
+    return TextField(
+      controller: controller,
+      onChanged: onChanged,
+      style: GoogleFonts.arimo(color: isDark ? Colors.white : Colors.black, fontSize: 14),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: GoogleFonts.arimo(color: isDark ? const Color(0xFFA0A0A0) : Colors.grey[600], fontSize: 14),
+        filled: true,
+        fillColor: isDark ? const Color(0xFF2D2D2D) : Colors.grey[100],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      ),
+    );
+  }
+
+  Widget _sectionCard({required Widget child, required bool isDark}) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(14),
+        color: isDark ? const Color(0xFF2D2D2D) : Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
       ),
       child: child,
     );
   }
 
-  Widget _scheduleToggle() {
+  Widget _scheduleToggle(ThemeData theme, bool isDark) {
     return Container(
-      height: 26,
-      padding: const EdgeInsets.all(3),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F0F0F),
-        borderRadius: BorderRadius.circular(34),
+        color: isDark ? const Color(0xFF111111) : Colors.grey[200],
+        borderRadius: BorderRadius.circular(33),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _toggleOption('Recurring', _isRecurring,
-                  () => setState(() => _isRecurring = true)),
-          _toggleOption('Once', !_isRecurring,
-                  () => setState(() => _isRecurring = false)),
+          _toggleOption("Once", !_isRecurring, () => setState(() => _isRecurring = false), theme, isDark),
+          _toggleOption("Recurring", _isRecurring, () => setState(() => _isRecurring = true), theme, isDark),
         ],
       ),
     );
   }
 
-  Widget _toggleOption(String label, bool active, VoidCallback onTap) {
+  Widget _toggleOption(String label, bool active, VoidCallback onTap, ThemeData theme, bool isDark) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
         decoration: BoxDecoration(
-          color: active ? const Color(0xFF5A5A5A) : Colors.transparent,
+          color: active ? theme.primaryColor.withOpacity(0.15) : Colors.transparent,
           borderRadius: BorderRadius.circular(33),
         ),
         child: Text(label,
             style: GoogleFonts.arimo(
                 color: active
-                    ? const Color(0xFF00C950)
-                    : Colors.white.withOpacity(0.48),
+                    ? theme.primaryColor
+                    : (isDark ? Colors.white.withOpacity(0.48) : Colors.grey[600]),
                 fontSize: 12,
                 fontWeight: FontWeight.w400)),
       ),
@@ -526,6 +523,8 @@ class _ReminderTemplateScreenState
     required String value,
     VoidCallback? onTap,
     Widget? trailing,
+    required bool isDark,
+    required ThemeData theme,
   }) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -537,14 +536,14 @@ class _ReminderTemplateScreenState
             if (label.isNotEmpty)
               Text(label,
                   style: GoogleFonts.arimo(
-                      color: Colors.white.withOpacity(0.77),
+                      color: isDark ? Colors.white.withOpacity(0.77) : Colors.black87,
                       fontSize: 14,
                       fontWeight: FontWeight.w500)),
             const Spacer(),
             if (trailing != null) ...[trailing, const SizedBox(width: 6)],
             Text(value,
                 style: GoogleFonts.arimo(
-                    color: const Color(0xFF00C950),
+                    color: theme.primaryColor,
                     fontSize: 14,
                     fontWeight: FontWeight.w500)),
           ],
@@ -558,6 +557,7 @@ class _ReminderTemplateScreenState
     required String hint,
     required TextEditingController controller,
     bool optional = false,
+    required bool isDark,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -568,27 +568,27 @@ class _ReminderTemplateScreenState
             children: [
               Text(label,
                   style: GoogleFonts.arimo(
-                      color: Colors.white,
+                      color: isDark ? Colors.white : Colors.black,
                       fontSize: 14,
                       fontWeight: FontWeight.w400)),
               const Spacer(),
               if (optional)
                 Text('optional',
                     style: GoogleFonts.arimo(
-                        color: Colors.white.withOpacity(0.49),
+                        color: isDark ? Colors.white.withOpacity(0.49) : Colors.grey[600],
                         fontSize: 14)),
             ],
           ),
           const SizedBox(height: 6),
           TextField(
             controller: controller,
-            style: GoogleFonts.arimo(color: Colors.white, fontSize: 14),
+            style: GoogleFonts.arimo(color: isDark ? Colors.white : Colors.black, fontSize: 14),
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: GoogleFonts.arimo(
-                  color: const Color(0xFFB4B4B4), fontSize: 14),
+                  color: isDark ? const Color(0xFFB4B4B4) : Colors.grey[500], fontSize: 14),
               filled: true,
-              fillColor: const Color(0xFF0C0C0C),
+              fillColor: isDark ? const Color(0xFF0C0C0C) : Colors.grey[100],
               contentPadding:
               const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               border: OutlineInputBorder(
@@ -602,8 +602,8 @@ class _ReminderTemplateScreenState
     );
   }
 
-  Widget _divider() => Container(
+  Widget _divider(bool isDark) => Container(
     height: 0.5,
-    color: Colors.white12,
+    color: isDark ? Colors.white12 : Colors.grey[300],
   );
 }

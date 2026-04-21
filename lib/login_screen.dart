@@ -23,6 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final h = MediaQuery.of(context).size.height;
+    final theme = Theme.of(context);
 
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
@@ -49,8 +50,10 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
       },
+
       child: Scaffold(
-        backgroundColor: const Color(0xFF1A1A1A),
+        backgroundColor: theme.scaffoldBackgroundColor,
+
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 13),
@@ -67,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: GoogleFonts.bonaNova(
                     fontSize: 26,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFFE4E4E4),
+                    color: theme.textTheme.bodyLarge?.color,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -78,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   "Your daily health companion",
                   style: GoogleFonts.bonaNova(
                     fontSize: 15,
-                    color: const Color(0xFFE4E4E4),
+                    color: theme.textTheme.bodyMedium?.color,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -130,10 +133,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
+                    Text(
                       "Don't have an account yet?",
                       style: TextStyle(
-                        color: Color(0xFFE4E4E4),
+                        color: theme.textTheme.bodyMedium?.color,
                         fontSize: 15,
                       ),
                     ),
@@ -146,10 +149,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         );
                       },
-                      child: const Text(
+                      child: Text(
                         " Sign up",
                         style: TextStyle(
-                          color: Color(0xFF2B7FFF),
+                          color: theme.colorScheme.primary,
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                         ),

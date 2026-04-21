@@ -15,11 +15,11 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  final _nameCtrl = TextEditingController();
-  final _emailCtrl = TextEditingController();
-  final _passCtrl = TextEditingController();
+  final _nameCtrl    = TextEditingController();
+  final _emailCtrl   = TextEditingController();
+  final _passCtrl    = TextEditingController();
   final _confirmCtrl = TextEditingController();
-  final _dobCtrl = TextEditingController();
+  final _dobCtrl     = TextEditingController();
 
   String? _selectedGender;
   bool _loadingShown = false;
@@ -36,13 +36,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   void _submit(BuildContext context) {
     final fullName = _nameCtrl.text.trim();
-    final email = _emailCtrl.text.trim();
-    final pass = _passCtrl.text;
-    final confirm = _confirmCtrl.text;
-    final dob = _dobCtrl.text.trim();
+    final email    = _emailCtrl.text.trim();
+    final pass     = _passCtrl.text;
+    final confirm  = _confirmCtrl.text;
+    final dob      = _dobCtrl.text.trim();
 
     if (fullName.isEmpty || email.isEmpty || pass.isEmpty ||
-        confirm.isEmpty || dob.isEmpty || _selectedGender == null) {
+        confirm.isEmpty  || dob.isEmpty   || _selectedGender == null) {
       _snack(context, 'Please fill all fields');
       return;
     }
@@ -52,36 +52,37 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return;
     }
 
-    final names = fullName.split(' ');
-    final firstName = names.first;
-    final lastName =
-    names.length > 1 ? names.sublist(1).join(' ') : '';
-
     context.read<AuthCubit>().register(
-      fullName: fullName,
-      email: email,
-      password: pass,
-      gender: _selectedGender!,
+      fullName:    fullName,
+      email:       email,
+      password:    pass,
+      gender:      _selectedGender!,
       dateOfBirth: dob,
     );
   }
 
-  void _snack(BuildContext context, String msg) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg)));
-  }
+  void _snack(BuildContext context, String msg) =>
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(msg)));
 
   Future<void> _pickDob() async {
+    final isDark = context.isDark;
     final picked = await showDatePicker(
       context: context,
       initialDate: DateTime(1995),
       firstDate: DateTime(1920),
       lastDate: DateTime.now().subtract(const Duration(days: 365 * 10)),
       builder: (ctx, child) => Theme(
-        data: ThemeData.dark().copyWith(
+        data: isDark
+            ? ThemeData.dark().copyWith(
           colorScheme: const ColorScheme.dark(
-            primary: Color(0xFF00C950),
+            primary: AppColors.primary,
             surface: Color(0xFF2D2D2D),
+          ),
+        )
+            : ThemeData.light().copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: AppColors.primary,
           ),
         ),
         child: child!,
@@ -96,7 +97,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     final h = MediaQuery.of(context).size.height;
-
+    final c = context.colors;
 
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) async {
@@ -125,7 +126,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
             barrierDismissible: false,
             builder: (_) {
               final cubit = context.read<AuthCubit>();
-
               return BlocProvider.value(
                 value: cubit,
                 child: OtpDialog(email: state.email),
@@ -138,173 +138,180 @@ class _SignUpScreenState extends State<SignUpScreen> {
           _snack(context, state.message);
         }
       },
+
       builder: (context, state) {
         return Scaffold(
-          backgroundColor: const Color(0xFF1A1A1A),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: SafeArea(
             child: AbsorbPointer(
               absorbing: state is AuthLoading,
               child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
 
-                      SizedBox(height: h * 0.03),
+                    SizedBox(height: h * 0.03),
 
-                      Center(child: const ChronicLogo()),
-                      SizedBox(height: h * 0.03),
-                      Center(
-                        child: Text(
-                          'Create Account',
-                          style: GoogleFonts.arimo(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFFE4E4E4),
-                          ),
+                    const Center(child: ChronicLogo()),
+                    SizedBox(height: h * 0.03),
+
+                    Center(
+                      child: Text(
+                        'Create Account',
+                        style: GoogleFonts.arimo(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w600,
+                          color: c.primaryText,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Center(
-                        child: Text(
-                          'Your daily health companion',
-                          style: GoogleFonts.arimo(
-                            fontSize: 14,
-                            color: Colors.white38,
-                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Center(
+                      child: Text(
+                        'Your daily health companion',
+                        style: GoogleFonts.arimo(
+                          fontSize: 14,
+                          color: c.subtleText,
                         ),
                       ),
+                    ),
 
-                      SizedBox(height: h * 0.04),
+                    SizedBox(height: h * 0.04),
 
-                      _label('Full Name'),
-                      const SizedBox(height: 6),
-                      _field(
-                        controller: _nameCtrl,
-                        hint: 'Enter your full name',
-                        icon: Icons.person_outline,
-                      ),
+                    _label(context, 'Full Name'),
+                    const SizedBox(height: 6),
+                    _field(
+                      context: context,
+                      controller: _nameCtrl,
+                      hint: 'Enter your full name',
+                      icon: Icons.person_outline,
+                    ),
 
-                      const SizedBox(height: 14),
+                    const SizedBox(height: 14),
 
-                      _label('Email'),
-                      const SizedBox(height: 6),
-                      _field(
-                        controller: _emailCtrl,
-                        hint: 'Enter your email',
-                        icon: Icons.email_outlined,
-                        keyboard: TextInputType.emailAddress,
-                      ),
+                    _label(context, 'Email'),
+                    const SizedBox(height: 6),
+                    _field(
+                      context: context,
+                      controller: _emailCtrl,
+                      hint: 'Enter your email',
+                      icon: Icons.email_outlined,
+                      keyboard: TextInputType.emailAddress,
+                    ),
 
-                      const SizedBox(height: 14),
+                    const SizedBox(height: 14),
 
-                      _label('Password'),
-                      const SizedBox(height: 6),
-                      _field(
-                        controller: _passCtrl,
-                        hint: '••••••••',
-                        icon: Icons.lock_outline,
-                        obscure: true,
-                      ),
+                    _label(context, 'Password'),
+                    const SizedBox(height: 6),
+                    _field(
+                      context: context,
+                      controller: _passCtrl,
+                      hint: '••••••••',
+                      icon: Icons.lock_outline,
+                      obscure: true,
+                    ),
 
-                      const SizedBox(height: 14),
+                    const SizedBox(height: 14),
 
-                      _label('Confirm Password'),
-                      const SizedBox(height: 6),
-                      _field(
-                        controller: _confirmCtrl,
-                        hint: '••••••••',
-                        icon: Icons.lock_outline,
-                        obscure: true,
-                      ),
+                    _label(context, 'Confirm Password'),
+                    const SizedBox(height: 6),
+                    _field(
+                      context: context,
+                      controller: _confirmCtrl,
+                      hint: '••••••••',
+                      icon: Icons.lock_outline,
+                      obscure: true,
+                    ),
 
-                      const SizedBox(height: 14),
+                    const SizedBox(height: 14),
 
-                      _label('Gender'),
-                      const SizedBox(height: 6),
-                      _genderSelector(),
+                    _label(context, 'Gender'),
+                    const SizedBox(height: 6),
+                    _genderSelector(context),
 
-                      const SizedBox(height: 14),
+                    const SizedBox(height: 14),
 
-                      _label('Date of Birth'),
-                      const SizedBox(height: 6),
-                      GestureDetector(
-                        onTap: _pickDob,
-                        child: AbsorbPointer(
-                          child: _field(
-                            controller: _dobCtrl,
-                            hint: 'YYYY-MM-DD',
-                            icon: Icons.cake_outlined,
-                          ),
+                    _label(context, 'Date of Birth'),
+                    const SizedBox(height: 6),
+                    GestureDetector(
+                      onTap: _pickDob,
+                      child: AbsorbPointer(
+                        child: _field(
+                          context: context,
+                          controller: _dobCtrl,
+                          hint: 'YYYY-MM-DD',
+                          icon: Icons.cake_outlined,
                         ),
                       ),
+                    ),
 
-                      SizedBox(height: h * 0.04),
+                    SizedBox(height: h * 0.04),
 
-                      MainButton(
-                        text: 'Sign Up',
-                        onTap: () => _submit(context),
-                        enabled: true,
-                      ),
+                    MainButton(
+                      text: 'Sign Up',
+                      onTap: () => _submit(context),
+                      enabled: true,
+                    ),
 
-                      const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                      Center(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Already have an account? ',
+                    Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Already have an account? ',
+                            style: GoogleFonts.arimo(
+                              color: c.hintText,
+                              fontSize: 14,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => LoginScreen()),
+                            ),
+                            child: Text(
+                              'Login',
                               style: GoogleFonts.arimo(
-                                color: Colors.white54,
+                                color: const Color(0xFF2B7FFF),
                                 fontSize: 14,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
-                            GestureDetector(
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => LoginScreen()),
-                              ),
-                              child: Text(
-                                'Login',
-                                style: GoogleFonts.arimo(
-                                  color: const Color(0xFF2B7FFF),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
+                    ),
 
-                      SizedBox(height: h * 0.03),
-                    ],
-                  ),
+                    SizedBox(height: h * 0.03),
+                  ],
                 ),
               ),
             ),
-          );
-        },
-
-    );}
+          ),
+        );
+      },
+    );
+  }
 
   void _showLoading(BuildContext context) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(
-        child: CircularProgressIndicator(
-            color: Color(0xFF00C950)),
+        child: CircularProgressIndicator(color: AppColors.primary),
       ),
     );
   }
 
-  Widget _label(String text) => Text(
+
+  Widget _label(BuildContext context, String text) => Text(
     text,
     style: GoogleFonts.arimo(
-      color: Colors.white70,
+      color: context.colors.secondaryText,
       fontSize: 12,
       fontWeight: FontWeight.w600,
       letterSpacing: 0.5,
@@ -312,46 +319,46 @@ class _SignUpScreenState extends State<SignUpScreen> {
   );
 
   Widget _field({
+    required BuildContext context,
     required TextEditingController controller,
     required String hint,
     required IconData icon,
     bool obscure = false,
     TextInputType keyboard = TextInputType.text,
   }) {
+    final c = context.colors;
     return TextField(
       controller: controller,
       obscureText: obscure,
       keyboardType: keyboard,
-      style: GoogleFonts.arimo(color: Colors.white, fontSize: 15),
+      style: GoogleFonts.arimo(color: c.primaryText, fontSize: 15),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.arimo(
-            color: Colors.white24, fontSize: 15),
-        prefixIcon: Icon(icon, color: Colors.white24, size: 18),
+        hintStyle: GoogleFonts.arimo(color: c.ghostText, fontSize: 15),
+        prefixIcon: Icon(icon, color: c.ghostText, size: 18),
         filled: true,
-        fillColor: const Color(0xFF242424),
-        contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16, vertical: 16),
+        fillColor: c.inputFill,
+        contentPadding:
+        const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-              color: Colors.white12, width: 0.5),
+          borderSide: BorderSide(color: c.divider, width: 0.5),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-              color: Colors.white12, width: 0.5),
+          borderSide: BorderSide(color: c.divider, width: 0.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-              color: Color(0xFF00C950), width: 1),
+          borderSide:
+          const BorderSide(color: AppColors.primary, width: 1),
         ),
       ),
     );
   }
 
-  Widget _genderSelector() {
+  Widget _genderSelector(BuildContext context) {
+    final c = context.colors;
     return Row(
       children: ['Male', 'Female'].map((g) {
         final active = _selectedGender == g.toLowerCase();
@@ -360,18 +367,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
             onTap: () =>
                 setState(() => _selectedGender = g.toLowerCase()),
             child: Container(
-              margin: EdgeInsets.only(
-                  right: g == 'Male' ? 8 : 0),
+              margin: EdgeInsets.only(right: g == 'Male' ? 8 : 0),
               padding: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(
                 color: active
-                    ? const Color(0xFF00C950).withOpacity(0.15)
-                    : const Color(0xFF242424),
+                    ? AppColors.primary.withOpacity(0.15)
+                    : c.inputFill,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: active
-                      ? const Color(0xFF00C950)
-                      : Colors.white12,
+                  color: active ? AppColors.primary : c.divider,
                   width: active ? 1 : 0.5,
                 ),
               ),
@@ -379,9 +383,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 child: Text(
                   g,
                   style: GoogleFonts.arimo(
-                    color: active
-                        ? const Color(0xFF00C950)
-                        : Colors.white38,
+                    color: active ? AppColors.primary : c.subtleText,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -394,6 +396,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 }
+
 
 class OtpDialog extends StatefulWidget {
   final String email;
@@ -443,27 +446,25 @@ class _OtpDialogState extends State<OtpDialog> {
 
   void _verify(BuildContext context) {
     final otp = _otp;
-
-    print("VERIFY CLICKED: $otp"); // DEBUG
-
     if (otp.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter the complete 6-digit code')),
+        const SnackBar(
+            content: Text('Enter the complete 6-digit code')),
       );
       return;
     }
-
-    final cubit = context.read<AuthCubit>();
-
-    print("CALLING VERIFY OTP");
-
-    cubit.verifyOtp(email: widget.email, otp: otp);
+    context.read<AuthCubit>().verifyOtp(
+      email: widget.email,
+      otp: otp,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
+
     return Dialog(
-      backgroundColor: const Color(0xFF1E1E1E),
+      backgroundColor: c.bottomSheet,
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20)),
       child: BlocListener<AuthCubit, AuthState>(
@@ -476,8 +477,8 @@ class _OtpDialogState extends State<OtpDialog> {
             Navigator.pushReplacement(context,
                 MaterialPageRoute(builder: (_) => LoginScreen()));
           } else if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)));
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(state.message)));
           } else if (state is AuthOtpSent) {
             _startTimer();
           }
@@ -488,25 +489,30 @@ class _OtpDialogState extends State<OtpDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
 
-              // Icon
               Container(
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF00C950).withOpacity(0.12),
+                  color: AppColors.primary.withOpacity(0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.mark_email_read_outlined,
-                    color: Color(0xFF00C950), size: 26),
+                child: const Icon(
+                  Icons.mark_email_read_outlined,
+                  color: AppColors.primary,
+                  size: 26,
+                ),
               ),
 
               const SizedBox(height: 16),
 
-              Text('Check your email',
-                  style: GoogleFonts.arimo(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700)),
+              Text(
+                'Check your email',
+                style: GoogleFonts.arimo(
+                  color: c.primaryText,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
 
               const SizedBox(height: 6),
 
@@ -514,12 +520,11 @@ class _OtpDialogState extends State<OtpDialog> {
                 'We sent a 6-digit code to\n${widget.email}',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.arimo(
-                    color: Colors.white38, fontSize: 13),
+                    color: c.subtleText, fontSize: 13),
               ),
 
               const SizedBox(height: 28),
 
-              // OTP boxes
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(6, (i) {
@@ -533,30 +538,31 @@ class _OtpDialogState extends State<OtpDialog> {
                       textAlign: TextAlign.center,
                       maxLength: 1,
                       inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly
+                        FilteringTextInputFormatter.digitsOnly,
                       ],
                       style: GoogleFonts.arimo(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700),
+                        color: c.primaryText,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
                       decoration: InputDecoration(
                         counterText: '',
                         filled: true,
-                        fillColor: const Color(0xFF2A2A2A),
+                        fillColor: c.inputFill,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(
-                              color: Colors.white12, width: 0.5),
+                          borderSide:
+                          BorderSide(color: c.divider, width: 0.5),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(
-                              color: Colors.white12, width: 0.5),
+                          borderSide:
+                          BorderSide(color: c.divider, width: 0.5),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: const BorderSide(
-                              color: Color(0xFF00C950), width: 1.5),
+                              color: AppColors.primary, width: 1.5),
                         ),
                       ),
                       onChanged: (val) {
@@ -573,13 +579,12 @@ class _OtpDialogState extends State<OtpDialog> {
 
               const SizedBox(height: 28),
 
-              // Verify button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () => _verify(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00C950),
+                    backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
@@ -587,21 +592,21 @@ class _OtpDialogState extends State<OtpDialog> {
                     ),
                     elevation: 0,
                   ),
-                  child: Text('Verify',
-                      style: GoogleFonts.arimo(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700)),
+                  child: Text(
+                    'Verify',
+                    style: GoogleFonts.arimo(
+                        fontSize: 15, fontWeight: FontWeight.w700),
+                  ),
                 ),
               ),
 
               const SizedBox(height: 16),
 
-              // Resend
               _seconds > 0
                   ? Text(
                 'Resend code in ${_seconds}s',
                 style: GoogleFonts.arimo(
-                    color: Colors.white38, fontSize: 13),
+                    color: c.subtleText, fontSize: 13),
               )
                   : GestureDetector(
                 onTap: () => context

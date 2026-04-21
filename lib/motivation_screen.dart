@@ -13,8 +13,11 @@ class MotivationScreen extends StatefulWidget {
 class _MotivationScreenState extends State<MotivationScreen> {
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Color(0xFF1A1A1A),
+      backgroundColor: theme.scaffoldBackgroundColor,
+
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -34,7 +37,7 @@ class _MotivationScreenState extends State<MotivationScreen> {
                 'We know that living with a chronic disease is uncomfortable',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.arimo(
-                  color: const Color(0xFFFFFFFF),
+                  color: theme.textTheme.bodyLarge?.color,
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
                   height: 1.33,
@@ -49,7 +52,7 @@ class _MotivationScreenState extends State<MotivationScreen> {
                     TextSpan(
                       text: "But don't worry, ",
                       style: GoogleFonts.arimo(
-                        color: const Color(0xFFFFFFFF),
+                        color: theme.textTheme.bodyMedium?.color,
                         fontSize: 20,
                         fontWeight: FontWeight.w400,
                         height: 1.40,
@@ -58,7 +61,7 @@ class _MotivationScreenState extends State<MotivationScreen> {
                     TextSpan(
                       text: "we got you\n",
                       style: GoogleFonts.arimo(
-                        color: const Color(0xFFFFFFFF),
+                        color: theme.textTheme.bodyLarge?.color,
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
                         height: 1.40,
@@ -68,7 +71,7 @@ class _MotivationScreenState extends State<MotivationScreen> {
                       text:
                       "We help you live a happy life with diabetes",
                       style: GoogleFonts.arimo(
-                        color: const Color(0xFFFFFFFF),
+                        color: theme.textTheme.bodyMedium?.color,
                         fontSize: 20,
                         fontWeight: FontWeight.w400,
                         height: 1.40,
@@ -118,13 +121,18 @@ class _MotivationScreenState extends State<MotivationScreen> {
                 onTap: () {},
               ),
 
-              const SizedBox(height: 30,),
+              const SizedBox(height: 30),
 
               MainButton(
                 text: "Let's get started",
                 onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder:
-                  (_)=>PersonalizeSchedule()));},
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PersonalizeSchedule(),
+                    ),
+                  );
+                },
               ),
 
               const SizedBox(height: 12),
