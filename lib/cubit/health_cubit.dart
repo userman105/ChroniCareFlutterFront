@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/appointment_entry.dart';
 import '../models/blood_pressure_entry.dart';
@@ -9,6 +11,7 @@ import '../models/med_entry.dart';
 import '../models/symptom_entry.dart';
 import '../models/weight_entry.dart';
 import '../services/notification_service.dart';
+import '../services/token_service.dart';
 import '../widgets/alarm_screen.dart';
 import '../models/glucose_entry.dart';
 
@@ -390,7 +393,53 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     emit(List.from(state));
   }
 
+
+  Future<Map<String, dynamic>> uploadLabTest(File imageFile) async {
+    final token = await TokenStorage.getAccessToken();
+
+    final uri = Uri.parse("http://10.0.2.2:3000/api/user/lab-test");
+
+    final request = http.MultipartRequest("POST", uri);
+
+    request.headers["Authorization"] = "Bearer $token";
+
+    request.fields["test_type"] = "blood_test";
+    request.fields["result_date"] = DateTime.now().toIso8601String();
+
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        "file",
+        imageFile.path,
+        contentType: http.MediaType('image', 'jpeg'),
+      ),
+    );
+
+    final response = await request.send();
+
+    final resBody = await response.stream.bytesToString();
+
+    print("STATUS: ${response.statusCode}");
+    print("BODY: $resBody");
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      // Parse JSON response
+      final jsonData = json.decode(resBody);
+      return {
+        'success': true,
+        'message': jsonData['message'],
+        'lab_test_id': jsonData['lab_test_id'],
+        'ocr_text': jsonData['ocr_text'] ?? '',
+        'ocr_lines': jsonData['ocr_lines'] ?? [],
+      };
+    } else {
+      final errorData = json.decode(resBody);
+      throw Exception(errorData['message'] ?? "Upload failed");
+    }
+  }
+
 }
+
+
 
 
 
