@@ -5,6 +5,10 @@ import '../../cubit/health_cubit.dart';
 import '../../models/appointment_entry.dart';
 import '../../widgets/components.dart';
 
+// ─────────────────────────────────────────────────────────────
+//  APPOINTMENT LOG SCREEN
+// ─────────────────────────────────────────────────────────────
+
 class AppointmentLogScreen extends StatefulWidget {
   const AppointmentLogScreen({super.key});
 
@@ -13,13 +17,16 @@ class AppointmentLogScreen extends StatefulWidget {
       _AppointmentLogScreenState();
 }
 
-class _AppointmentLogScreenState extends State<AppointmentLogScreen> {
-  final _nameCtrl = TextEditingController();
+class _AppointmentLogScreenState
+    extends State<AppointmentLogScreen> {
+  final _nameCtrl     = TextEditingController();
   final _locationCtrl = TextEditingController();
-  final _notesCtrl = TextEditingController();
+  final _notesCtrl    = TextEditingController();
 
-  DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
-  TimeOfDay _selectedTime = const TimeOfDay(hour: 9, minute: 0);
+  DateTime _selectedDate =
+  DateTime.now().add(const Duration(days: 1));
+  TimeOfDay _selectedTime =
+  const TimeOfDay(hour: 9, minute: 0);
   String _currentDate = '';
   String _currentTime = '';
 
@@ -42,27 +49,30 @@ class _AppointmentLogScreenState extends State<AppointmentLogScreen> {
   }
 
   String _monthName(int m) => const [
-    'Jan','Feb','Mar','Apr','May','Jun',
-    'Jul','Aug','Sep','Oct','Nov','Dec',
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
   ][m - 1];
 
   void _updateDateLabel(DateTime date) {
-    final now = DateTime.now();
-    final isToday = date.year == now.year &&
+    final now      = DateTime.now();
+    final tomorrow = now.add(const Duration(days: 1));
+    final isToday  = date.year == now.year &&
         date.month == now.month &&
         date.day == now.day;
-    final tomorrow = now.add(const Duration(days: 1));
     final isTomorrow = date.year == tomorrow.year &&
         date.month == tomorrow.month &&
         date.day == tomorrow.day;
 
     setState(() {
       if (isToday) {
-        _currentDate = 'Today: ${_monthName(date.month)} ${date.day}';
+        _currentDate =
+        'Today: ${_monthName(date.month)} ${date.day}';
       } else if (isTomorrow) {
-        _currentDate = 'Tomorrow: ${_monthName(date.month)} ${date.day}';
+        _currentDate =
+        'Tomorrow: ${_monthName(date.month)} ${date.day}';
       } else {
-        _currentDate = '${_monthName(date.month)} ${date.day}, ${date.year}';
+        _currentDate =
+        '${_monthName(date.month)} ${date.day}, ${date.year}';
       }
     });
   }
@@ -75,16 +85,24 @@ class _AppointmentLogScreenState extends State<AppointmentLogScreen> {
   }
 
   Future<void> _pickDate() async {
+    final isDark = context.isDark;
     final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+      lastDate:
+      DateTime.now().add(const Duration(days: 365 * 5)),
       builder: (ctx, child) => Theme(
-        data: ThemeData.dark().copyWith(
+        data: isDark
+            ? ThemeData.dark().copyWith(
           colorScheme: const ColorScheme.dark(
-            primary: Color(0xFF00C950),
+            primary: AppColors.primary,
             surface: Color(0xFF2D2D2D),
+          ),
+        )
+            : ThemeData.light().copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: AppColors.primary,
           ),
         ),
         child: child!,
@@ -97,14 +115,21 @@ class _AppointmentLogScreenState extends State<AppointmentLogScreen> {
   }
 
   Future<void> _pickTime() async {
+    final isDark = context.isDark;
     final picked = await showTimePicker(
       context: context,
       initialTime: _selectedTime,
       builder: (ctx, child) => Theme(
-        data: ThemeData.dark().copyWith(
+        data: isDark
+            ? ThemeData.dark().copyWith(
           colorScheme: const ColorScheme.dark(
-            primary: Color(0xFF00C950),
+            primary: AppColors.primary,
             surface: Color(0xFF2D2D2D),
+          ),
+        )
+            : ThemeData.light().copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: AppColors.primary,
           ),
         ),
         child: child!,
@@ -142,49 +167,66 @@ class _AppointmentLogScreenState extends State<AppointmentLogScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF212121),
+      backgroundColor: c.bottomSheet,
       body: SafeArea(
         child: Column(
           children: [
+
+            // ── Top bar ──────────────────────────────────
             Container(
               height: 46,
-              color: const Color(0xFF2D2D2D),
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              color: c.surface,
+              padding:
+              const EdgeInsets.symmetric(horizontal: 8),
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new,
-                        color: Colors.white, size: 20),
+                    icon: Icon(Icons.arrow_back_ios_new,
+                        color: c.primaryText, size: 20),
                     onPressed: () => Navigator.pop(context),
                   ),
-                  Text('Log Appointment',
-                      style: GoogleFonts.arimo(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500)),
+                  Text(
+                    'Log Appointment',
+                    style: GoogleFonts.arimo(
+                        color: c.primaryText,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500),
+                  ),
                 ],
               ),
             ),
+
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 25, 20, 0),
+                padding: const EdgeInsets.fromLTRB(
+                    20, 25, 20, 0),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                  CrossAxisAlignment.start,
                   children: [
-                    Text('Date/Time:',
-                        style: GoogleFonts.arimo(
-                            color: Colors.white, fontSize: 16)),
+
+                    Text(
+                      'Date/Time:',
+                      style: GoogleFonts.arimo(
+                          color: c.primaryText,
+                          fontSize: 16),
+                    ),
                     const SizedBox(height: 14),
+
                     Row(
                       children: [
                         _chip(
+                          context: context,
                           onTap: _pickDate,
                           icon: 'assets/icons/calendar.png',
                           label: _currentDate,
                         ),
                         const SizedBox(width: 10),
                         _chip(
+                          context: context,
                           onTap: _pickTime,
                           icon: 'assets/icons/clock.png',
                           label: _currentTime,
@@ -193,26 +235,29 @@ class _AppointmentLogScreenState extends State<AppointmentLogScreen> {
                     ),
 
                     const SizedBox(height: 25),
-                    _fieldLabel('Appointment Name'),
+                    _fieldLabel(context, 'Appointment Name'),
                     const SizedBox(height: 8),
                     _textField(
+                      context: context,
                       controller: _nameCtrl,
                       hint: 'eg. Cardiology checkup',
                     ),
 
                     const SizedBox(height: 20),
-                    _fieldLabel('Location'),
+                    _fieldLabel(context, 'Location'),
                     const SizedBox(height: 8),
                     _textField(
+                      context: context,
                       controller: _locationCtrl,
                       hint: 'eg. Cairo Medical Center, Room 204',
                       prefixIcon: Icons.location_on_outlined,
                     ),
 
                     const SizedBox(height: 20),
-                    _fieldLabel('Notes'),
+                    _fieldLabel(context, 'Notes'),
                     const SizedBox(height: 8),
                     _textField(
+                      context: context,
                       controller: _notesCtrl,
                       hint: 'eg. Bring previous test results',
                       maxLines: 3,
@@ -223,8 +268,10 @@ class _AppointmentLogScreenState extends State<AppointmentLogScreen> {
                 ),
               ),
             ),
+
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              padding:
+              const EdgeInsets.fromLTRB(20, 12, 20, 24),
               child: MainButton(
                 text: 'Add',
                 enabled: _canSubmit,
@@ -237,17 +284,22 @@ class _AppointmentLogScreenState extends State<AppointmentLogScreen> {
     );
   }
 
+  // ── Helpers ────────────────────────────────────────────
+
   Widget _chip({
+    required BuildContext context,
     required VoidCallback onTap,
     required String icon,
     required String label,
   }) {
+    final c = context.colors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+            horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFF313131),
+          color: c.cardBg,
           borderRadius: BorderRadius.circular(30),
         ),
         child: Row(
@@ -256,40 +308,44 @@ class _AppointmentLogScreenState extends State<AppointmentLogScreen> {
             const SizedBox(width: 6),
             Text(label,
                 style: GoogleFonts.arimo(
-                    color: Colors.white, fontSize: 12)),
+                    color: c.primaryText, fontSize: 12)),
           ],
         ),
       ),
     );
   }
 
-  Widget _fieldLabel(String label) => Text(
-    label,
-    style: GoogleFonts.arimo(
-        color: Colors.white,
-        fontSize: 14,
-        fontWeight: FontWeight.w500),
-  );
+  Widget _fieldLabel(BuildContext context, String label) =>
+      Text(
+        label,
+        style: GoogleFonts.arimo(
+            color: context.colors.primaryText,
+            fontSize: 14,
+            fontWeight: FontWeight.w500),
+      );
 
   Widget _textField({
+    required BuildContext context,
     required TextEditingController controller,
     required String hint,
     int maxLines = 1,
     IconData? prefixIcon,
   }) {
+    final c = context.colors;
     return TextField(
       controller: controller,
       maxLines: maxLines,
-      style: GoogleFonts.arimo(color: Colors.white, fontSize: 15),
+      style:
+      GoogleFonts.arimo(color: c.primaryText, fontSize: 15),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: GoogleFonts.arimo(
-            color: const Color(0xFFB4B4B4), fontSize: 15),
+            color: c.hintGrey, fontSize: 15),
         prefixIcon: prefixIcon != null
-            ? Icon(prefixIcon, color: Colors.white38, size: 18)
+            ? Icon(prefixIcon, color: c.subtleText, size: 18)
             : null,
         filled: true,
-        fillColor: const Color(0xFF0C0C0C),
+        fillColor: c.notesFill,
         contentPadding: const EdgeInsets.symmetric(
             horizontal: 14, vertical: 14),
         border: OutlineInputBorder(

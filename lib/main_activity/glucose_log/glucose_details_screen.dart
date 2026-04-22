@@ -28,7 +28,6 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
 
   String get _unit => _showMmol ? "mmol/L" : "mg/dL";
 
-  // Convert stored value to display unit
   double _convert(GlucoseEntry e) {
     final storedInMmol = e.unit == 'mmol/L';
     if (_showMmol && !storedInMmol) return e.value / 18.0182;
@@ -53,7 +52,6 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
     }
   }
 
-  // Always evaluate status in mg/dL
   String _entryStatus(GlucoseEntry e) {
     final mgDl = e.unit == 'mmol/L' ? e.value * 18.0182 : e.value;
     return _glucoseStatus(mgDl);
@@ -61,21 +59,21 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final allEntries = List<GlucoseEntry>.from(
       context.watch<HealthCubit>().getGlucoseEntries(),
     )..sort((a, b) => a.dateTime.compareTo(b.dateTime));
 
     if (allEntries.isEmpty) {
       return Scaffold(
-        backgroundColor: const Color(0xFF111111),
         body: SafeArea(
           child: Column(
             children: [
               _topBar(context),
-              const Expanded(
+              Expanded(
                 child: Center(
                   child: Text("No Data",
-                      style: TextStyle(color: Colors.white)),
+                      style: TextStyle(color: theme.colorScheme.onSurface)),
                 ),
               ),
             ],
@@ -93,12 +91,11 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
         .toList();
 
     final values = chartEntries.map(_convert).toList();
-    final minVal = values.reduce((a, b) => a < b ? a : b);
-    final maxVal = values.reduce((a, b) => a > b ? a : b);
-    final avgVal = values.reduce((a, b) => a + b) / values.length;
+    final minVal = values.isEmpty ? 0.0 : values.reduce((a, b) => a < b ? a : b);
+    final maxVal = values.isEmpty ? 0.0 : values.reduce((a, b) => a > b ? a : b);
+    final avgVal = values.isEmpty ? 0.0 : values.reduce((a, b) => a + b) / values.length;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF111111),
       body: SafeArea(
         child: Column(
           children: [
@@ -109,30 +106,21 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     _latestCard(latest),
-
                     const SizedBox(height: 20),
-
                     _chartCard(chartEntries, minVal, avgVal, maxVal),
-
                     const SizedBox(height: 20),
-
                     Text("History",
                         style: GoogleFonts.arimo(
-                            color: Colors.white,
+                            color: theme.colorScheme.onSurface,
                             fontSize: 16,
                             fontWeight: FontWeight.w600)),
-
                     const SizedBox(height: 10),
-
                     ...allEntries.reversed
                         .take(3)
                         .map((e) => _historyTile(e))
                         .toList(),
-
                     const SizedBox(height: 12),
-
                     Center(
                       child: GestureDetector(
                         onTap: () => Navigator.push(
@@ -143,36 +131,27 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
                           ),
                         ),
                         child: Container(
-                          width: 87,
-                          height: 31,
-                          clipBehavior: Clip.antiAlias,
+                          width: 100,
+                          height: 36,
                           decoration: ShapeDecoration(
-                            color: const Color(0xFF474747),
+                            color: theme.colorScheme.surfaceContainerHighest,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(21),
                             ),
                           ),
-                          child: const Stack(
-                            children: [
-                              Positioned(
-                                left: 15,
-                                top: 8,
-                                child: Text(
-                                  'All Entries',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontFamily: 'Inter',
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
+                          child: Center(
+                            child: Text(
+                              'All Entries',
+                              style: TextStyle(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
                               ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -185,27 +164,28 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
   }
 
   Widget _topBar(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      height: 46,
+      height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 14),
-      color: const Color(0xFF2D2D2D),
+      color: theme.colorScheme.surfaceContainer,
       child: Row(
         children: [
           GestureDetector(
             onTap: () => Navigator.pop(context),
-            child: const Icon(Icons.arrow_back, color: Colors.white),
+            child: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
           ),
           const SizedBox(width: 16),
           Text("Glucose",
               style: GoogleFonts.arimo(
-                  color: Colors.white,
-                  fontSize: 16,
+                  color: theme.colorScheme.onSurface,
+                  fontSize: 18,
                   fontWeight: FontWeight.w500)),
           const Spacer(),
           GestureDetector(
             onTap: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const GlucoseScreen())),
-            child: Image.asset('assets/icons/add.png', width: 26, height: 26),
+            child: Icon(Icons.add_circle_outline, color: theme.colorScheme.primary),
           ),
         ],
       ),
@@ -213,6 +193,7 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
   }
 
   Widget _latestCard(GlucoseEntry e) {
+    final theme = Theme.of(context);
     final value = _convert(e);
     final status = _entryStatus(e);
     final color = _statusColor(status);
@@ -221,9 +202,9 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: ShapeDecoration(
-        color: const Color(0xFF2D2D2D),
+        color: theme.colorScheme.surfaceContainerLow,
         shape: RoundedRectangleBorder(
-          side: const BorderSide(color: Color(0xFF4B4B4B)),
+          side: BorderSide(color: theme.colorScheme.outlineVariant),
           borderRadius: BorderRadius.circular(16),
         ),
       ),
@@ -232,11 +213,11 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
         children: [
           Row(
             children: [
-              Image.asset('assets/icons/diabetes.png', width: 20),
+              Icon(Icons.bloodtype, size: 20, color: theme.colorScheme.primary),
               const SizedBox(width: 8),
               Text("Latest Entry",
                   style: GoogleFonts.arimo(
-                      color: Colors.white, fontSize: 16)),
+                      color: theme.colorScheme.onSurface, fontSize: 16)),
             ],
           ),
           const SizedBox(height: 10),
@@ -246,18 +227,17 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
               Text(
                 "${value.toStringAsFixed(1)} $_unit",
                 style: GoogleFonts.arimo(
-                    color: Colors.white,
+                    color: theme.colorScheme.onSurface,
                     fontSize: 28,
                     fontWeight: FontWeight.bold),
               ),
               Row(
                 children: [
-                  // Status chip
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.2),
+                      color: color.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(status,
@@ -266,7 +246,6 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
                             fontWeight: FontWeight.w600)),
                   ),
                   const SizedBox(width: 8),
-                  // Unit toggle
                   _unitToggle("mg/dL", !_showMmol,
                           () => setState(() => _showMmol = false)),
                   const SizedBox(width: 6),
@@ -279,25 +258,22 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
           const SizedBox(height: 8),
           Text(
             "Measured ${_formatDate(e.dateTime)} at ${_formatTime(e.dateTime)}",
-            style: GoogleFonts.arimo(color: const Color(0xFFCDCDCD)),
+            style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant),
           ),
         ],
       ),
     );
   }
-  Widget _chartCard(
-      List<GlucoseEntry> entries,
-      double minVal,
-      double avgVal,
-      double maxVal,
-      ) {
+
+  Widget _chartCard(List<GlucoseEntry> entries, double minVal, double avgVal, double maxVal) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: ShapeDecoration(
-        color: const Color(0xFF2D2D2D),
+        color: theme.colorScheme.surfaceContainerLow,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFF4B4B4B)),
+          side: BorderSide(color: theme.colorScheme.outlineVariant),
         ),
       ),
       child: Column(
@@ -308,15 +284,13 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
             children: [
               Text("History Chart",
                   style: GoogleFonts.arimo(
-                      color: Colors.white,
+                      color: theme.colorScheme.onSurface,
                       fontSize: 15,
                       fontWeight: FontWeight.w600)),
               _rangePicker(),
             ],
           ),
-
           const SizedBox(height: 12),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -325,30 +299,26 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
               _statChip("Max", "${maxVal.toStringAsFixed(1)} $_unit"),
             ],
           ),
-
           const SizedBox(height: 16),
-
           if (entries.isEmpty)
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 40),
                 child: Text("No data in range",
-                    style: GoogleFonts.arimo(color: Colors.white54)),
+                    style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant)),
               ),
             )
           else
             SizedBox(height: 220, child: _buildChart(entries)),
-
           const SizedBox(height: 12),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _legendDot(const Color(0xFF3B82F6)),
+              _legendDot(theme.colorScheme.primary),
               const SizedBox(width: 4),
               Text("Glucose ($_unit)",
                   style: GoogleFonts.arimo(
-                      color: Colors.white70, fontSize: 12)),
+                      color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
             ],
           ),
         ],
@@ -357,12 +327,13 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
   }
 
   Widget _rangePicker() {
+    final theme = Theme.of(context);
     return DropdownButtonHideUnderline(
       child: DropdownButton<int>(
         value: _selectedRange,
-        dropdownColor: const Color(0xFF3A3A3A),
-        style: GoogleFonts.arimo(color: Colors.white, fontSize: 13),
-        icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+        dropdownColor: theme.colorScheme.surfaceContainerHighest,
+        style: GoogleFonts.arimo(color: theme.colorScheme.onSurface, fontSize: 13),
+        icon: Icon(Icons.arrow_drop_down, color: theme.colorScheme.onSurface),
         items: const [
           DropdownMenuItem(value: 7,  child: Text("Last 7 days")),
           DropdownMenuItem(value: 14, child: Text("Last 14 days")),
@@ -374,15 +345,16 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
   }
 
   Widget _statChip(String label, String value) {
+    final theme = Theme.of(context);
     return Column(
       children: [
         Text(label,
             style: GoogleFonts.arimo(
-                color: Colors.white54, fontSize: 12)),
+                color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
         const SizedBox(height: 2),
         Text(value,
             style: GoogleFonts.arimo(
-                color: Colors.white,
+                color: theme.colorScheme.onSurface,
                 fontSize: 15,
                 fontWeight: FontWeight.w600)),
       ],
@@ -390,28 +362,30 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
   }
 
   Widget _legendDot(Color color) => Container(
-    width: 10,
-    height: 10,
+    width: 10, height: 10,
     decoration: BoxDecoration(shape: BoxShape.circle, color: color),
   );
 
   Widget _unitToggle(String label, bool active, VoidCallback onTap) {
+    final theme = Theme.of(context);
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: active ? const Color(0xFF3B82F6) : const Color(0xFF474747),
+          color: active ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Text(label,
             style: GoogleFonts.arimo(
-                color: Colors.white, fontSize: 11)),
+                color: active ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
+                fontSize: 11)),
       ),
     );
   }
 
   Widget _buildChart(List<GlucoseEntry> entries) {
+    final theme = Theme.of(context);
     final spots = entries
         .map((e) => FlSpot(e.dateTime.day.toDouble(), _convert(e)))
         .toList();
@@ -420,108 +394,65 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
     final minY = values.reduce((a, b) => a < b ? a : b) - (_showMmol ? 0.5 : 10);
     final maxY = values.reduce((a, b) => a > b ? a : b) + (_showMmol ? 0.5 : 10);
 
-    // Normal range band
     final normalMin = _showMmol ? 3.9 : 70.0;
     final normalMax = _showMmol ? 5.6 : 100.0;
-
-    const blue = Color(0xFF3B82F6);
 
     return LineChart(
       LineChartData(
         minY: minY,
         maxY: maxY,
-        backgroundColor: const Color(0xFF2D2D2D),
-
         rangeAnnotations: RangeAnnotations(
           horizontalRangeAnnotations: [
             HorizontalRangeAnnotation(
-              y1: normalMin,
-              y2: normalMax,
-              color: const Color(0xFF1E5C38).withOpacity(0.4),
+              y1: normalMin, y2: normalMax,
+              color: Colors.green.withOpacity(0.15),
             ),
           ],
         ),
-
         gridData: FlGridData(
           show: true,
-          drawVerticalLine: true,
-          drawHorizontalLine: true,
-          verticalInterval: 1,
-          getDrawingVerticalLine: (_) =>
-          const FlLine(color: Color(0xFF3A3A3A), strokeWidth: 1),
-          getDrawingHorizontalLine: (_) =>
-          const FlLine(color: Color(0xFF3A3A3A), strokeWidth: 1),
+          getDrawingHorizontalLine: (_) => FlLine(color: theme.colorScheme.outlineVariant, strokeWidth: 0.5),
+          getDrawingVerticalLine: (_) => FlLine(color: theme.colorScheme.outlineVariant, strokeWidth: 0.5),
         ),
-
         borderData: FlBorderData(show: false),
-
         titlesData: FlTitlesData(
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 44,
+              reservedSize: 40,
               getTitlesWidget: (val, _) => Text(
                 val.toStringAsFixed(_showMmol ? 1 : 0),
-                style: GoogleFonts.arimo(
-                    color: Colors.white54, fontSize: 11),
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 10),
               ),
             ),
           ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              interval: 1,
               getTitlesWidget: (val, _) => Text(
                 val.toInt().toString(),
-                style: GoogleFonts.arimo(
-                    color: Colors.white54, fontSize: 11),
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 10),
               ),
             ),
           ),
-          topTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
-
         lineBarsData: [
           LineChartBarData(
             spots: spots,
-            isCurved: false,
-            color: blue,
-            barWidth: 2,
-            dotData: FlDotData(
-              show: true,
-              getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
-                radius: 5,
-                color: blue,
-                strokeColor: blue,
-              ),
-            ),
-            aboveBarData: BarAreaData(show: false),
-            belowBarData: BarAreaData(show: false),
+            isCurved: true,
+            color: theme.colorScheme.primary,
+            barWidth: 3,
+            dotData: const FlDotData(show: true),
           ),
         ],
-
-        lineTouchData: LineTouchData(
-          enabled: true,
-          touchTooltipData: LineTouchTooltipData(
-            getTooltipColor: (_) => const Color(0xFF3A3A3A),
-            getTooltipItems: (spots) => spots
-                .map((s) => LineTooltipItem(
-              "${s.y.toStringAsFixed(_showMmol ? 1 : 0)} $_unit",
-              GoogleFonts.arimo(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold),
-            ))
-                .toList(),
-          ),
-        ),
       ),
     );
   }
 
   Widget _historyTile(GlucoseEntry e) {
+    final theme = Theme.of(context);
     final value = _convert(e);
     final status = _entryStatus(e);
     final color = _statusColor(status);
@@ -530,8 +461,9 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF2D2D2D),
-        borderRadius: BorderRadius.circular(10),
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Row(
         children: [
@@ -542,15 +474,14 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
                 Text(
                   "${value.toStringAsFixed(1)} $_unit",
                   style: GoogleFonts.arimo(
-                      color: Colors.white,
+                      color: theme.colorScheme.onSurface,
                       fontSize: 18,
                       fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: 2),
                 Text(
                   "${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}",
                   style: GoogleFonts.arimo(
-                      color: Colors.white54, fontSize: 12),
+                      color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
                 ),
               ],
             ),
@@ -558,20 +489,19 @@ class _GlucoseDetailsScreenState extends State<GlucoseDetailsScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              color: color.withOpacity(0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(status,
                 style: GoogleFonts.arimo(
-                    color: color,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600)),
+                    color: color, fontSize: 12, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
     );
   }
 }
+
 
 class AllGlucoseEntriesScreen extends StatefulWidget {
   final List<GlucoseEntry> entries;
@@ -599,7 +529,7 @@ class _AllGlucoseEntriesScreenState extends State<AllGlucoseEntriesScreen> {
   String _formatShort(DateTime dt) {
     final m = dt.month.toString().padLeft(2, '0');
     final d = dt.day.toString().padLeft(2, '0');
-    return "$m/${d}/${dt.year}";
+    return "$m/$d/${dt.year}";
   }
 
   String get _unit => _showMmol ? "mmol/L" : "mg/dL";
@@ -613,7 +543,7 @@ class _AllGlucoseEntriesScreenState extends State<AllGlucoseEntriesScreen> {
 
   String _entryStatus(GlucoseEntry e) {
     final mgDl = e.unit == 'mmol/L' ? e.value * 18.0182 : e.value;
-    if (mgDl < 70)  return "Low";
+    if (mgDl < 70) return "Low";
     if (mgDl <= 99) return "Normal";
     if (mgDl <= 125) return "Pre-diabetic";
     return "High";
@@ -642,8 +572,7 @@ class _AllGlucoseEntriesScreenState extends State<AllGlucoseEntriesScreen> {
 
     return sorted
         .where((e) =>
-    !e.dateTime.isBefore(_filterStart!) &&
-        !e.dateTime.isAfter(end))
+    !e.dateTime.isBefore(_filterStart!) && !e.dateTime.isAfter(end))
         .toList();
   }
 
@@ -655,7 +584,9 @@ class _AllGlucoseEntriesScreenState extends State<AllGlucoseEntriesScreen> {
       builder: (_) => Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 16, right: 16, top: 16,
+          left: 16,
+          right: 16,
+          top: 16,
         ),
         child: DateRangePickerWidget(
           initialStart: _filterStart,
@@ -669,29 +600,28 @@ class _AllGlucoseEntriesScreenState extends State<AllGlucoseEntriesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final entries = _filtered;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF111111),
       body: SafeArea(
         child: Column(
           children: [
-
             Container(
-              height: 46,
+              height: 56,
               padding: const EdgeInsets.symmetric(horizontal: 14),
-              color: const Color(0xFF2D2D2D),
+              color: theme.colorScheme.surfaceContainer,
               child: Row(
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: const Icon(Icons.arrow_back, color: Colors.white),
+                    child: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
                   ),
                   const SizedBox(width: 16),
                   Text("All Entries",
                       style: GoogleFonts.arimo(
-                          color: Colors.white,
-                          fontSize: 16,
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 18,
                           fontWeight: FontWeight.w500)),
                   const Spacer(),
                   _unitToggle("mg/dL", !_showMmol,
@@ -702,28 +632,29 @@ class _AllGlucoseEntriesScreenState extends State<AllGlucoseEntriesScreen> {
                   const SizedBox(width: 10),
                   Text("${entries.length} records",
                       style: GoogleFonts.arimo(
-                          color: Colors.white54, fontSize: 13)),
+                          color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
                 ],
               ),
             ),
-
             const SizedBox(height: 12),
-
             Padding(
               padding: const EdgeInsets.only(left: 16),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: GestureDetector(
                   onTap: _hasFilter
-                      ? () => setState(
-                          () { _filterStart = null; _filterEnd = null; })
+                      ? () => setState(() {
+                    _filterStart = null;
+                    _filterEnd = null;
+                  })
                       : _openPicker,
-                  child: _hasFilter
-                      ? Container(
-                    height: 32,
+                  child: Container(
+                    height: 36,
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     decoration: ShapeDecoration(
-                      color: const Color(0xFF474747),
+                      color: _hasFilter
+                          ? theme.colorScheme.primaryContainer
+                          : theme.colorScheme.surfaceContainerHighest,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(25),
                       ),
@@ -731,58 +662,37 @@ class _AllGlucoseEntriesScreenState extends State<AllGlucoseEntriesScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        Icon(Icons.calendar_today,
+                            size: 16,
+                            color: _hasFilter ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onSurfaceVariant),
+                        const SizedBox(width: 8),
                         Text(
-                          "${_formatShort(_filterStart!)} – ${_formatShort(_filterEnd!)}",
+                          _hasFilter
+                              ? "${_formatShort(_filterStart!)} – ${_formatShort(_filterEnd!)}"
+                              : 'All Time',
                           style: GoogleFonts.arimo(
-                              color: Colors.white,
-                              fontSize: 12,
+                              color: _hasFilter ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onSurface,
+                              fontSize: 14,
                               fontWeight: FontWeight.w500),
                         ),
-                        const SizedBox(width: 6),
-                        const Icon(Icons.close,
-                            color: Colors.white, size: 14),
-                      ],
-                    ),
-                  )
-                      : Container(
-                    width: 118,
-                    height: 32,
-                    decoration: ShapeDecoration(
-                      color: const Color(0xFF2D2D2D),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                    ),
-                    child: Center(
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 12),
-                          Image.asset("assets/icons/calendar.png",
-                              height: 20, width: 20),
-                          const SizedBox(width: 10),
-                          Text('All Time',
-                              style: GoogleFonts.arimo(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500)),
+                        if (_hasFilter) ...[
+                          const SizedBox(width: 6),
+                          Icon(Icons.close,
+                              color: theme.colorScheme.onPrimaryContainer, size: 16),
                         ],
-                      ),
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
-
             const SizedBox(height: 12),
-
             Expanded(
               child: entries.isEmpty
                   ? Center(
                 child: Text(
-                  _hasFilter
-                      ? "No entries in this range"
-                      : "No entries",
-                  style: GoogleFonts.arimo(color: Colors.white54),
+                  _hasFilter ? "No entries in this range" : "No entries",
+                  style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant),
                 ),
               )
                   : ListView.builder(
@@ -802,20 +712,20 @@ class _AllGlucoseEntriesScreenState extends State<AllGlucoseEntriesScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2D2D2D),
-                        borderRadius: BorderRadius.circular(10),
+                        color: theme.colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: theme.colorScheme.outlineVariant),
                       ),
                       child: Row(
                         children: [
                           Expanded(
                             child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   "${value.toStringAsFixed(1)} $_unit",
                                   style: GoogleFonts.arimo(
-                                      color: Colors.white,
+                                      color: theme.colorScheme.onSurface,
                                       fontSize: 18,
                                       fontWeight: FontWeight.w600),
                                 ),
@@ -823,7 +733,7 @@ class _AllGlucoseEntriesScreenState extends State<AllGlucoseEntriesScreen> {
                                 Text(
                                   "${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}",
                                   style: GoogleFonts.arimo(
-                                      color: Colors.white54,
+                                      color: theme.colorScheme.onSurfaceVariant,
                                       fontSize: 12),
                                 ),
                               ],
@@ -833,7 +743,7 @@ class _AllGlucoseEntriesScreenState extends State<AllGlucoseEntriesScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: color.withOpacity(0.2),
+                              color: color.withOpacity(0.15),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(status,
@@ -843,8 +753,8 @@ class _AllGlucoseEntriesScreenState extends State<AllGlucoseEntriesScreen> {
                                     fontWeight: FontWeight.w600)),
                           ),
                           const SizedBox(width: 8),
-                          const Icon(Icons.chevron_right,
-                              color: Colors.white38, size: 18),
+                          Icon(Icons.chevron_right,
+                              color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5), size: 18),
                         ],
                       ),
                     ),
@@ -859,21 +769,25 @@ class _AllGlucoseEntriesScreenState extends State<AllGlucoseEntriesScreen> {
   }
 
   Widget _unitToggle(String label, bool active, VoidCallback onTap) {
+    final theme = Theme.of(context);
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: active ? const Color(0xFF3B82F6) : const Color(0xFF474747),
+          color: active ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Text(label,
-            style: GoogleFonts.arimo(color: Colors.white, fontSize: 11)),
+            style: GoogleFonts.arimo(
+                color: active ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
+                fontSize: 11)),
       ),
     );
   }
 
   void _showEntryDetails(BuildContext context, GlucoseEntry e) {
+    final theme = Theme.of(context);
     final mgDl = e.unit == 'mmol/L' ? e.value * 18.0182 : e.value;
     final mmol = e.unit == 'mmol/L' ? e.value : e.value / 18.0182;
 
@@ -882,9 +796,9 @@ class _AllGlucoseEntriesScreenState extends State<AllGlucoseEntriesScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Color(0xFF212121),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -894,19 +808,19 @@ class _AllGlucoseEntriesScreenState extends State<AllGlucoseEntriesScreen> {
               child: Container(
                 width: 40, height: 4,
                 decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: theme.colorScheme.outlineVariant,
                     borderRadius: BorderRadius.circular(2)),
               ),
             ),
             const SizedBox(height: 20),
             Row(
               children: [
-                Image.asset('assets/icons/diabetes.png', width: 20),
+                Icon(Icons.bloodtype, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
                 Text("Glucose Entry",
                     style: GoogleFonts.arimo(
-                        color: Colors.white,
-                        fontSize: 16,
+                        color: theme.colorScheme.onSurface,
+                        fontSize: 18,
                         fontWeight: FontWeight.w600)),
               ],
             ),
@@ -933,23 +847,25 @@ class _AllGlucoseEntriesScreenState extends State<AllGlucoseEntriesScreen> {
   }
 
   Widget _detailChip(String label, String value) {
+    final theme = Theme.of(context);
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFF2D2D2D),
+          color: theme.colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: theme.colorScheme.outlineVariant),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(label,
                 style: GoogleFonts.arimo(
-                    color: Colors.white54, fontSize: 12)),
+                    color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
             const SizedBox(height: 4),
             Text(value,
                 style: GoogleFonts.arimo(
-                    color: Colors.white,
+                    color: theme.colorScheme.onSurface,
                     fontSize: 18,
                     fontWeight: FontWeight.w600)),
           ],
@@ -959,15 +875,16 @@ class _AllGlucoseEntriesScreenState extends State<AllGlucoseEntriesScreen> {
   }
 
   Widget _detailRow(IconData icon, String text) {
+    final theme = Theme.of(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: Colors.white38, size: 16),
+        Icon(icon, color: theme.colorScheme.onSurfaceVariant, size: 16),
         const SizedBox(width: 8),
         Expanded(
           child: Text(text,
               style: GoogleFonts.arimo(
-                  color: Colors.white70, fontSize: 14)),
+                  color: theme.colorScheme.onSurface, fontSize: 14)),
         ),
       ],
     );

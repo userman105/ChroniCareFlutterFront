@@ -22,7 +22,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isGuest = false;
   bool _notificationsOn = true;
   bool _isLoading = true;
-  bool _isLightMode = false;
 
   @override
   void initState() {
@@ -36,7 +35,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _name = prefs.getString('name') ?? 'User';
       _email = prefs.getString('email') ?? 'example@mail.com';
       _gender = prefs.getString('gender') ?? 'Male';
-      _isLightMode = prefs.getBool('is_light_mode') ?? false;
       final birthday = prefs.getString('birthday');
       final dob = prefs.getString('dob');
       if (birthday != null && birthday.isNotEmpty) {
@@ -469,13 +467,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       _settingsRow(
                         label: 'Light Mode',
-                        value: _isLightMode ? 'On' : 'Off',
+                        value: context.watch<ThemeCubit>().state == ThemeMode.light ? 'On' : 'Off',
                         showChevron: false,
                         trailing: Switch(
-                          value: _isLightMode,
+                          value: context.watch<ThemeCubit>().state == ThemeMode.light, // ✅ FIXED
                           activeColor: _getPrimaryColor(context),
                           onChanged: (v) {
-                            setState(() => _isLightMode = v);
                             context.read<ThemeCubit>().toggleTheme(v);
                           },
                         ),

@@ -6,26 +6,26 @@ import '../../models/symptom_entry.dart';
 import '../../widgets/components.dart';
 import 'symptom_screen.dart';
 
+
 class SymptomsDetailsScreen extends StatefulWidget {
   const SymptomsDetailsScreen({super.key});
 
   @override
-  State<SymptomsDetailsScreen> createState() =>
-      _SymptomsDetailsScreenState();
+  State<SymptomsDetailsScreen> createState() => _SymptomsDetailsScreenState();
 }
 
 class _SymptomsDetailsScreenState extends State<SymptomsDetailsScreen> {
   int _selectedRange = 7;
   int? _expandedDot;
+  final Color _accentGreen = const Color(0xFF00C950);
 
   String _formatTime(DateTime dt) =>
       '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
 
-  String _formatDate(DateTime dt) =>
-      '${dt.day}/${dt.month}/${dt.year}';
+  String _formatDate(DateTime dt) => '${dt.day}/${dt.month}/${dt.year}';
 
   Color _severityColor(int severity) {
-    if (severity <= 3) return const Color(0xFF00C950);
+    if (severity <= 3) return _accentGreen;
     if (severity <= 6) return Colors.orange;
     return Colors.red;
   }
@@ -38,21 +38,21 @@ class _SymptomsDetailsScreenState extends State<SymptomsDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final allEntries = List<SymptomEntry>.from(
       context.watch<HealthCubit>().getSymptomEntries(),
     )..sort((a, b) => a.dateTime.compareTo(b.dateTime));
 
     if (allEntries.isEmpty) {
       return Scaffold(
-        backgroundColor: const Color(0xFF111111),
         body: SafeArea(
           child: Column(
             children: [
               _topBar(context),
-              const Expanded(
+              Expanded(
                 child: Center(
                   child: Text('No Data',
-                      style: TextStyle(color: Colors.white)),
+                      style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant)),
                 ),
               ),
             ],
@@ -69,7 +69,6 @@ class _SymptomsDetailsScreenState extends State<SymptomsDetailsScreen> {
         .toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF111111),
       body: SafeArea(
         child: Column(
           children: [
@@ -80,65 +79,45 @@ class _SymptomsDetailsScreenState extends State<SymptomsDetailsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     _latestCard(allEntries.last),
-
                     const SizedBox(height: 20),
-
                     _chartCard(chartEntries),
-
-                    const SizedBox(height: 20),
-
+                    const SizedBox(height: 24),
                     Text('History',
                         style: GoogleFonts.arimo(
-                            color: Colors.white,
+                            color: theme.colorScheme.onSurface,
                             fontSize: 16,
                             fontWeight: FontWeight.w600)),
-
-                    const SizedBox(height: 10),
-
+                    const SizedBox(height: 12),
                     ...allEntries.reversed
                         .take(3)
                         .map((e) => _historyTile(context, e))
                         .toList(),
-
-                    const SizedBox(height: 12),
-
+                    const SizedBox(height: 16),
                     Center(
                       child: GestureDetector(
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => AllSymptomsEntriesScreen(
-                                entries: allEntries),
+                            builder: (_) => AllSymptomsEntriesScreen(entries: allEntries),
                           ),
                         ),
                         child: Container(
-                          width: 87,
-                          height: 31,
-                          clipBehavior: Clip.antiAlias,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                           decoration: ShapeDecoration(
-                            color: const Color(0xFF474747),
+                            color: theme.colorScheme.surfaceContainerHighest,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(21),
+                              borderRadius: BorderRadius.circular(20),
                             ),
                           ),
-                          child: const Stack(children: [
-                            Positioned(
-                              left: 15,
-                              top: 8,
-                              child: Text('All Entries',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontFamily: 'Inter',
-                                      fontWeight: FontWeight.w500)),
-                            ),
-                          ]),
+                          child: Text('View All Entries',
+                              style: GoogleFonts.arimo(
+                                  color: theme.colorScheme.onSurface,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600)),
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -150,63 +129,60 @@ class _SymptomsDetailsScreenState extends State<SymptomsDetailsScreen> {
     );
   }
 
-  // ── Top Bar ───────────────────────────────────────────────────────────────
   Widget _topBar(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      height: 46,
+      height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 14),
-      color: const Color(0xFF2D2D2D),
+      color: theme.colorScheme.surfaceContainer,
       child: Row(
         children: [
           GestureDetector(
             onTap: () => Navigator.pop(context),
-            child: const Icon(Icons.arrow_back, color: Colors.white),
+            child: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
           ),
           const SizedBox(width: 16),
           Text('Symptoms',
               style: GoogleFonts.arimo(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500)),
+                  color: theme.colorScheme.onSurface,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600)),
           const Spacer(),
           GestureDetector(
-            onTap: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const SymptomScreen())),
-            child: Image.asset('assets/icons/add.png', width: 26, height: 26),
+            onTap: () => Navigator.push(
+                context, MaterialPageRoute(builder: (_) => const SymptomScreen())),
+            child: Icon(Icons.add_circle, color: _accentGreen, size: 28),
           ),
         ],
       ),
     );
   }
 
-  // ── Latest Card ───────────────────────────────────────────────────────────
   Widget _latestCard(SymptomEntry e) {
+    final theme = Theme.of(context);
     final color = _severityColor(e.severity);
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: ShapeDecoration(
-        color: const Color(0xFF2D2D2D),
-        shape: RoundedRectangleBorder(
-          side: const BorderSide(color: Color(0xFF4B4B4B)),
-          borderRadius: BorderRadius.circular(16),
-        ),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.monitor_heart_outlined,
-                  color: Color(0xFF00C950), size: 20),
+              Icon(Icons.monitor_heart_outlined, color: _accentGreen, size: 20),
               const SizedBox(width: 8),
               Text('Latest Entry',
                   style: GoogleFonts.arimo(
-                      color: Colors.white, fontSize: 16)),
+                      color: theme.colorScheme.onSurfaceVariant, fontSize: 14, fontWeight: FontWeight.w500)),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -214,73 +190,67 @@ class _SymptomsDetailsScreenState extends State<SymptomsDetailsScreen> {
                 child: Text(
                   e.symptom,
                   style: GoogleFonts.arimo(
-                      color: Colors.white,
+                      color: theme.colorScheme.onSurface,
                       fontSize: 24,
                       fontWeight: FontWeight.bold),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
+                  color: color.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   _severityLabel(e.severity),
-                  style: GoogleFonts.arimo(
-                      color: color,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600),
+                  style: GoogleFonts.arimo(color: color, fontSize: 13, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          // Severity bar
+          const SizedBox(height: 16),
           Row(
             children: [
-              Text('Severity: ',
-                  style: GoogleFonts.arimo(
-                      color: Colors.white54, fontSize: 13)),
               Expanded(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: e.severity / 10,
-                    backgroundColor: Colors.white12,
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
                     valueColor: AlwaysStoppedAnimation(color),
                     minHeight: 6,
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Text('${e.severity}/10',
-                  style: GoogleFonts.arimo(
-                      color: color,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600)),
+                  style: GoogleFonts.arimo(color: color, fontSize: 13, fontWeight: FontWeight.bold)),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           Text(
             'Logged ${_formatDate(e.dateTime)} at ${_formatTime(e.dateTime)}',
-            style: GoogleFonts.arimo(color: const Color(0xFFCDCDCD)),
+            style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
           ),
           if (e.notes != null && e.notes!.trim().isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.notes_outlined,
-                    color: Colors.white38, size: 14),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(e.notes!,
-                      style: GoogleFonts.arimo(
-                          color: Colors.white54, fontSize: 13)),
-                ),
-              ],
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.notes_outlined, color: theme.colorScheme.onSurfaceVariant, size: 14),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(e.notes!,
+                        style: GoogleFonts.arimo(color: theme.colorScheme.onSurface, fontSize: 13)),
+                  ),
+                ],
+              ),
             ),
           ],
         ],
@@ -288,16 +258,14 @@ class _SymptomsDetailsScreenState extends State<SymptomsDetailsScreen> {
     );
   }
 
-  // ── Chart Card ────────────────────────────────────────────────────────────
   Widget _chartCard(List<SymptomEntry> entries) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: ShapeDecoration(
-        color: const Color(0xFF2D2D2D),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFF4B4B4B)),
-        ),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -307,47 +275,33 @@ class _SymptomsDetailsScreenState extends State<SymptomsDetailsScreen> {
             children: [
               Text('Severity Chart',
                   style: GoogleFonts.arimo(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600)),
+                      color: theme.colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w700)),
               _rangePicker(),
             ],
           ),
-
-          const SizedBox(height: 12),
-
-          // Legend
+          const SizedBox(height: 16),
           Row(
             children: [
-              _legendDot(const Color(0xFF00C950)),
+              _legendDot(_accentGreen),
               const SizedBox(width: 4),
-              Text('Mild',
-                  style: GoogleFonts.arimo(
-                      color: Colors.white70, fontSize: 11)),
+              Text('Mild', style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 11)),
               const SizedBox(width: 12),
               _legendDot(Colors.orange),
               const SizedBox(width: 4),
-              Text('Moderate',
-                  style: GoogleFonts.arimo(
-                      color: Colors.white70, fontSize: 11)),
+              Text('Moderate', style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 11)),
               const SizedBox(width: 12),
               _legendDot(Colors.red),
               const SizedBox(width: 4),
-              Text('Severe',
-                  style: GoogleFonts.arimo(
-                      color: Colors.white70, fontSize: 11)),
+              Text('Severe', style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 11)),
             ],
           ),
-
-          const SizedBox(height: 16),
-
+          const SizedBox(height: 24),
           entries.isEmpty
               ? Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 40),
               child: Text('No data in range',
-                  style: GoogleFonts.arimo(
-                      color: Colors.white54)),
+                  style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant)),
             ),
           )
               : SizedBox(height: 200, child: _dotChart(entries)),
@@ -359,12 +313,11 @@ class _SymptomsDetailsScreenState extends State<SymptomsDetailsScreen> {
   Widget _legendDot(Color color) => Container(
     width: 8,
     height: 8,
-    decoration:
-    BoxDecoration(shape: BoxShape.circle, color: color),
+    decoration: BoxDecoration(shape: BoxShape.circle, color: color),
   );
 
   Widget _dotChart(List<SymptomEntry> entries) {
-    // Group by day
+    final theme = Theme.of(context);
     final Map<int, List<SymptomEntry>> byDay = {};
     for (final e in entries) {
       byDay.putIfAbsent(e.dateTime.day, () => []).add(e);
@@ -374,27 +327,18 @@ class _SymptomsDetailsScreenState extends State<SymptomsDetailsScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        // Y-axis labels
         SizedBox(
           width: 28,
           height: 200,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('10',
-                  style: GoogleFonts.arimo(
-                      color: Colors.white38, fontSize: 10)),
-              Text('5',
-                  style: GoogleFonts.arimo(
-                      color: Colors.white38, fontSize: 10)),
-              Text('0',
-                  style: GoogleFonts.arimo(
-                      color: Colors.white38, fontSize: 10)),
+              Text('10', style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 10)),
+              Text('5', style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 10)),
+              Text('0', style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 10)),
             ],
           ),
         ),
-
-        // Chart
         Expanded(
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -403,90 +347,56 @@ class _SymptomsDetailsScreenState extends State<SymptomsDetailsScreen> {
               children: days.map((day) {
                 final dayEntries = byDay[day]!;
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      // Dots
                       Column(
-                        children: dayEntries.asMap().entries.map((e) {
-                          final idx = entries.indexOf(e.value);
+                        children: dayEntries.map((entry) {
+                          final idx = entries.indexOf(entry);
                           final isExpanded = _expandedDot == idx;
-                          final entry = e.value;
                           final color = _severityColor(entry.severity);
 
                           return GestureDetector(
-                            onTap: () => setState(() =>
-                            _expandedDot =
-                            isExpanded ? null : idx),
+                            onTap: () => setState(() => _expandedDot = isExpanded ? null : idx),
                             child: AnimatedContainer(
-                              duration:
-                              const Duration(milliseconds: 250),
-                              margin: const EdgeInsets.only(bottom: 4),
+                              duration: const Duration(milliseconds: 250),
+                              margin: const EdgeInsets.only(bottom: 6),
                               padding: isExpanded
-                                  ? const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 6)
+                                  ? const EdgeInsets.symmetric(horizontal: 8, vertical: 6)
                                   : EdgeInsets.zero,
                               decoration: BoxDecoration(
-                                color: isExpanded
-                                    ? const Color(0xFF1E1E1E)
-                                    : Colors.transparent,
+                                color: isExpanded ? theme.colorScheme.surfaceContainer : Colors.transparent,
                                 borderRadius: BorderRadius.circular(8),
-                                border: isExpanded
-                                    ? Border.all(
-                                    color: color.withOpacity(0.5))
-                                    : null,
+                                border: isExpanded ? Border.all(color: color.withOpacity(0.5)) : null,
                               ),
                               child: isExpanded
                                   ? Column(
-                                crossAxisAlignment:
-                                CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    entry.symptom,
-                                    style: GoogleFonts.arimo(
-                                        color: Colors.white,
-                                        fontSize: 10,
-                                        fontWeight:
-                                        FontWeight.w600),
-                                  ),
-                                  Text(
-                                    '${_severityLabel(entry.severity)} · ${entry.severity}/10',
-                                    style: GoogleFonts.arimo(
-                                        color: color,
-                                        fontSize: 9),
-                                  ),
-                                  Text(
-                                    _formatTime(entry.dateTime),
-                                    style: GoogleFonts.arimo(
-                                        color: Colors.white38,
-                                        fontSize: 9),
-                                  ),
+                                  Text(entry.symptom,
+                                      style: GoogleFonts.arimo(
+                                          color: theme.colorScheme.onSurface,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700)),
+                                  Text('${_severityLabel(entry.severity)} · ${entry.severity}/10',
+                                      style: GoogleFonts.arimo(color: color, fontSize: 9, fontWeight: FontWeight.w600)),
                                 ],
                               )
                                   : Container(
                                 width: 12,
                                 height: 12,
-                                decoration: BoxDecoration(
-                                  color: color,
-                                  shape: BoxShape.circle,
-                                ),
+                                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
                               ),
                             ),
                           );
                         }).toList(),
                       ),
-                      // Day label
                       const SizedBox(height: 6),
-                      Container(
-                        width: 0.5,
-                        height: 6,
-                        color: Colors.white24,
-                      ),
-                      const SizedBox(height: 2),
+                      Container(width: 1, height: 6, color: theme.colorScheme.outlineVariant),
+                      const SizedBox(height: 4),
                       Text('$day',
-                          style: GoogleFonts.arimo(
-                              color: Colors.white54, fontSize: 11)),
+                          style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 11)),
                     ],
                   ),
                 );
@@ -499,12 +409,13 @@ class _SymptomsDetailsScreenState extends State<SymptomsDetailsScreen> {
   }
 
   Widget _rangePicker() {
+    final theme = Theme.of(context);
     return DropdownButtonHideUnderline(
       child: DropdownButton<int>(
         value: _selectedRange,
-        dropdownColor: const Color(0xFF3A3A3A),
-        style: GoogleFonts.arimo(color: Colors.white, fontSize: 13),
-        icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+        dropdownColor: theme.colorScheme.surfaceContainerHighest,
+        style: GoogleFonts.arimo(color: theme.colorScheme.primary, fontSize: 13, fontWeight: FontWeight.w600),
+        icon: Icon(Icons.keyboard_arrow_down, color: theme.colorScheme.primary, size: 18),
         items: const [
           DropdownMenuItem(value: 7, child: Text('Last 7 days')),
           DropdownMenuItem(value: 14, child: Text('Last 14 days')),
@@ -516,62 +427,45 @@ class _SymptomsDetailsScreenState extends State<SymptomsDetailsScreen> {
   }
 
   Widget _historyTile(BuildContext context, SymptomEntry e) {
+    final theme = Theme.of(context);
     final color = _severityColor(e.severity);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => _showEntryDetails(context, e),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding:
-        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF2D2D2D),
-          borderRadius: BorderRadius.circular(10),
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
         ),
         child: Row(
           children: [
-            Icon(Icons.monitor_heart_outlined,
-                color: color, size: 22),
-            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+              child: Icon(Icons.monitor_heart_outlined, color: color, size: 20),
+            ),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(e.symptom,
                       style: GoogleFonts.arimo(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600)),
+                          color: theme.colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 4),
+                  Text('${_severityLabel(e.severity)} · ${e.severity}/10',
+                      style: GoogleFonts.arimo(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: color.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '${_severityLabel(e.severity)} · ${e.severity}/10',
-                          style: GoogleFonts.arimo(
-                              color: color, fontSize: 11),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}',
-                    style: GoogleFonts.arimo(
-                        color: Colors.white38, fontSize: 11),
-                  ),
+                  Text('${_formatDate(e.dateTime)} at ${_formatTime(e.dateTime)}',
+                      style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 11)),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right,
-                color: Colors.white38, size: 18),
+            Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant, size: 20),
           ],
         ),
       ),
@@ -579,6 +473,7 @@ class _SymptomsDetailsScreenState extends State<SymptomsDetailsScreen> {
   }
 
   void _showEntryDetails(BuildContext context, SymptomEntry e) {
+    final theme = Theme.of(context);
     final color = _severityColor(e.severity);
 
     showModalBottomSheet(
@@ -586,10 +481,9 @@ class _SymptomsDetailsScreenState extends State<SymptomsDetailsScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Color(0xFF212121),
-          borderRadius:
-          BorderRadius.vertical(top: Radius.circular(22)),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -600,131 +494,58 @@ class _SymptomsDetailsScreenState extends State<SymptomsDetailsScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(2)),
+                    color: theme.colorScheme.outlineVariant, borderRadius: BorderRadius.circular(2)),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             Row(
               children: [
-                Icon(Icons.monitor_heart_outlined,
-                    color: color, size: 22),
-                const SizedBox(width: 8),
+                Icon(Icons.monitor_heart_outlined, color: color, size: 24),
+                const SizedBox(width: 12),
                 Text('Symptom Entry',
                     style: GoogleFonts.arimo(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600)),
+                        color: theme.colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.w700)),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Text(e.symptom,
                 style: GoogleFonts.arimo(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-
-            // Severity bar
-            Row(
-              children: [
-                Text('Severity  ',
-                    style: GoogleFonts.arimo(
-                        color: Colors.white54, fontSize: 13)),
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: e.severity / 10,
-                      backgroundColor: Colors.white12,
-                      valueColor: AlwaysStoppedAnimation(color),
-                      minHeight: 8,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text('${e.severity}/10',
-                    style: GoogleFonts.arimo(
-                        color: color,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600)),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            Row(
-              children: [
-                _detailChip(
-                    'Severity', _severityLabel(e.severity), color),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            Row(
-              children: [
-                const Icon(Icons.calendar_today_outlined,
-                    color: Colors.white38, size: 16),
-                const SizedBox(width: 8),
-                Text(
-                  '${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}',
-                  style: GoogleFonts.arimo(
-                      color: Colors.white70, fontSize: 14),
-                ),
-              ],
-            ),
-
-            if (e.notes != null && e.notes!.trim().isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.notes_outlined,
-                      color: Colors.white38, size: 16),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(e.notes!,
-                        style: GoogleFonts.arimo(
-                            color: Colors.white70, fontSize: 14)),
-                  ),
-                ],
-              ),
-            ],
-
+                    color: theme.colorScheme.onSurface, fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
+            _detailRow('Severity', '${_severityLabel(e.severity)} (${e.severity}/10)', color),
+            const SizedBox(height: 12),
+            _detailRow('Date & Time', '${_formatDate(e.dateTime)} at ${_formatTime(e.dateTime)}', theme.colorScheme.onSurface),
+            if (e.notes != null && e.notes!.trim().isNotEmpty) ...[
+              const SizedBox(height: 20),
+              Text('NOTES',
+                  style: GoogleFonts.arimo(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1)),
+              const SizedBox(height: 8),
+              Text(e.notes!,
+                  style: GoogleFonts.arimo(color: theme.colorScheme.onSurface, fontSize: 15, height: 1.5)),
+            ],
+            const SizedBox(height: 32),
           ],
         ),
       ),
     );
   }
 
-  Widget _detailChip(String label, String value, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-          vertical: 10, horizontal: 16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label,
-              style: GoogleFonts.arimo(
-                  color: Colors.white54, fontSize: 11)),
-          const SizedBox(height: 2),
-          Text(value,
-              style: GoogleFonts.arimo(
-                  color: color,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600)),
-        ],
-      ),
+  Widget _detailRow(String label, String value, Color valueColor) {
+    final theme = Theme.of(context);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 14)),
+        Text(value, style: GoogleFonts.arimo(color: valueColor, fontSize: 14, fontWeight: FontWeight.w700)),
+      ],
     );
   }
 }
+
 class AllSymptomsEntriesScreen extends StatefulWidget {
   final List<SymptomEntry> entries;
 
@@ -735,27 +556,26 @@ class AllSymptomsEntriesScreen extends StatefulWidget {
       _AllSymptomsEntriesScreenState();
 }
 
-class _AllSymptomsEntriesScreenState
-    extends State<AllSymptomsEntriesScreen> {
+class _AllSymptomsEntriesScreenState extends State<AllSymptomsEntriesScreen> {
   DateTime? _filterStart;
   DateTime? _filterEnd;
+  final Color _accentGreen = const Color(0xFF00C950);
 
   String _formatTime(DateTime dt) =>
       '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
 
-  String _formatDate(DateTime dt) =>
-      '${dt.day}/${dt.month}/${dt.year}';
+  String _formatDate(DateTime dt) => '${dt.day}/${dt.month}/${dt.year}';
 
   String _formatShort(DateTime dt) {
     final m = dt.month.toString().padLeft(2, '0');
     final d = dt.day.toString().padLeft(2, '0');
-    return '$m/${d}/${dt.year}';
+    return '$m/$d/${dt.year}';
   }
 
   bool get _hasFilter => _filterStart != null && _filterEnd != null;
 
   Color _severityColor(int severity) {
-    if (severity <= 3) return const Color(0xFF00C950);
+    if (severity <= 3) return _accentGreen;
     if (severity <= 6) return Colors.orange;
     return Colors.red;
   }
@@ -770,12 +590,11 @@ class _AllSymptomsEntriesScreenState
     final sorted = List<SymptomEntry>.from(widget.entries)
       ..sort((a, b) => b.dateTime.compareTo(a.dateTime));
     if (!_hasFilter) return sorted;
-    final end = DateTime(_filterEnd!.year, _filterEnd!.month,
-        _filterEnd!.day, 23, 59, 59);
+    final end = DateTime(
+        _filterEnd!.year, _filterEnd!.month, _filterEnd!.day, 23, 59, 59);
     return sorted
         .where((e) =>
-    !e.dateTime.isBefore(_filterStart!) &&
-        !e.dateTime.isAfter(end))
+    !e.dateTime.isBefore(_filterStart!) && !e.dateTime.isAfter(end))
         .toList();
   }
 
@@ -787,13 +606,17 @@ class _AllSymptomsEntriesScreenState
       builder: (_) => Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 16, right: 16, top: 16,
+          left: 16,
+          right: 16,
+          top: 16,
         ),
         child: DateRangePickerWidget(
           initialStart: _filterStart,
           initialEnd: _filterEnd,
-          onApply: (s, e) =>
-              setState(() { _filterStart = s; _filterEnd = e; }),
+          onApply: (s, e) => setState(() {
+            _filterStart = s;
+            _filterEnd = e;
+          }),
         ),
       ),
     );
@@ -801,41 +624,43 @@ class _AllSymptomsEntriesScreenState
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final entries = _filtered;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF111111),
       body: SafeArea(
         child: Column(
           children: [
+            // Header
             Container(
-              height: 46,
+              height: 56,
               padding: const EdgeInsets.symmetric(horizontal: 14),
-              color: const Color(0xFF2D2D2D),
+              color: theme.colorScheme.surfaceContainer,
               child: Row(
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: const Icon(Icons.arrow_back,
-                        color: Colors.white),
+                    child: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
                   ),
                   const SizedBox(width: 16),
                   Text('All Entries',
                       style: GoogleFonts.arimo(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500)),
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600)),
                   const Spacer(),
                   Text('${entries.length} records',
                       style: GoogleFonts.arimo(
-                          color: Colors.white54, fontSize: 13)),
+                          color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
                 ],
               ),
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
+
+            // Filter Bar
             Padding(
-              padding: const EdgeInsets.only(left: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: GestureDetector(
@@ -845,151 +670,65 @@ class _AllSymptomsEntriesScreenState
                     _filterEnd = null;
                   })
                       : _openPicker,
-                  child: _hasFilter
-                      ? Container(
-                    height: 32,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14),
-                    decoration: ShapeDecoration(
-                      color: const Color(0xFF474747),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: _hasFilter
+                          ? _accentGreen.withOpacity(0.1)
+                          : theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: _hasFilter ? _accentGreen : Colors.transparent,
+                        width: 1,
                       ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          '${_formatShort(_filterStart!)} – ${_formatShort(_filterEnd!)}',
-                          style: GoogleFonts.arimo(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500),
+                        Icon(
+                          _hasFilter ? Icons.date_range : Icons.filter_list,
+                          color: _hasFilter ? _accentGreen : theme.colorScheme.onSurfaceVariant,
+                          size: 18,
                         ),
-                        const SizedBox(width: 6),
-                        const Icon(Icons.close,
-                            color: Colors.white, size: 14),
-                      ],
-                    ),
-                  )
-                      : Container(
-                    width: 118,
-                    height: 32,
-                    decoration: ShapeDecoration(
-                      color: const Color(0xFF2D2D2D),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                    ),
-                    child: Center(
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 12),
-                          Image.asset(
-                              'assets/icons/calendar.png',
-                              height: 20, width: 20),
-                          const SizedBox(width: 10),
-                          Text('All Time',
-                              style: GoogleFonts.arimo(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500)),
+                        const SizedBox(width: 8),
+                        Text(
+                          _hasFilter
+                              ? '${_formatShort(_filterStart!)} – ${_formatShort(_filterEnd!)}'
+                              : 'Filter by Date',
+                          style: GoogleFonts.arimo(
+                              color: _hasFilter ? _accentGreen : theme.colorScheme.onSurface,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600),
+                        ),
+                        if (_hasFilter) ...[
+                          const SizedBox(width: 8),
+                          Icon(Icons.close, color: _accentGreen, size: 14),
                         ],
-                      ),
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-            // ── List ──────────────────────────────────────────────
+            // Entries List
             Expanded(
               child: entries.isEmpty
                   ? Center(
                 child: Text(
-                  _hasFilter
-                      ? 'No entries in this range'
-                      : 'No entries',
-                  style: GoogleFonts.arimo(
-                      color: Colors.white54),
+                  _hasFilter ? 'No entries in this range' : 'No entries logged yet',
+                  style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant),
                 ),
               )
                   : ListView.builder(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: entries.length,
                 itemBuilder: (context, index) {
                   final e = entries[index];
-                  final color = _severityColor(e.severity);
-
-                  return GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () =>
-                        _showEntryDetails(context, e),
-                    child: Container(
-                      margin:
-                      const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2D2D2D),
-                        borderRadius:
-                        BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.monitor_heart_outlined,
-                              color: color, size: 22),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                              children: [
-                                Text(e.symptom,
-                                    style: GoogleFonts.arimo(
-                                        color: Colors.white,
-                                        fontSize: 15,
-                                        fontWeight:
-                                        FontWeight.w600)),
-                                const SizedBox(height: 2),
-                                Container(
-                                  padding: const EdgeInsets
-                                      .symmetric(
-                                      horizontal: 8,
-                                      vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color:
-                                    color.withOpacity(0.2),
-                                    borderRadius:
-                                    BorderRadius.circular(
-                                        8),
-                                  ),
-                                  child: Text(
-                                    '${_severityLabel(e.severity)} · ${e.severity}/10',
-                                    style: GoogleFonts.arimo(
-                                        color: color,
-                                        fontSize: 11),
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}',
-                                  style: GoogleFonts.arimo(
-                                      color: Colors.white38,
-                                      fontSize: 11),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Icon(Icons.chevron_right,
-                              color: Colors.white38, size: 18),
-                        ],
-                      ),
-                    ),
-                  );
+                  return _entryTile(context, e);
                 },
               ),
             ),
@@ -999,7 +738,69 @@ class _AllSymptomsEntriesScreenState
     );
   }
 
+  Widget _entryTile(BuildContext context, SymptomEntry e) {
+    final theme = Theme.of(context);
+    final color = _severityColor(e.severity);
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _showEntryDetails(context, e),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+              child: Icon(Icons.monitor_heart_outlined, color: color, size: 20),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(e.symptom,
+                      style: GoogleFonts.arimo(
+                          color: theme.colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: color.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '${_severityLabel(e.severity)} · ${e.severity}/10',
+                          style: GoogleFonts.arimo(color: color, fontSize: 11, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${_formatDate(e.dateTime)} at ${_formatTime(e.dateTime)}',
+                    style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showEntryDetails(BuildContext context, SymptomEntry e) {
+    final theme = Theme.of(context);
     final color = _severityColor(e.severity);
 
     showModalBottomSheet(
@@ -1007,10 +808,9 @@ class _AllSymptomsEntriesScreenState
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Color(0xFF212121),
-          borderRadius:
-          BorderRadius.vertical(top: Radius.circular(22)),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1020,86 +820,92 @@ class _AllSymptomsEntriesScreenState
               child: Container(
                 width: 40, height: 4,
                 decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: theme.colorScheme.outlineVariant,
                     borderRadius: BorderRadius.circular(2)),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             Row(
               children: [
-                Icon(Icons.monitor_heart_outlined,
-                    color: color, size: 22),
-                const SizedBox(width: 8),
-                Text('Symptom Entry',
+                Icon(Icons.monitor_heart_outlined, color: color, size: 24),
+                const SizedBox(width: 12),
+                Text('Entry Details',
                     style: GoogleFonts.arimo(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600)),
+                        color: theme.colorScheme.onSurface,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700)),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Text(e.symptom,
                 style: GoogleFonts.arimo(
-                    color: Colors.white,
-                    fontSize: 22,
+                    color: theme.colorScheme.onSurface,
+                    fontSize: 24,
                     fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
+            const SizedBox(height: 24),
+
+            // Severity Progress
             Row(
               children: [
-                Text('Severity  ',
-                    style: GoogleFonts.arimo(
-                        color: Colors.white54, fontSize: 13)),
+                Text('Severity', style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
+                const SizedBox(width: 12),
                 Expanded(
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
                       value: e.severity / 10,
-                      backgroundColor: Colors.white12,
+                      backgroundColor: theme.colorScheme.surfaceContainerHighest,
                       valueColor: AlwaysStoppedAnimation(color),
                       minHeight: 8,
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
                 Text('${e.severity}/10',
-                    style: GoogleFonts.arimo(
-                        color: color,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600)),
+                    style: GoogleFonts.arimo(color: color, fontSize: 14, fontWeight: FontWeight.bold)),
               ],
             ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                const Icon(Icons.calendar_today_outlined,
-                    color: Colors.white38, size: 16),
-                const SizedBox(width: 8),
-                Text(
-                  '${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}',
-                  style: GoogleFonts.arimo(
-                      color: Colors.white70, fontSize: 14),
-                ),
-              ],
-            ),
-            if (e.notes != null && e.notes!.trim().isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.notes_outlined,
-                      color: Colors.white38, size: 16),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(e.notes!,
-                        style: GoogleFonts.arimo(
-                            color: Colors.white70, fontSize: 14)),
-                  ),
-                ],
-              ),
-            ],
+
             const SizedBox(height: 24),
+
+            // Metadata
+            _detailRow(theme, Icons.calendar_today, 'Date', _formatDate(e.dateTime)),
+            _detailRow(theme, Icons.access_time, 'Time', _formatTime(e.dateTime)),
+
+            if (e.notes != null && e.notes!.trim().isNotEmpty) ...[
+              const SizedBox(height: 20),
+              Divider(color: theme.colorScheme.outlineVariant),
+              const SizedBox(height: 16),
+              Text('NOTES',
+                  style: GoogleFonts.arimo(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1)),
+              const SizedBox(height: 8),
+              Text(e.notes!,
+                  style: GoogleFonts.arimo(
+                      color: theme.colorScheme.onSurface,
+                      fontSize: 15,
+                      height: 1.5)),
+            ],
+            const SizedBox(height: 32),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _detailRow(ThemeData theme, IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, color: theme.colorScheme.onSurfaceVariant, size: 16),
+          const SizedBox(width: 8),
+          Text('$label: ', style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 14)),
+          Text(value, style: GoogleFonts.arimo(color: theme.colorScheme.onSurface, fontSize: 14, fontWeight: FontWeight.w600)),
+        ],
       ),
     );
   }

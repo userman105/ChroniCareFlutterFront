@@ -7,6 +7,7 @@ import '../../models/weight_entry.dart';
 import '../../widgets/components.dart';
 import 'weight_log_screen.dart';
 
+
 class WeightDetailsScreen extends StatefulWidget {
   const WeightDetailsScreen({super.key});
 
@@ -17,6 +18,7 @@ class WeightDetailsScreen extends StatefulWidget {
 class _WeightDetailsScreenState extends State<WeightDetailsScreen> {
   int _selectedRange = 7;
   bool _showKg = true;
+  final Color _accentGreen = const Color(0xFF00C950);
 
   String _formatTime(DateTime dt) {
     final h = dt.hour.toString().padLeft(2, '0');
@@ -35,21 +37,21 @@ class _WeightDetailsScreenState extends State<WeightDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final allEntries = List<WeightEntry>.from(
       context.watch<HealthCubit>().getWeightEntries(),
     )..sort((a, b) => a.dateTime.compareTo(b.dateTime));
 
     if (allEntries.isEmpty) {
       return Scaffold(
-        backgroundColor: const Color(0xFF111111),
         body: SafeArea(
           child: Column(
             children: [
               _topBar(context),
-              const Expanded(
+              Expanded(
                 child: Center(
                   child: Text("No Data",
-                      style: TextStyle(color: Colors.white)),
+                      style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant)),
                 ),
               ),
             ],
@@ -66,13 +68,13 @@ class _WeightDetailsScreenState extends State<WeightDetailsScreen> {
         .isAfter(rangeStart.subtract(const Duration(seconds: 1))))
         .toList();
 
-    final values = chartEntries.map(_convert).toList();
+    // Prevent errors if chartEntries is empty after filtering
+    final values = chartEntries.isNotEmpty ? chartEntries.map(_convert).toList() : [0.0];
     final minVal = values.reduce((a, b) => a < b ? a : b);
     final maxVal = values.reduce((a, b) => a > b ? a : b);
     final avgVal = values.reduce((a, b) => a + b) / values.length;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF111111),
       body: SafeArea(
         child: Column(
           children: [
@@ -83,71 +85,48 @@ class _WeightDetailsScreenState extends State<WeightDetailsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     _latestCard(latest),
-
                     const SizedBox(height: 20),
-
                     _chartCard(chartEntries, minVal, avgVal, maxVal),
-
-                    const SizedBox(height: 20),
-
+                    const SizedBox(height: 24),
                     Text(
                       "History",
                       style: GoogleFonts.arimo(
-                          color: Colors.white,
+                          color: theme.colorScheme.onSurface,
                           fontSize: 16,
-                          fontWeight: FontWeight.w600),
+                          fontWeight: FontWeight.w700),
                     ),
-                    const SizedBox(height: 10),
-
+                    const SizedBox(height: 12),
                     ...allEntries.reversed
                         .take(3)
                         .map((e) => _historyTile(e))
                         .toList(),
-
-                    const SizedBox(height: 12),
-
+                    const SizedBox(height: 16),
                     Center(
                       child: GestureDetector(
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => AllWeightEntriesScreen(
-                                entries: allEntries),
+                            builder: (_) => AllWeightEntriesScreen(entries: allEntries),
                           ),
                         ),
                         child: Container(
-                          width: 87,
-                          height: 31,
-                          clipBehavior: Clip.antiAlias,
-                          decoration: ShapeDecoration(
-                            color: const Color(0xFF474747),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(21),
-                            ),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Stack(
-                            children: [
-                              Positioned(
-                                left: 15,
-                                top: 8,
-                                child: Text(
-                                  'All Entries',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontFamily: 'Inter',
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
+                          child: Text(
+                            'All Entries',
+                            style: GoogleFonts.arimo(
+                              color: theme.colorScheme.onSurface,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -160,27 +139,28 @@ class _WeightDetailsScreenState extends State<WeightDetailsScreen> {
   }
 
   Widget _topBar(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      height: 46,
+      height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 14),
-      color: const Color(0xFF2D2D2D),
+      color: theme.colorScheme.surfaceContainer,
       child: Row(
         children: [
           GestureDetector(
             onTap: () => Navigator.pop(context),
-            child: const Icon(Icons.arrow_back, color: Colors.white),
+            child: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
           ),
           const SizedBox(width: 16),
           Text("Weight",
               style: GoogleFonts.arimo(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500)),
+                  color: theme.colorScheme.onSurface,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600)),
           const Spacer(),
           GestureDetector(
             onTap: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const WeightLogScreen())),
-            child: Image.asset('assets/icons/add.png', width: 26, height: 26),
+            child: Icon(Icons.add_circle, color: _accentGreen, size: 28),
           ),
         ],
       ),
@@ -188,95 +168,92 @@ class _WeightDetailsScreenState extends State<WeightDetailsScreen> {
   }
 
   Widget _latestCard(WeightEntry e) {
+    final theme = Theme.of(context);
     final value = _convert(e);
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: ShapeDecoration(
-        color: const Color(0xFF2D2D2D),
-        shape: RoundedRectangleBorder(
-          side: const BorderSide(color: Color(0xFF4B4B4B)),
-          borderRadius: BorderRadius.circular(16),
-        ),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Image.asset('assets/icons/weight.png', width: 20),
+              Icon(Icons.scale_outlined, color: _accentGreen, size: 20),
               const SizedBox(width: 8),
               Text("Latest Entry",
-                  style: GoogleFonts.arimo(color: Colors.white, fontSize: 16)),
+                  style: GoogleFonts.arimo(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500)),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 "${value.toStringAsFixed(1)} $_unit",
                 style: GoogleFonts.arimo(
-                    color: Colors.white,
-                    fontSize: 28,
+                    color: theme.colorScheme.onSurface,
+                    fontSize: 32,
                     fontWeight: FontWeight.bold),
               ),
-              // KG / LBS toggle
-              Row(
-                children: [
-                  _unitToggle("KG", _showKg,
-                          () => setState(() => _showKg = true)),
-                  const SizedBox(width: 6),
-                  _unitToggle("LBS", !_showKg,
-                          () => setState(() => _showKg = false)),
-                ],
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    _unitToggle("KG", _showKg, () => setState(() => _showKg = true)),
+                    const SizedBox(width: 4),
+                    _unitToggle("LBS", !_showKg, () => setState(() => _showKg = false)),
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             "Measured ${_formatDate(e.dateTime)} at ${_formatTime(e.dateTime)}",
-            style: GoogleFonts.arimo(color: const Color(0xFFCDCDCD)),
+            style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
           ),
         ],
       ),
     );
   }
 
-  Widget _chartCard(
-      List<WeightEntry> entries,
-      double minVal,
-      double avgVal,
-      double maxVal,
-      ) {
+  Widget _chartCard(List<WeightEntry> entries, double minVal, double avgVal, double maxVal) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: ShapeDecoration(
-        color: const Color(0xFF2D2D2D),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFF4B4B4B)),
-        ),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("History Chart",
+              Text("Weight Trend",
                   style: GoogleFonts.arimo(
-                      color: Colors.white,
+                      color: theme.colorScheme.onSurface,
                       fontSize: 15,
-                      fontWeight: FontWeight.w600)),
+                      fontWeight: FontWeight.w700)),
               _rangePicker(),
             ],
           ),
-
-          const SizedBox(height: 12),
-
+          const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -285,30 +262,25 @@ class _WeightDetailsScreenState extends State<WeightDetailsScreen> {
               _statChip("Max", "${maxVal.toStringAsFixed(1)} $_unit"),
             ],
           ),
-
-          const SizedBox(height: 16),
-
+          const SizedBox(height: 24),
           if (entries.isEmpty)
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 40),
                 child: Text("No data in range",
-                    style: GoogleFonts.arimo(color: Colors.white54)),
+                    style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant)),
               ),
             )
           else
             SizedBox(height: 220, child: _buildChart(entries)),
-
-          const SizedBox(height: 12),
-
+          const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _legendDot(const Color(0xFF00C950)),
-              const SizedBox(width: 4),
-              Text("Weight ($_unit)",
-                  style: GoogleFonts.arimo(
-                      color: Colors.white70, fontSize: 12)),
+              Container(width: 10, height: 10, decoration: BoxDecoration(shape: BoxShape.circle, color: _accentGreen)),
+              const SizedBox(width: 8),
+              Text("Weight Progress ($_unit)",
+                  style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
             ],
           ),
         ],
@@ -317,12 +289,13 @@ class _WeightDetailsScreenState extends State<WeightDetailsScreen> {
   }
 
   Widget _rangePicker() {
+    final theme = Theme.of(context);
     return DropdownButtonHideUnderline(
       child: DropdownButton<int>(
         value: _selectedRange,
-        dropdownColor: const Color(0xFF3A3A3A),
-        style: GoogleFonts.arimo(color: Colors.white, fontSize: 13),
-        icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+        dropdownColor: theme.colorScheme.surfaceContainerHighest,
+        style: GoogleFonts.arimo(color: _accentGreen, fontSize: 13, fontWeight: FontWeight.w600),
+        icon: Icon(Icons.keyboard_arrow_down, color: _accentGreen, size: 18),
         items: const [
           DropdownMenuItem(value: 7, child: Text("Last 7 days")),
           DropdownMenuItem(value: 14, child: Text("Last 14 days")),
@@ -334,28 +307,13 @@ class _WeightDetailsScreenState extends State<WeightDetailsScreen> {
   }
 
   Widget _statChip(String label, String value) {
+    final theme = Theme.of(context);
     return Column(
       children: [
-        Text(label,
-            style: GoogleFonts.arimo(color: Colors.white54, fontSize: 12)),
-        const SizedBox(height: 2),
-        Text(value,
-            style: GoogleFonts.arimo(
-                color: Colors.white,
-                fontSize: 15,
-                fontWeight: FontWeight.w600)),
+        Text(label, style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 11, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 4),
+        Text(value, style: GoogleFonts.arimo(color: theme.colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.bold)),
       ],
-    );
-  }
-
-  Widget _legendDot(Color color) {
-    return Container(
-      width: 10,
-      height: 10,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-      ),
     );
   }
 
@@ -363,109 +321,122 @@ class _WeightDetailsScreenState extends State<WeightDetailsScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: active
-              ? const Color(0xFF00C950)
-              : const Color(0xFF474747),
-          borderRadius: BorderRadius.circular(10),
+          color: active ? _accentGreen : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Text(label,
-            style: GoogleFonts.arimo(color: Colors.white, fontSize: 12)),
+            style: GoogleFonts.arimo(
+                color: active ? Colors.white : Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 11,
+                fontWeight: FontWeight.bold)),
       ),
     );
   }
 
   Widget _buildChart(List<WeightEntry> entries) {
+    final theme = Theme.of(context);
     final spots = entries
-        .map((e) => FlSpot(e.dateTime.day.toDouble(), _convert(e)))
+        .asMap()
+        .entries
+        .map((e) => FlSpot(e.key.toDouble(), _convert(e.value)))
         .toList();
 
     final values = entries.map(_convert).toList();
-    final minY = values.reduce((a, b) => a < b ? a : b) - 5;
-    final maxY = values.reduce((a, b) => a > b ? a : b) + 5;
-
-    const green = Color(0xFF00C950);
+    // Fix: Explicitly cast to double after clamp
+    final minY = (values.reduce((a, b) => a < b ? a : b) - 2)
+        .clamp(0.0, double.infinity)
+        .toDouble();
+    final maxY = values.reduce((a, b) => a > b ? a : b) + 2;
 
     return LineChart(
       LineChartData(
         minY: minY,
         maxY: maxY,
-        backgroundColor: const Color(0xFF2D2D2D),
-
         gridData: FlGridData(
           show: true,
-          drawVerticalLine: true,
-          drawHorizontalLine: true,
-          verticalInterval: 1,
-          getDrawingVerticalLine: (_) =>
-          const FlLine(color: Color(0xFF3A3A3A), strokeWidth: 1),
-          getDrawingHorizontalLine: (_) =>
-          const FlLine(color: Color(0xFF3A3A3A), strokeWidth: 1),
+          drawVerticalLine: false,
+          getDrawingHorizontalLine: (value) => FlLine(
+            color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+            strokeWidth: 1,
+          ),
         ),
-
-        borderData: FlBorderData(show: false),
-
         titlesData: FlTitlesData(
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 40,
+              reservedSize: 35,
               getTitlesWidget: (val, _) => Text(
                 val.toStringAsFixed(0),
                 style: GoogleFonts.arimo(
-                    color: Colors.white54, fontSize: 11),
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 10,
+                ),
               ),
             ),
           ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              interval: 1,
-              getTitlesWidget: (val, _) => Text(
-                val.toInt().toString(),
-                style: GoogleFonts.arimo(
-                    color: Colors.white54, fontSize: 11),
-              ),
+              getTitlesWidget: (val, _) {
+                final index = val.toInt();
+                if (index >= 0 && index < entries.length) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      entries[index].dateTime.day.toString(),
+                      style: GoogleFonts.arimo(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 10,
+                      ),
+                    ),
+                  );
+                }
+                return const SizedBox();
+              },
             ),
           ),
-          topTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
-
+        borderData: FlBorderData(show: false),
         lineBarsData: [
           LineChartBarData(
             spots: spots,
-            isCurved: false,
-            color: green,
-            barWidth: 2,
+            isCurved: true,
+            // Removed: curveType (it is monotone by default or handled via isStepLine)
+            color: _accentGreen,
+            barWidth: 3,
+            isStrokeCapRound: true,
             dotData: FlDotData(
               show: true,
               getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
-                radius: 5,
-                color: green,
-                strokeColor: green,
+                radius: 4,
+                color: theme.colorScheme.surface,
+                strokeColor: _accentGreen,
+                strokeWidth: 2,
               ),
             ),
-            aboveBarData: BarAreaData(show: false),
-            belowBarData: BarAreaData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              color: _accentGreen.withOpacity(0.1),
+            ),
           ),
         ],
-
         lineTouchData: LineTouchData(
-          enabled: true,
           touchTooltipData: LineTouchTooltipData(
-            getTooltipColor: (_) => const Color(0xFF3A3A3A),
-            getTooltipItems: (spots) => spots
-                .map((s) => LineTooltipItem(
-              "${s.y.toStringAsFixed(1)} $_unit",
-              GoogleFonts.arimo(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold),
-            ))
-                .toList(),
+            // Fix: getTooltipColor usually returns a Color directly
+            getTooltipColor: (touchedSpot) => theme.colorScheme.surfaceContainerHighest,
+            getTooltipItems: (touchedSpots) => touchedSpots.map((s) {
+              return LineTooltipItem(
+                "${s.y.toStringAsFixed(1)} $_unit",
+                GoogleFonts.arimo(
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.bold,
+                ),
+              );
+            }).toList(),
           ),
         ),
       ),
@@ -473,42 +444,44 @@ class _WeightDetailsScreenState extends State<WeightDetailsScreen> {
   }
 
   Widget _historyTile(WeightEntry e) {
+    final theme = Theme.of(context);
     final value = _convert(e);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF2D2D2D),
-        borderRadius: BorderRadius.circular(10),
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "${value.toStringAsFixed(1)} $_unit",
-                  style: GoogleFonts.arimo(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  "${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}",
-                  style:
-                  GoogleFonts.arimo(color: Colors.white54, fontSize: 12),
-                ),
-              ],
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "${value.toStringAsFixed(1)} $_unit",
+                style: GoogleFonts.arimo(
+                    color: theme.colorScheme.onSurface,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                "${_formatDate(e.dateTime)} at ${_formatTime(e.dateTime)}",
+                style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
+              ),
+            ],
           ),
+          Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant, size: 20),
         ],
       ),
     );
   }
 }
+
 
 class AllWeightEntriesScreen extends StatefulWidget {
   final List<WeightEntry> entries;
@@ -516,14 +489,14 @@ class AllWeightEntriesScreen extends StatefulWidget {
   const AllWeightEntriesScreen({super.key, required this.entries});
 
   @override
-  State<AllWeightEntriesScreen> createState() =>
-      _AllWeightEntriesScreenState();
+  State<AllWeightEntriesScreen> createState() => _AllWeightEntriesScreenState();
 }
 
 class _AllWeightEntriesScreenState extends State<AllWeightEntriesScreen> {
   DateTime? _filterStart;
   DateTime? _filterEnd;
   bool _showKg = true;
+  final Color _accentGreen = const Color(0xFF00C950);
 
   String _formatTime(DateTime dt) {
     final h = dt.hour.toString().padLeft(2, '0');
@@ -536,7 +509,7 @@ class _AllWeightEntriesScreenState extends State<AllWeightEntriesScreen> {
   String _formatShort(DateTime dt) {
     final m = dt.month.toString().padLeft(2, '0');
     final d = dt.day.toString().padLeft(2, '0');
-    return "$m/${d}/${dt.year}";
+    return "$m/$d/${dt.year}";
   }
 
   String get _unit => _showKg ? "kg" : "lbs";
@@ -554,13 +527,12 @@ class _AllWeightEntriesScreenState extends State<AllWeightEntriesScreen> {
 
     if (!_hasFilter) return sorted;
 
-    final end = DateTime(_filterEnd!.year, _filterEnd!.month,
-        _filterEnd!.day, 23, 59, 59);
+    final end = DateTime(
+        _filterEnd!.year, _filterEnd!.month, _filterEnd!.day, 23, 59, 59);
 
     return sorted
         .where((e) =>
-    !e.dateTime.isBefore(_filterStart!) &&
-        !e.dateTime.isAfter(end))
+    !e.dateTime.isBefore(_filterStart!) && !e.dateTime.isAfter(end))
         .toList();
   }
 
@@ -579,8 +551,10 @@ class _AllWeightEntriesScreenState extends State<AllWeightEntriesScreen> {
         child: DateRangePickerWidget(
           initialStart: _filterStart,
           initialEnd: _filterEnd,
-          onApply: (start, end) =>
-              setState(() { _filterStart = start; _filterEnd = end; }),
+          onApply: (start, end) => setState(() {
+            _filterStart = start;
+            _filterEnd = end;
+          }),
         ),
       ),
     );
@@ -588,179 +562,65 @@ class _AllWeightEntriesScreenState extends State<AllWeightEntriesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final entries = _filtered;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF111111),
       body: SafeArea(
         child: Column(
           children: [
-
+            // Header
             Container(
-              height: 46,
+              height: 56,
               padding: const EdgeInsets.symmetric(horizontal: 14),
-              color: const Color(0xFF2D2D2D),
+              color: theme.colorScheme.surfaceContainer,
               child: Row(
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: const Icon(Icons.arrow_back, color: Colors.white),
+                    child: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
                   ),
                   const SizedBox(width: 16),
-                  Text("All Entries",
+                  Text("Weight History",
                       style: GoogleFonts.arimo(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500)),
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700)),
                   const Spacer(),
-                  // KG / LBS toggle
-                  Row(
-                    children: [
-                      _unitToggle("KG", _showKg,
-                              () => setState(() => _showKg = true)),
-                      const SizedBox(width: 6),
-                      _unitToggle("LBS", !_showKg,
-                              () => setState(() => _showKg = false)),
-                    ],
-                  ),
-                  const SizedBox(width: 10),
-                  Text("${entries.length} records",
-                      style: GoogleFonts.arimo(
-                          color: Colors.white54, fontSize: 13)),
+                  _unitToggleGroup(),
                 ],
               ),
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-        Padding(
-          padding: const EdgeInsets.only(left :16.0),
-          child: Align(
-            alignment: Alignment.centerLeft,
-              child: GestureDetector(
-                onTap: _hasFilter
-                    ? () => setState(
-                        () { _filterStart = null; _filterEnd = null; })
-                    : _openPicker,
-                child: _hasFilter
-                    ? Container(
-                  height: 32,
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 14),
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFF474747),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        "${_formatShort(_filterStart!)} – ${_formatShort(_filterEnd!)}",
-                        style: GoogleFonts.arimo(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500),
-                      ),
-                      const SizedBox(width: 6),
-                      const Icon(Icons.close,
-                          color: Colors.white, size: 14),
-                    ],
-                  ),
-                )
-                    : Container(
-                  width: 118,
-                  height: 32,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFF2D2D2D),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                  ),
-                  child: Center(
-                    child: Row(
-                      children: [
-                        const SizedBox(width: 12,),
-                        Image.asset("assets/icons/calendar.png",
-                          height: 20,width: 20,),
-                        const SizedBox(width: 10,),
-                        Text(
-                          'All Time',
-                          style: GoogleFonts.arimo(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+            // Filter & Record Count
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _filterButton(theme),
+                  Text("${entries.length} logs",
+                      style: GoogleFonts.arimo(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500)),
+                ],
               ),
             ),
-        ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
+            // List
             Expanded(
               child: entries.isEmpty
-                  ? Center(
-                child: Text(
-                  _hasFilter
-                      ? "No entries in this range"
-                      : "No entries",
-                  style:
-                  GoogleFonts.arimo(color: Colors.white54),
-                ),
-              )
+                  ? _emptyState(theme)
                   : ListView.builder(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: entries.length,
-                // Replace the existing Container in ListView.builder with this:
                 itemBuilder: (context, index) {
-                  final e = entries[index];
-                  final value = _convert(e);
-
-                  return GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => _showEntryDetails(context, e),
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2D2D2D),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "${value.toStringAsFixed(1)} $_unit",
-                                  style: GoogleFonts.arimo(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  "${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}",
-                                  style: GoogleFonts.arimo(
-                                      color: Colors.white54, fontSize: 12),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Arrow hint
-                          const Icon(Icons.chevron_right, color: Colors.white38, size: 18),
-                        ],
-                      ),
-                    ),
-                  );
+                  return _weightTile(context, entries[index]);
                 },
               ),
             ),
@@ -770,24 +630,114 @@ class _AllWeightEntriesScreenState extends State<AllWeightEntriesScreen> {
     );
   }
 
+  Widget _unitToggleGroup() {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          _unitToggle("KG", _showKg, () => setState(() => _showKg = true)),
+          const SizedBox(width: 2),
+          _unitToggle("LBS", !_showKg, () => setState(() => _showKg = false)),
+        ],
+      ),
+    );
+  }
+
   Widget _unitToggle(String label, bool active, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: active
-              ? const Color(0xFF00C950)
-              : const Color(0xFF474747),
-          borderRadius: BorderRadius.circular(10),
+          color: active ? _accentGreen : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Text(label,
-            style: GoogleFonts.arimo(color: Colors.white, fontSize: 12)),
+            style: GoogleFonts.arimo(
+                color: active ? Colors.white : Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 11,
+                fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+
+  Widget _filterButton(ThemeData theme) {
+    return GestureDetector(
+      onTap: _hasFilter ? () => setState(() { _filterStart = null; _filterEnd = null; }) : _openPicker,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: _hasFilter ? _accentGreen.withOpacity(0.1) : theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: _hasFilter ? _accentGreen : theme.colorScheme.outlineVariant),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.calendar_today, color: _hasFilter ? _accentGreen : theme.colorScheme.onSurfaceVariant, size: 14),
+            const SizedBox(width: 8),
+            Text(
+              _hasFilter ? "${_formatShort(_filterStart!)} – ${_formatShort(_filterEnd!)}" : 'All Time',
+              style: GoogleFonts.arimo(
+                  color: _hasFilter ? _accentGreen : theme.colorScheme.onSurface,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600),
+            ),
+            if (_hasFilter) ...[
+              const SizedBox(width: 8),
+              Icon(Icons.close, color: _accentGreen, size: 14),
+            ]
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _weightTile(BuildContext context, WeightEntry e) {
+    final theme = Theme.of(context);
+    final value = _convert(e);
+
+    return GestureDetector(
+      onTap: () => _showEntryDetails(context, e),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("${value.toStringAsFixed(1)} $_unit",
+                      style: GoogleFonts.arimo(
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 4),
+                  Text("${_formatDate(e.dateTime)} • ${_formatTime(e.dateTime)}",
+                      style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant, size: 20),
+          ],
+        ),
       ),
     );
   }
 
   void _showEntryDetails(BuildContext context, WeightEntry e) {
+    final theme = Theme.of(context);
     final kg = e.kg ?? (e.lbs! / 2.20462);
     final lbs = e.lbs ?? (e.kg! * 2.20462);
 
@@ -796,110 +746,89 @@ class _AllWeightEntriesScreenState extends State<AllWeightEntriesScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Color(0xFF212121),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            Row(
-              children: [
-                Image.asset('assets/icons/weight.png', width: 20),
-                const SizedBox(width: 8),
-                Text(
-                  "Weight Entry",
-                  style: GoogleFonts.arimo(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            Row(
-              children: [
-                _detailChip("KG", "${kg.toStringAsFixed(1)} kg"),
-                const SizedBox(width: 12),
-                _detailChip("LBS", "${lbs.toStringAsFixed(1)} lbs"),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            _detailRow(
-              Icons.calendar_today_outlined,
-              "${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}",
-            ),
-
-            if (e.notes != null && e.notes!.trim().isNotEmpty) ...[
-              const SizedBox(height: 12),
-              _detailRow(Icons.notes_outlined, e.notes!),
-            ],
-
+            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: theme.colorScheme.outlineVariant, borderRadius: BorderRadius.circular(2)))),
             const SizedBox(height: 24),
+            Row(
+              children: [
+                Icon(Icons.scale, color: _accentGreen, size: 22),
+                const SizedBox(width: 12),
+                Text("Log Details",
+                    style: GoogleFonts.arimo(color: theme.colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.w700)),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                _detailChip(theme, "KILOGRAMS", "${kg.toStringAsFixed(1)} kg"),
+                const SizedBox(width: 12),
+                _detailChip(theme, "POUNDS", "${lbs.toStringAsFixed(1)} lbs"),
+              ],
+            ),
+            const SizedBox(height: 24),
+            _infoRow(theme, Icons.calendar_today, "Date", _formatDate(e.dateTime)),
+            _infoRow(theme, Icons.access_time, "Time", _formatTime(e.dateTime)),
+            if (e.notes != null && e.notes!.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Divider(color: theme.colorScheme.outlineVariant),
+              const SizedBox(height: 16),
+              Text("NOTES", style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1)),
+              const SizedBox(height: 8),
+              Text(e.notes!, style: GoogleFonts.arimo(color: theme.colorScheme.onSurface, fontSize: 15, height: 1.4)),
+            ],
+            const SizedBox(height: 32),
           ],
         ),
       ),
     );
   }
 
-  Widget _detailChip(String label, String value) {
+  Widget _detailChip(ThemeData theme, String label, String value) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF2D2D2D),
-          borderRadius: BorderRadius.circular(12),
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: theme.colorScheme.outlineVariant),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label,
-                style: GoogleFonts.arimo(
-                    color: Colors.white54, fontSize: 12)),
-            const SizedBox(height: 4),
-            Text(value,
-                style: GoogleFonts.arimo(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600)),
+            Text(label, style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 10, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text(value, style: GoogleFonts.arimo(color: theme.colorScheme.onSurface, fontSize: 20, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
     );
   }
 
-  Widget _detailRow(IconData icon, String text) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, color: Colors.white38, size: 16),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: GoogleFonts.arimo(color: Colors.white70, fontSize: 14),
-          ),
-        ),
-      ],
+  Widget _infoRow(ThemeData theme, IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Icon(icon, color: theme.colorScheme.onSurfaceVariant, size: 16),
+          const SizedBox(width: 12),
+          Text("$label: ", style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 14)),
+          Text(value, style: GoogleFonts.arimo(color: theme.colorScheme.onSurface, fontSize: 14, fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  Widget _emptyState(ThemeData theme) {
+    return Center(
+      child: Text(_hasFilter ? "No entries in this range" : "No entries logged yet",
+          style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant)),
     );
   }
 }

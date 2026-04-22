@@ -5,7 +5,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../cubit/health_cubit.dart';
 import '../../models/blood_pressure_entry.dart';
+import '../../widgets/components.dart';
 import 'all_entries.dart';
+
 
 String getBPStatus(int sys, int dia) {
   if (sys < 90 || dia < 60) return "Low";
@@ -13,6 +15,17 @@ String getBPStatus(int sys, int dia) {
   if (sys <= 139 || dia <= 89) return "Elevated";
   return "High";
 }
+
+Color getStatusColor(String status) {
+  switch (status) {
+    case "Normal":   return const Color(0xFF00C950);
+    case "Elevated": return Colors.orange;
+    case "High":     return Colors.red;
+    case "Low":      return Colors.blue;
+    default:         return Colors.grey;
+  }
+}
+
 
 class BloodPressureDetailsScreen extends StatefulWidget {
   const BloodPressureDetailsScreen({super.key});
@@ -24,19 +37,7 @@ class BloodPressureDetailsScreen extends StatefulWidget {
 
 class _BloodPressureDetailsScreenState
     extends State<BloodPressureDetailsScreen> {
-  int _selectedRange = 7; // days to show in chart
-
-  String getStatus(int sys, int dia) => getBPStatus(sys, dia);
-
-  Color getStatusColor(String status) {
-    switch (status) {
-      case "Normal":   return const Color(0xFF00C950);
-      case "Elevated": return Colors.orange;
-      case "High":     return Colors.red;
-      case "Low":      return Colors.blue;
-      default:         return Colors.grey;
-    }
-  }
+  int _selectedRange = 7;
 
   String _formatTime(DateTime dt) {
     final h = dt.hour.toString().padLeft(2, '0');
@@ -44,96 +45,93 @@ class _BloodPressureDetailsScreenState
     return "$h:$m";
   }
 
-  String _formatDate(DateTime dt) {
-    return "${dt.day}/${dt.month}/${dt.year}";
-  }
+  String _formatDate(DateTime dt) =>
+      "${dt.day}/${dt.month}/${dt.year}";
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
+
     final allEntries = List<BloodPressureEntry>.from(
       context.watch<HealthCubit>().state,
     )..sort((a, b) => a.dateTime.compareTo(b.dateTime));
 
     if (allEntries.isEmpty) {
       return Scaffold(
-        backgroundColor: const Color(0xFF111111),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
-          backgroundColor: const Color(0xFF2D2D2D),
+          backgroundColor: c.surface,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            icon: Icon(Icons.arrow_back, color: c.primaryText),
             onPressed: () => Navigator.pop(context),
           ),
           title: Text("Blood Pressure",
-              style: GoogleFonts.arimo(color: Colors.white)),
+              style: GoogleFonts.arimo(color: c.primaryText)),
         ),
-        body: const Center(
-            child: Text("No Data", style: TextStyle(color: Colors.white))),
+        body: Center(
+          child: Text("No Data",
+              style: TextStyle(color: c.primaryText)),
+        ),
       );
     }
 
-    // Latest by date
     final latest = allEntries.last;
-    final status = getStatus(latest.systolic, latest.diastolic);
+    final status = getBPStatus(latest.systolic, latest.diastolic);
 
-    // Chart range entries
-    final now = DateTime.now();
+    final now        = DateTime.now();
     final rangeStart = now.subtract(Duration(days: _selectedRange - 1));
-    final chartEntries = allEntries.where((e) =>
-        e.dateTime.isAfter(rangeStart.subtract(const Duration(seconds: 1)))).toList();
+    final chartEntries = allEntries
+        .where((e) => e.dateTime.isAfter(
+        rangeStart.subtract(const Duration(seconds: 1))))
+        .toList();
 
     // Stats
     final sysValues = chartEntries.map((e) => e.systolic).toList();
     final diaValues = chartEntries.map((e) => e.diastolic).toList();
     final sysMin = sysValues.reduce((a, b) => a < b ? a : b);
     final sysMax = sysValues.reduce((a, b) => a > b ? a : b);
-    final sysAvg = (sysValues.reduce((a, b) => a + b) / sysValues.length).round();
+    final sysAvg =
+    (sysValues.reduce((a, b) => a + b) / sysValues.length).round();
     final diaMin = diaValues.reduce((a, b) => a < b ? a : b);
     final diaMax = diaValues.reduce((a, b) => a > b ? a : b);
-    final diaAvg = (diaValues.reduce((a, b) => a + b) / diaValues.length).round();
+    final diaAvg =
+    (diaValues.reduce((a, b) => a + b) / diaValues.length).round();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF111111),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
+
             Container(
               height: 46,
               padding: const EdgeInsets.symmetric(horizontal: 14),
-              color: const Color(0xFF2D2D2D),
+              color: c.surface,
               child: Row(
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: const Icon(Icons.arrow_back, color: Colors.white),
+                    child:
+                    Icon(Icons.arrow_back, color: c.primaryText),
                   ),
-
                   const SizedBox(width: 16),
-
                   Text(
                     "Blood Pressure",
                     style: GoogleFonts.arimo(
-                      color: Colors.white,
+                      color: c.primaryText,
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-
                   const Spacer(),
-
                   GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const BloodPressureScreen(),
-                        ),
-                      );
-                    },
-                    child: Image.asset(
-                      'assets/icons/add.png',
-                      width: 26,
-                      height: 26,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const BloodPressureScreen()),
                     ),
+                    child: Image.asset('assets/icons/add.png',
+                        width: 26, height: 26),
                   ),
                 ],
               ),
@@ -145,26 +143,29 @@ class _BloodPressureDetailsScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _latestCard(latest, status, getStatusColor(status)),
+
+                    _latestCard(context, latest, status,
+                        getStatusColor(status)),
 
                     const SizedBox(height: 20),
 
-                    _chartCard(chartEntries, sysMin, sysAvg, sysMax,
-                        diaMin, diaAvg, diaMax),
+                    _chartCard(context, chartEntries, sysMin, sysAvg,
+                        sysMax, diaMin, diaAvg, diaMax),
 
                     const SizedBox(height: 20),
-
 
                     Text(
                       "History",
                       style: GoogleFonts.arimo(
-                          color: Colors.white,
+                          color: c.primaryText,
                           fontSize: 16,
                           fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 10),
 
-                    ...allEntries.reversed.take(3).map((e) => _historyTile(e)).toList(),
+                    ...allEntries.reversed
+                        .take(3)
+                        .map((e) => _historyTile(context, e)),
 
                     const SizedBox(height: 12),
 
@@ -173,7 +174,8 @@ class _BloodPressureDetailsScreenState
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => AllEntriesScreen(entries: allEntries),
+                            builder: (_) => AllEntriesScreen(
+                                entries: allEntries),
                           ),
                         ),
                         child: Container(
@@ -181,38 +183,26 @@ class _BloodPressureDetailsScreenState
                           height: 31,
                           clipBehavior: Clip.antiAlias,
                           decoration: ShapeDecoration(
-                            color: const Color(0xFF474747),
+                            color: c.reminderTileBg,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(21),
                             ),
                           ),
-                          child: const Stack(
-                            children: [
-                              Positioned(
-                                left: 15,
-                                top: 8,
-                                child: Text(
-                                  'All Entries',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontFamily: 'Inter',
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
+                          child: Center(
+                            child: Text(
+                              'All Entries',
+                              style: GoogleFonts.arimo(
+                                color: c.primaryText,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
                               ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
                     ),
 
                     const SizedBox(height: 20),
-
-
-                    // ...allEntries.reversed
-                    //     .map((e) => _historyTile(e))بلام
-                    //     .toList(),
                   ],
                 ),
               ),
@@ -223,14 +213,17 @@ class _BloodPressureDetailsScreenState
     );
   }
 
-  Widget _latestCard(BloodPressureEntry e, String status, Color color) {
+
+  Widget _latestCard(BuildContext context, BloodPressureEntry e,
+      String status, Color statusColor) {
+    final c = context.colors;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: ShapeDecoration(
-        color: const Color(0xFF2D2D2D),
+        color: c.surface,
         shape: RoundedRectangleBorder(
-          side: const BorderSide(color: Color(0xFF4B4B4B)),
+          side: BorderSide(color: c.subtleBorder),
           borderRadius: BorderRadius.circular(16),
         ),
       ),
@@ -242,7 +235,8 @@ class _BloodPressureDetailsScreenState
               Image.asset('assets/icons/bloodPressure.png', width: 20),
               const SizedBox(width: 8),
               Text("Latest Reading",
-                  style: GoogleFonts.arimo(color: Colors.white, fontSize: 16)),
+                  style: GoogleFonts.arimo(
+                      color: c.primaryText, fontSize: 16)),
             ],
           ),
           const SizedBox(height: 10),
@@ -252,17 +246,19 @@ class _BloodPressureDetailsScreenState
               Text(
                 "${e.systolic}/${e.diastolic} mmHg",
                 style: GoogleFonts.arimo(
-                    color: Colors.white,
+                    color: c.primaryText,
                     fontSize: 28,
                     fontWeight: FontWeight.bold),
               ),
               Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.3),
+                  color: statusColor.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(12),
                 ),
+                // Status badge text stays white — it sits on a
+                // coloured (semi-transparent) background in both themes
                 child: Text(status,
                     style: GoogleFonts.arimo(color: Colors.white)),
               ),
@@ -271,75 +267,71 @@ class _BloodPressureDetailsScreenState
           const SizedBox(height: 8),
           Text(
             "Measured ${_formatDate(e.dateTime)} at ${_formatTime(e.dateTime)}",
-            style: GoogleFonts.arimo(color: const Color(0xFFCDCDCD)),
+            style: GoogleFonts.arimo(color: c.secondaryText),
           ),
         ],
       ),
     );
   }
 
+
   Widget _chartCard(
+      BuildContext context,
       List<BloodPressureEntry> entries,
       int sysMin, int sysAvg, int sysMax,
       int diaMin, int diaAvg, int diaMax,
       ) {
+    final c = context.colors;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: ShapeDecoration(
-        color: const Color(0xFF2D2D2D),
+        color: c.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFF4B4B4B)),
+          side: BorderSide(color: c.subtleBorder),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 "History Chart",
                 style: GoogleFonts.arimo(
-                    color: Colors.white,
+                    color: c.primaryText,
                     fontSize: 15,
                     fontWeight: FontWeight.w600),
               ),
-              _rangePicker(),
+              _rangePicker(context),
             ],
           ),
-
           const SizedBox(height: 12),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _statChip("Min", "$sysMin/$diaMin"),
-              _statChip("Avg", "$sysAvg/$diaAvg"),
-              _statChip("Max", "$sysMax/$diaMax"),
+              _statChip(context, "Min", "$sysMin/$diaMin"),
+              _statChip(context, "Avg", "$sysAvg/$diaAvg"),
+              _statChip(context, "Max", "$sysMax/$diaMax"),
             ],
           ),
-
           const SizedBox(height: 16),
-
-          if (entries.isEmpty)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40),
-                child: Text("No data in range",
-                    style:
-                    GoogleFonts.arimo(color: Colors.white54)),
-              ),
-            )
-          else
-            SizedBox(
-              height: 220,
-              child: _buildChart(entries),
+          entries.isEmpty
+              ? Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Text("No data in range",
+                  style:
+                  GoogleFonts.arimo(color: c.hintText)),
             ),
-
+          )
+              : SizedBox(
+            height: 220,
+            child: _buildChart(context, entries),
+          ),
           const SizedBox(height: 12),
-
+          // Legend
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -347,13 +339,13 @@ class _BloodPressureDetailsScreenState
               const SizedBox(width: 4),
               Text("Systolic",
                   style: GoogleFonts.arimo(
-                      color: Colors.white70, fontSize: 12)),
+                      color: c.secondaryText, fontSize: 12)),
               const SizedBox(width: 16),
               _legendDot(const Color(0xFFE8C44A), hollow: true),
               const SizedBox(width: 4),
               Text("Diastolic",
                   style: GoogleFonts.arimo(
-                      color: Colors.white70, fontSize: 12)),
+                      color: c.secondaryText, fontSize: 12)),
             ],
           ),
         ],
@@ -361,84 +353,104 @@ class _BloodPressureDetailsScreenState
     );
   }
 
-  Widget _legendDot(Color color, {bool hollow = false}) {
-    return Container(
-      width: 10,
-      height: 10,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: hollow ? Colors.transparent : color,
-        border: Border.all(color: color, width: 2),
-      ),
-    );
-  }
+  Widget _legendDot(Color color, {bool hollow = false}) =>
+      Container(
+        width: 10,
+        height: 10,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: hollow ? Colors.transparent : color,
+          border: Border.all(color: color, width: 2),
+        ),
+      );
 
-  Widget _rangePicker() {
+  Widget _rangePicker(BuildContext context) {
+    final c = context.colors;
     return DropdownButtonHideUnderline(
       child: DropdownButton<int>(
         value: _selectedRange,
-        dropdownColor: const Color(0xFF3A3A3A),
-        style: GoogleFonts.arimo(color: Colors.white, fontSize: 13),
-        icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-        items: const [
-          DropdownMenuItem(value: 7, child: Text("Last 7 days")),
-          DropdownMenuItem(value: 14, child: Text("Last 14 days")),
-          DropdownMenuItem(value: 30, child: Text("Last 30 days")),
+        dropdownColor: c.cardBg,
+        style:
+        GoogleFonts.arimo(color: c.primaryText, fontSize: 13),
+        icon: Icon(Icons.arrow_drop_down, color: c.primaryText),
+        items: [
+          DropdownMenuItem(
+              value: 7,
+              child: Text("Last 7 days",
+                  style: TextStyle(color: c.primaryText))),
+          DropdownMenuItem(
+              value: 14,
+              child: Text("Last 14 days",
+                  style: TextStyle(color: c.primaryText))),
+          DropdownMenuItem(
+              value: 30,
+              child: Text("Last 30 days",
+                  style: TextStyle(color: c.primaryText))),
         ],
         onChanged: (v) => setState(() => _selectedRange = v!),
       ),
     );
   }
 
-  Widget _statChip(String label, String value) {
+  Widget _statChip(
+      BuildContext context, String label, String value) {
+    final c = context.colors;
     return Column(
       children: [
         Text(label,
-            style: GoogleFonts.arimo(color: Colors.white54, fontSize: 12)),
+            style:
+            GoogleFonts.arimo(color: c.hintText, fontSize: 12)),
         const SizedBox(height: 2),
         Text(value,
             style: GoogleFonts.arimo(
-                color: Colors.white,
+                color: c.primaryText,
                 fontSize: 15,
                 fontWeight: FontWeight.w600)),
       ],
     );
   }
 
-  Widget _buildChart(List<BloodPressureEntry> entries) {
-    // X axis = day-of-month, Y axis = BP value
-    FlSpot toSpot(BloodPressureEntry e, int Function(BloodPressureEntry) val) {
-      return FlSpot(e.dateTime.day.toDouble(), val(e).toDouble());
-    }
+  Widget _buildChart(
+      BuildContext context, List<BloodPressureEntry> entries) {
+    final c = context.colors;
 
-    final sysSpots = entries.map((e) => toSpot(e, (e) => e.systolic)).toList();
-    final diaSpots = entries.map((e) => toSpot(e, (e) => e.diastolic)).toList();
+    FlSpot toSpot(BloodPressureEntry e,
+        int Function(BloodPressureEntry) val) =>
+        FlSpot(e.dateTime.day.toDouble(), val(e).toDouble());
+
+    final sysSpots =
+    entries.map((e) => toSpot(e, (e) => e.systolic)).toList();
+    final diaSpots =
+    entries.map((e) => toSpot(e, (e) => e.diastolic)).toList();
 
     final allVals = [
       ...entries.map((e) => e.systolic),
       ...entries.map((e) => e.diastolic),
     ];
-    final minY = (allVals.reduce((a, b) => a < b ? a : b) - 20)
-        .clamp(0, 999)
-        .toDouble();
+    final minY =
+    (allVals.reduce((a, b) => a < b ? a : b) - 20).clamp(0, 999).toDouble();
     final maxY =
     (allVals.reduce((a, b) => a > b ? a : b) + 20).toDouble();
 
     const yellow = Color(0xFFE8C44A);
-    const normalBandMin = 60.0;
-    const normalBandMax = 80.0; // diastolic normal band reference
+
+    // Grid / background colours adapt to theme
+    final gridLineColor = c.divider;
+    final chartBg       = c.surface;
+    // Hollow dot fill should match the card surface so it looks "hollow"
+    final hollowFill    = c.surface;
 
     return LineChart(
       LineChartData(
         minY: minY,
         maxY: maxY,
-        backgroundColor: const Color(0xFF2D2D2D),
+        backgroundColor: chartBg,
 
         rangeAnnotations: RangeAnnotations(
           horizontalRangeAnnotations: [
             HorizontalRangeAnnotation(
-              y1: normalBandMin,
-              y2: normalBandMax,
+              y1: 60,
+              y2: 80,
               color: const Color(0xFF1E5C38).withOpacity(0.5),
             ),
           ],
@@ -451,9 +463,9 @@ class _BloodPressureDetailsScreenState
           verticalInterval: 1,
           horizontalInterval: 50,
           getDrawingVerticalLine: (_) =>
-          const FlLine(color: Color(0xFF3A3A3A), strokeWidth: 1),
+              FlLine(color: gridLineColor, strokeWidth: 1),
           getDrawingHorizontalLine: (_) =>
-          const FlLine(color: Color(0xFF3A3A3A), strokeWidth: 1),
+              FlLine(color: gridLineColor, strokeWidth: 1),
         ),
 
         borderData: FlBorderData(show: false),
@@ -467,7 +479,7 @@ class _BloodPressureDetailsScreenState
               getTitlesWidget: (val, _) => Text(
                 val.toInt().toString(),
                 style: GoogleFonts.arimo(
-                    color: Colors.white54, fontSize: 11),
+                    color: c.hintText, fontSize: 11),
               ),
             ),
           ),
@@ -478,18 +490,18 @@ class _BloodPressureDetailsScreenState
               getTitlesWidget: (val, _) => Text(
                 val.toInt().toString(),
                 style: GoogleFonts.arimo(
-                    color: Colors.white54, fontSize: 11),
+                    color: c.hintText, fontSize: 11),
               ),
             ),
           ),
-          topTitles:
-          const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles:
-          const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false)),
         ),
 
         lineBarsData: [
-          // Systolic line
+          // Systolic — filled dot
           LineChartBarData(
             spots: sysSpots,
             isCurved: false,
@@ -497,16 +509,16 @@ class _BloodPressureDetailsScreenState
             barWidth: 2,
             dotData: FlDotData(
               show: true,
-              getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
-                radius: 5,
-                color: yellow,
-                strokeColor: yellow,
-              ),
+              getDotPainter: (_, __, ___, ____) =>
+                  FlDotCirclePainter(
+                      radius: 5,
+                      color: yellow,
+                      strokeColor: yellow),
             ),
             aboveBarData: BarAreaData(show: false),
             belowBarData: BarAreaData(show: false),
           ),
-          // Diastolic line
+          // Diastolic — hollow dot
           LineChartBarData(
             spots: diaSpots,
             isCurved: false,
@@ -514,12 +526,12 @@ class _BloodPressureDetailsScreenState
             barWidth: 2,
             dotData: FlDotData(
               show: true,
-              getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
-                radius: 5,
-                color: const Color(0xFF2D2D2D),
-                strokeColor: yellow,
-                strokeWidth: 2,
-              ),
+              getDotPainter: (_, __, ___, ____) =>
+                  FlDotCirclePainter(
+                      radius: 5,
+                      color: hollowFill, // adapts so it looks hollow
+                      strokeColor: yellow,
+                      strokeWidth: 2),
             ),
             aboveBarData: BarAreaData(show: false),
             belowBarData: BarAreaData(show: false),
@@ -529,29 +541,33 @@ class _BloodPressureDetailsScreenState
         lineTouchData: LineTouchData(
           enabled: true,
           touchTooltipData: LineTouchTooltipData(
-            getTooltipColor: (_) => const Color(0xFF3A3A3A),
-            getTooltipItems: (spots) => spots.map((s) {
-              return LineTooltipItem(
-                s.y.toInt().toString(),
-                GoogleFonts.arimo(
-                    color: Colors.white, fontWeight: FontWeight.bold),
-              );
-            }).toList(),
+            getTooltipColor: (_) => c.cardBg,
+            getTooltipItems: (spots) => spots
+                .map((s) => LineTooltipItem(
+              s.y.toInt().toString(),
+              GoogleFonts.arimo(
+                  color: c.primaryText,
+                  fontWeight: FontWeight.bold),
+            ))
+                .toList(),
           ),
         ),
       ),
     );
   }
 
-  Widget _historyTile(BloodPressureEntry e) {
-    final status = getStatus(e.systolic, e.diastolic);
-    final color = getStatusColor(status);
+
+  Widget _historyTile(BuildContext context, BloodPressureEntry e) {
+    final c      = context.colors;
+    final status = getBPStatus(e.systolic, e.diastolic);
+    final color  = getStatusColor(status);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding:
+      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF2D2D2D),
+        color: c.surface,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -563,22 +579,22 @@ class _BloodPressureDetailsScreenState
                 Text(
                   "${e.systolic}/${e.diastolic} mmHg",
                   style: GoogleFonts.arimo(
-                      color: Colors.white,
+                      color: c.primaryText,
                       fontSize: 18,
                       fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   "${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}",
-                  style:
-                  GoogleFonts.arimo(color: Colors.white54, fontSize: 12),
+                  style: GoogleFonts.arimo(
+                      color: c.hintText, fontSize: 12),
                 ),
               ],
             ),
           ),
           Container(
-            padding:
-            const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: color.withOpacity(0.3),
               borderRadius: BorderRadius.circular(12),

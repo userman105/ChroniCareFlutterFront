@@ -15,15 +15,15 @@ class LabTestLogScreen extends StatefulWidget {
 }
 
 class _LabTestLogScreenState extends State<LabTestLogScreen> {
-  // From LabTestUploadScreen
   final _ocrNotesController = TextEditingController();
+  final _testNameCtrl = TextEditingController();
   File? _selectedImage;
   bool _isUploading = false;
   final ImagePicker _picker = ImagePicker();
-
-  // From LabTestLogScreen (adapted)
   DateTime? _selectedDate;
-  final _testNameCtrl = TextEditingController();
+
+  // Consistent Green Accent
+  final Color _accentGreen = const Color(0xFF00C950);
 
   bool get _isValid =>
       _selectedImage != null &&
@@ -43,7 +43,6 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
     super.dispose();
   }
 
-  // From LabTestUploadScreen
   Future<void> _pickImage(ImageSource source) async {
     try {
       final XFile? pickedFile = await _picker.pickImage(
@@ -63,16 +62,16 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
     }
   }
 
-  // From LabTestUploadScreen
   void _showImageSourceDialog() {
+    final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Color(0xFF212121),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -82,7 +81,7 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -91,7 +90,7 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
             Text(
               'Select Image Source',
               style: GoogleFonts.arimo(
-                color: Colors.white,
+                color: theme.colorScheme.onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
@@ -121,30 +120,30 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
     );
   }
 
-  // From LabTestUploadScreen
   Widget _imageSourceOption({
     required IconData icon,
     required String label,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFF2D2D2D),
+          color: theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: const Color(0xFF00C950), size: 24),
+            Icon(icon, color: _accentGreen, size: 24),
             const SizedBox(width: 12),
             Text(
               label,
               style: GoogleFonts.arimo(
-                color: Colors.white,
+                color: theme.colorScheme.onSurface,
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
@@ -155,7 +154,6 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
     );
   }
 
-  // From LabTestUploadScreen
   Future<void> _uploadLabTest() async {
     if (_selectedImage == null) {
       _showSnackBar('Please select an image first');
@@ -166,11 +164,9 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
 
     try {
       final result = await context.read<HealthCubit>().uploadLabTest(_selectedImage!);
-
       setState(() {
         _ocrNotesController.text = result['ocr_text'] ?? 'No text extracted';
       });
-
       _showSnackBar('Lab test uploaded successfully!');
     } catch (e) {
       _showSnackBar('Upload failed: $e');
@@ -179,28 +175,28 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
     }
   }
 
-  // From LabTestUploadScreen
   void _showSnackBar(String message) {
+    final theme = Theme.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: GoogleFonts.arimo()),
-        backgroundColor: const Color(0xFF2D2D2D),
+        content: Text(message, style: GoogleFonts.arimo(color: Colors.white)),
+        backgroundColor: theme.colorScheme.inverseSurface,
       ),
     );
   }
 
-  // From LabTestLogScreen
   Future<void> _pickDate() async {
+    final theme = Theme.of(context);
     final picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
       builder: (ctx, child) => Theme(
-        data: ThemeData.dark().copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: Color(0xFF00C950),
-            surface: Color(0xFF2D2D2D),
+        data: theme.copyWith(
+          colorScheme: theme.colorScheme.copyWith(
+            primary: _accentGreen,
+            onPrimary: Colors.white,
           ),
         ),
         child: child!,
@@ -209,15 +205,14 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
     if (picked != null) setState(() => _selectedDate = picked);
   }
 
-  // From LabTestLogScreen
   void _submit() {
     if (!_isValid) return;
 
     final entry = LabTestEntry(
       testName: _testNameCtrl.text.trim(),
-      imagePath: _selectedImage!.path, // Changed to use _selectedImage
+      imagePath: _selectedImage!.path,
       testDate: _selectedDate!,
-      notes: _ocrNotesController.text.trim().isEmpty // Changed to use _ocrNotesController
+      notes: _ocrNotesController.text.trim().isEmpty
           ? null
           : _ocrNotesController.text.trim(),
       createdAt: DateTime.now(),
@@ -229,21 +224,21 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A1A),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF2D2D2D),
+        backgroundColor: theme.colorScheme.surfaceContainer,
         elevation: 0,
         title: Text(
           'Log Lab Test',
           style: GoogleFonts.arimo(
-            color: Colors.white,
+            color: theme.colorScheme.onSurface,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -252,7 +247,6 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image Preview Section (from LabTestUploadScreen)
             _label('Lab Test Image'),
             const SizedBox(height: 12),
             GestureDetector(
@@ -261,10 +255,10 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
                 width: double.infinity,
                 height: 250,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF242424),
+                  color: theme.colorScheme.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: Colors.white12,
+                    color: theme.colorScheme.outlineVariant,
                     width: 1,
                   ),
                 ),
@@ -272,16 +266,16 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
                     ? Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.add_photo_alternate_outlined,
-                      color: Color(0xFF00C950),
+                      color: _accentGreen,
                       size: 64,
                     ),
                     const SizedBox(height: 12),
                     Text(
                       'Tap to select image',
                       style: GoogleFonts.arimo(
-                        color: Colors.white54,
+                        color: theme.colorScheme.onSurfaceVariant,
                         fontSize: 14,
                       ),
                     ),
@@ -296,7 +290,6 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
                 ),
               ),
             ),
-
             if (_selectedImage != null) ...[
               const SizedBox(height: 12),
               GestureDetector(
@@ -305,7 +298,7 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
                   child: Text(
                     'Change Image',
                     style: GoogleFonts.arimo(
-                      color: const Color(0xFF2B7FFF),
+                      color: _accentGreen,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -313,10 +306,7 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
                 ),
               ),
             ],
-
             const SizedBox(height: 32),
-
-            // Upload Button (from LabTestUploadScreen)
             GestureDetector(
               onTap: _isUploading ? null : _uploadLabTest,
               child: Container(
@@ -324,8 +314,8 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
                 height: 50,
                 decoration: BoxDecoration(
                   color: _isUploading
-                      ? const Color(0xFF00C950).withOpacity(0.5)
-                      : const Color(0xFF00C950),
+                      ? _accentGreen.withOpacity(0.5)
+                      : _accentGreen,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
@@ -341,11 +331,8 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
                       : Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        Icons.upload_file,
-                        color: Colors.white,
-                        size: 20,
-                      ),
+                      const Icon(Icons.upload_file,
+                          color: Colors.white, size: 20),
                       const SizedBox(width: 8),
                       Text(
                         'Upload & Extract Text',
@@ -360,33 +347,25 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 32),
-
-            // Test Name Field (from LabTestLogScreen)
             _fieldLabel('TEST NAME'),
             const SizedBox(height: 6),
             _textField(
               controller: _testNameCtrl,
               hint: 'e.g., Blood Test, CBC, Lipid Panel',
             ),
-
             const SizedBox(height: 16),
-
-            // Date of Test Field (from LabTestLogScreen)
             _fieldLabel('DATE OF TEST'),
             const SizedBox(height: 6),
             GestureDetector(
               onTap: _pickDate,
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 decoration: BoxDecoration(
-                  color: Colors.black,
+                  color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: Colors.white10, width: 1),
+                  border: Border.all(color: theme.colorScheme.outlineVariant, width: 1),
                 ),
                 child: Row(
                   children: [
@@ -397,22 +376,18 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
                             : '${_selectedDate!.month.toString().padLeft(2, '0')} / ${_selectedDate!.day.toString().padLeft(2, '0')} / ${_selectedDate!.year}',
                         style: GoogleFonts.arimo(
                           color: _selectedDate == null
-                              ? const Color(0xFFB4B4B4)
-                              : Colors.white,
+                              ? theme.colorScheme.onSurfaceVariant
+                              : theme.colorScheme.onSurface,
                           fontSize: 16,
                         ),
                       ),
                     ),
-                    Image.asset('assets/icons/calendar.png',
-                        width: 20, height: 20),
+                    Icon(Icons.calendar_today, color: _accentGreen, size: 20),
                   ],
                 ),
               ),
             ),
-
             const SizedBox(height: 16),
-
-            // Extracted Notes Field (from LabTestUploadScreen, adapted)
             _fieldLabel('EXTRACTED NOTES (OPTIONAL)'),
             const SizedBox(height: 6),
             _textField(
@@ -420,13 +395,13 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
               hint: 'OCR extracted text will appear here...',
               maxLines: 8,
             ),
-
             const SizedBox(height: 32),
-
             MainButton(
               text: 'Add',
               enabled: _isValid,
               onTap: _isValid ? _submit : null,
+              // Assuming MainButton handles its own colors,
+              // otherwise ensure it uses _accentGreen internally.
             ),
           ],
         ),
@@ -434,52 +409,56 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
     );
   }
 
-  // Helper widgets from LabTestLogScreen (adapted _fieldLabel and _textField)
-  Widget _fieldLabel(String label) => Text(
-    label,
-    style: GoogleFonts.arimo(
-      color: Colors.white,
-      fontSize: 10,
-      fontWeight: FontWeight.w700,
-      letterSpacing: 1.5,
-    ),
-  );
+  Widget _fieldLabel(String label) {
+    final theme = Theme.of(context);
+    return Text(
+      label,
+      style: GoogleFonts.arimo(
+        color: theme.colorScheme.onSurface,
+        fontSize: 10,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.5,
+      ),
+    );
+  }
 
   Widget _textField({
     required TextEditingController controller,
     required String hint,
     int maxLines = 1,
   }) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white10, width: 1),
+        border: Border.all(color: theme.colorScheme.outlineVariant, width: 1),
       ),
       child: TextField(
         controller: controller,
         maxLines: maxLines,
-        style: GoogleFonts.arimo(color: Colors.white, fontSize: 16),
+        style: GoogleFonts.arimo(color: theme.colorScheme.onSurface, fontSize: 16),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.arimo(
-              color: const Color(0xFFB4B4B4), fontSize: 16),
+          hintStyle: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 16),
           border: InputBorder.none,
-          contentPadding:
-          const EdgeInsets.symmetric(vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(vertical: 14),
         ),
       ),
     );
   }
 
-  Widget _label(String text) => Text(
-    text,
-    style: GoogleFonts.arimo(
-      color: Colors.white70,
-      fontSize: 12,
-      fontWeight: FontWeight.w600,
-      letterSpacing: 0.5,
-    ),
-  );
+  Widget _label(String text) {
+    final theme = Theme.of(context);
+    return Text(
+      text,
+      style: GoogleFonts.arimo(
+        color: theme.colorScheme.onSurfaceVariant,
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.5,
+      ),
+    );
+  }
 }

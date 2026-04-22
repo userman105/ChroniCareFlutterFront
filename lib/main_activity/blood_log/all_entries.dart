@@ -23,35 +23,24 @@ class _AllEntriesScreenState extends State<AllEntriesScreen> {
     return "$h:$m";
   }
 
-  String _formatDate(DateTime dt) => "${dt.day}/${dt.month}/${dt.year}";
+  String _formatDate(DateTime dt) =>
+      "${dt.day}/${dt.month}/${dt.year}";
 
   String _formatShort(DateTime dt) {
     final m = dt.month.toString().padLeft(2, '0');
     final d = dt.day.toString().padLeft(2, '0');
-    return "$m/${d}/${dt.year}";
+    return "$m/$d/${dt.year}";
   }
 
-  String getStatus(int sys, int dia) => getBPStatus(sys, dia);
-
-  Color getStatusColor(String status) {
-    switch (status) {
-      case "Normal":   return const Color(0xFF00C950);
-      case "Elevated": return Colors.orange;
-      case "High":     return Colors.red;
-      case "Low":      return Colors.blue;
-      default:         return Colors.grey;
-    }
-  }
+  bool get _hasFilter =>
+      _filterStart != null && _filterEnd != null;
 
   List<BloodPressureEntry> get _filtered {
     final sorted = List<BloodPressureEntry>.from(widget.entries)
       ..sort((a, b) => b.dateTime.compareTo(a.dateTime));
-
-    if (_filterStart == null || _filterEnd == null) return sorted;
-
-    final end = DateTime(
-        _filterEnd!.year, _filterEnd!.month, _filterEnd!.day, 23, 59, 59);
-
+    if (!_hasFilter) return sorted;
+    final end = DateTime(_filterEnd!.year, _filterEnd!.month,
+        _filterEnd!.day, 23, 59, 59);
     return sorted
         .where((e) =>
     !e.dateTime.isBefore(_filterStart!) &&
@@ -74,43 +63,44 @@ class _AllEntriesScreenState extends State<AllEntriesScreen> {
         child: DateRangePickerWidget(
           initialStart: _filterStart,
           initialEnd: _filterEnd,
-          onApply: (start, end) {
-            setState(() {
-              _filterStart = start;
-              _filterEnd = end;
-            });
-          },
+          onApply: (s, e) =>
+              setState(() {
+                _filterStart = s;
+                _filterEnd   = e;
+              }),
         ),
       ),
     );
   }
 
-  bool get _hasFilter => _filterStart != null && _filterEnd != null;
-
   @override
   Widget build(BuildContext context) {
+    final c       = context.colors;
     final entries = _filtered;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF111111),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
+
+            // ── Top bar ────────────────────────────────────
             Container(
               height: 46,
               padding: const EdgeInsets.symmetric(horizontal: 14),
-              color: const Color(0xFF2D2D2D),
+              color: c.surface,
               child: Row(
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: const Icon(Icons.arrow_back, color: Colors.white),
+                    child: Icon(Icons.arrow_back,
+                        color: c.primaryText),
                   ),
                   const SizedBox(width: 16),
                   Text(
                     "All Entries",
                     style: GoogleFonts.arimo(
-                        color: Colors.white,
+                        color: c.primaryText,
                         fontSize: 16,
                         fontWeight: FontWeight.w500),
                   ),
@@ -118,50 +108,56 @@ class _AllEntriesScreenState extends State<AllEntriesScreen> {
                   Text(
                     "${entries.length} records",
                     style: GoogleFonts.arimo(
-                        color: Colors.white54, fontSize: 13),
+                        color: c.hintText, fontSize: 13),
                   ),
                 ],
               ),
             ),
 
             const SizedBox(height: 20),
+
+            // ── Date filter pill ──────────────────────────
             Padding(
-              padding: const EdgeInsets.only(left :16.0),
+              padding: const EdgeInsets.only(left: 16),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: GestureDetector(
                   onTap: _hasFilter
                       ? () => setState(() {
                     _filterStart = null;
-                    _filterEnd = null;
+                    _filterEnd   = null;
                   })
                       : _openPicker,
                   child: _hasFilter
-                  // Active filter chip
                       ? Container(
                     height: 32,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14),
                     decoration: ShapeDecoration(
-                      color: const Color(0xFF474747),
+                      color: c.reminderTileBg,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
+                        borderRadius:
+                        BorderRadius.circular(25),
                       ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Image.asset("assets/icons/calendar.png",
-                        height: 50,width: 50,),
+                        Image.asset(
+                            "assets/icons/calendar.png",
+                            height: 20,
+                            width: 20),
+                        const SizedBox(width: 6),
                         Text(
                           "${_formatShort(_filterStart!)} – ${_formatShort(_filterEnd!)}",
                           style: GoogleFonts.arimo(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
+                              color: c.primaryText,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500),
                         ),
                         const SizedBox(width: 6),
-                        const Icon(Icons.close, color: Colors.white, size: 14),
+                        Icon(Icons.close,
+                            color: c.primaryText, size: 14),
                       ],
                     ),
                   )
@@ -169,28 +165,28 @@ class _AllEntriesScreenState extends State<AllEntriesScreen> {
                     width: 118,
                     height: 32,
                     decoration: ShapeDecoration(
-                      color: const Color(0xFF2D2D2D),
+                      color: c.surface,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
+                        borderRadius:
+                        BorderRadius.circular(25),
                       ),
                     ),
-                    child: Center(
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 12,),
-                          Image.asset("assets/icons/calendar.png",
-                            height: 20,width: 20,),
-                          const SizedBox(width: 10,),
-                          Text(
-                            'All Time',
-                            style: GoogleFonts.arimo(
-                              color: Colors.white,
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 12),
+                        Image.asset(
+                            "assets/icons/calendar.png",
+                            height: 20,
+                            width: 20),
+                        const SizedBox(width: 10),
+                        Text(
+                          'All Time',
+                          style: GoogleFonts.arimo(
+                              color: c.primaryText,
                               fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
+                              fontWeight: FontWeight.w500),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -198,6 +194,8 @@ class _AllEntriesScreenState extends State<AllEntriesScreen> {
             ),
 
             const SizedBox(height: 12),
+
+            // ── Entry list ─────────────────────────────────
             Expanded(
               child: entries.isEmpty
                   ? Center(
@@ -205,60 +203,72 @@ class _AllEntriesScreenState extends State<AllEntriesScreen> {
                   _hasFilter
                       ? "No entries in this range"
                       : "No entries",
-                  style:
-                  GoogleFonts.arimo(color: Colors.white54),
+                  style: GoogleFonts.arimo(
+                      color: c.hintText),
                 ),
               )
                   : ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16),
                 itemCount: entries.length,
                 itemBuilder: (context, index) {
-                  final e = entries[index];
-                  final status = getStatus(e.systolic, e.diastolic);
-                  final color = getStatusColor(status);
+                  final e      = entries[index];
+                  final status = getBPStatus(
+                      e.systolic, e.diastolic);
+                  final color  = getStatusColor(status);
 
                   return GestureDetector(
-                    onTap: () => _showEntryDetail(context, e),
+                    onTap: () =>
+                        _showEntryDetail(context, e),
                     child: Container(
-                      margin: const EdgeInsets.only(bottom: 10),
+                      margin: const EdgeInsets.only(
+                          bottom: 10),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2D2D2D),
-                        borderRadius: BorderRadius.circular(10),
+                        color: c.surface,
+                        borderRadius:
+                        BorderRadius.circular(10),
                       ),
                       child: Row(
                         children: [
                           Expanded(
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment:
+                              CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   "${e.systolic}/${e.diastolic} mmHg",
                                   style: GoogleFonts.arimo(
-                                      color: Colors.white,
+                                      color: c.primaryText,
                                       fontSize: 18,
-                                      fontWeight: FontWeight.w600),
+                                      fontWeight:
+                                      FontWeight.w600),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   "${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}",
                                   style: GoogleFonts.arimo(
-                                      color: Colors.white54,
+                                      color: c.hintText,
                                       fontSize: 12),
                                 ),
                               ],
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
+                            padding:
+                            const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4),
                             decoration: BoxDecoration(
-                              color: color.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(12),
+                              color:
+                              color.withOpacity(0.3),
+                              borderRadius:
+                              BorderRadius.circular(12),
                             ),
                             child: Text(status,
-                                style: GoogleFonts.arimo(color: Colors.white)),
+                                style: GoogleFonts.arimo(
+                                    color: Colors.white)),
                           ),
                         ],
                       ),
@@ -272,32 +282,38 @@ class _AllEntriesScreenState extends State<AllEntriesScreen> {
       ),
     );
   }
-  void _showEntryDetail(BuildContext context, BloodPressureEntry e) {
-    final status = getStatus(e.systolic, e.diastolic);
-    final color = getStatusColor(status);
+
+  // ── Entry detail sheet ────────────────────────────────────
+
+  void _showEntryDetail(
+      BuildContext context, BloodPressureEntry e) {
+    final c      = context.colors;
+    final status = getBPStatus(e.systolic, e.diastolic);
+    final color  = getStatusColor(status);
 
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Color(0xFF1C1C1C),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        decoration: BoxDecoration(
+          color: c.bottomSheet,
+          borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(20)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
 
+            // Drag handle
             Center(
               child: Container(
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+                    color: c.subtleText,
+                    borderRadius: BorderRadius.circular(2)),
               ),
             ),
 
@@ -309,10 +325,9 @@ class _AllEntriesScreenState extends State<AllEntriesScreen> {
                 Text(
                   "${e.systolic}/${e.diastolic} mmHg",
                   style: GoogleFonts.arimo(
-                    color: Colors.white,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w700,
-                  ),
+                      color: c.primaryText,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -321,10 +336,9 @@ class _AllEntriesScreenState extends State<AllEntriesScreen> {
                     color: color.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
-                    status,
-                    style: GoogleFonts.arimo(color: Colors.white),
-                  ),
+                  child: Text(status,
+                      style:
+                      GoogleFonts.arimo(color: Colors.white)),
                 ),
               ],
             ),
@@ -334,16 +348,17 @@ class _AllEntriesScreenState extends State<AllEntriesScreen> {
             Text(
               "${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}",
               style: GoogleFonts.arimo(
-                  color: Colors.white54, fontSize: 13),
+                  color: c.hintText, fontSize: 13),
             ),
 
             const SizedBox(height: 20),
 
-            const Divider(color: Color(0xFF3A3A3A)),
+            Divider(color: c.divider),
 
             const SizedBox(height: 16),
 
             _detailRow(
+              context: context,
               icon: Icons.favorite,
               iconColor: Colors.redAccent,
               label: "Heart Rate",
@@ -355,10 +370,12 @@ class _AllEntriesScreenState extends State<AllEntriesScreen> {
             const SizedBox(height: 14),
 
             _detailRow(
+              context: context,
               icon: Icons.notes,
-              iconColor: Colors.white54,
+              iconColor: c.hintText,
               label: "Notes",
-              value: (e.notes != null && e.notes!.trim().isNotEmpty)
+              value: (e.notes != null &&
+                  e.notes!.trim().isNotEmpty)
                   ? e.notes!
                   : "No notes",
             ),
@@ -371,11 +388,13 @@ class _AllEntriesScreenState extends State<AllEntriesScreen> {
   }
 
   Widget _detailRow({
+    required BuildContext context,
     required IconData icon,
     required Color iconColor,
     required String label,
     required String value,
   }) {
+    final c = context.colors;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -384,24 +403,18 @@ class _AllEntriesScreenState extends State<AllEntriesScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              label,
-              style: GoogleFonts.arimo(
-                  color: Colors.white54, fontSize: 12),
-            ),
+            Text(label,
+                style: GoogleFonts.arimo(
+                    color: c.hintText, fontSize: 12)),
             const SizedBox(height: 2),
-            Text(
-              value,
-              style: GoogleFonts.arimo(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500),
-            ),
+            Text(value,
+                style: GoogleFonts.arimo(
+                    color: c.primaryText,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500)),
           ],
         ),
       ],
     );
   }
-
-
 }

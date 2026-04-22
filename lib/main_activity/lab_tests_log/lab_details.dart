@@ -11,56 +11,55 @@ class LabTestDetailsScreen extends StatefulWidget {
   const LabTestDetailsScreen({super.key});
 
   @override
-  State<LabTestDetailsScreen> createState() =>
-      _LabTestDetailsScreenState();
+  State<LabTestDetailsScreen> createState() => _LabTestDetailsScreenState();
 }
 
 class _LabTestDetailsScreenState extends State<LabTestDetailsScreen> {
+  // Consistent Green Accent
+  final Color _accentGreen = const Color(0xFF00C950);
+
   String _formatDate(DateTime dt) =>
       '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final tests = List<LabTestEntry>.from(
       context.watch<HealthCubit>().getLabTests(),
     )..sort((a, b) => b.testDate.compareTo(a.testDate));
 
     return Scaffold(
-      backgroundColor: const Color(0xFF111111),
       body: SafeArea(
         child: Column(
           children: [
-
+            // Header
             Container(
-              height: 46,
+              height: 56,
               padding: const EdgeInsets.symmetric(horizontal: 14),
-              color: const Color(0xFF2D2D2D),
+              color: theme.colorScheme.surfaceContainer,
               child: Row(
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: const Icon(Icons.arrow_back,
-                        color: Colors.white),
+                    child: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
                   ),
                   const SizedBox(width: 16),
                   Text('Lab Tests',
                       style: GoogleFonts.arimo(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500)),
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600)),
                   const Spacer(),
                   Text('${tests.length} test${tests.length == 1 ? '' : 's'}',
                       style: GoogleFonts.arimo(
-                          color: Colors.white38, fontSize: 13)),
-                  const SizedBox(width: 12),
+                          color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
+                  const SizedBox(width: 16),
                   GestureDetector(
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(
-                          builder: (_) => const LabTestLogScreen()),
+                      MaterialPageRoute(builder: (_) => const LabTestLogScreen()),
                     ),
-                    child: Image.asset('assets/icons/add.png',
-                        width: 26, height: 26),
+                    child: Icon(Icons.add_circle, color: _accentGreen, size: 28),
                   ),
                 ],
               ),
@@ -72,8 +71,7 @@ class _LabTestDetailsScreenState extends State<LabTestDetailsScreen> {
                   : ListView.builder(
                 padding: const EdgeInsets.all(16),
                 itemCount: tests.length,
-                itemBuilder: (context, index) =>
-                    _testCard(context, tests[index]),
+                itemBuilder: (context, index) => _testCard(context, tests[index]),
               ),
             ),
           ],
@@ -83,51 +81,48 @@ class _LabTestDetailsScreenState extends State<LabTestDetailsScreen> {
   }
 
   Widget _emptyState(BuildContext context) {
+    final theme = Theme.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 72,
-            height: 72,
+            width: 80,
+            height: 80,
             decoration: BoxDecoration(
-              color: const Color(0xFF00C950).withOpacity(0.1),
+              color: _accentGreen.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.science_outlined,
-                color: Color(0xFF00C950), size: 32),
+            child: Icon(Icons.science_outlined, color: _accentGreen, size: 40),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Text('No lab tests yet',
               style: GoogleFonts.arimo(
-                  color: Colors.white,
-                  fontSize: 16,
+                  color: theme.colorScheme.onSurface,
+                  fontSize: 18,
                   fontWeight: FontWeight.w600)),
-          const SizedBox(height: 6),
-          Text('Tap + to photograph or upload a lab result',
+          const SizedBox(height: 8),
+          Text('Tap the + icon to upload a lab result',
+              textAlign: TextAlign.center,
               style: GoogleFonts.arimo(
-                  color: Colors.white38, fontSize: 13)),
-          const SizedBox(height: 24),
+                  color: theme.colorScheme.onSurfaceVariant, fontSize: 14)),
+          const SizedBox(height: 32),
           GestureDetector(
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(
-                  builder: (_) => const LabTestLogScreen()),
+              MaterialPageRoute(builder: (_) => const LabTestLogScreen()),
             ),
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
               decoration: BoxDecoration(
-                color: const Color(0xFF00C950).withOpacity(0.15),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: const Color(0xFF00C950).withOpacity(0.4)),
+                color: _accentGreen,
+                borderRadius: BorderRadius.circular(25),
               ),
               child: Text('Add first test',
                   style: GoogleFonts.arimo(
-                      color: const Color(0xFF00C950),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500)),
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700)),
             ),
           ),
         ],
@@ -136,67 +131,58 @@ class _LabTestDetailsScreenState extends State<LabTestDetailsScreen> {
   }
 
   Widget _testCard(BuildContext context, LabTestEntry test) {
+    final theme = Theme.of(context);
     final fileExists = File(test.imagePath).existsSync();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: ShapeDecoration(
-        color: const Color(0xFF2D2D2D),
-        shape: RoundedRectangleBorder(
-          side: const BorderSide(color: Color(0xFF3A3A3A), width: 0.5),
-          borderRadius: BorderRadius.circular(14),
-        ),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.colorScheme.outlineVariant, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
+          // Image Preview
           GestureDetector(
             onTap: fileExists
                 ? () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) =>
-                    _FullImageScreen(path: test.imagePath),
+                builder: (_) => _FullImageScreen(path: test.imagePath),
               ),
             )
                 : null,
             child: ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(14),
-                topRight: Radius.circular(14),
-              ),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
               child: fileExists
                   ? Stack(
                 children: [
                   Image.file(
                     File(test.imagePath),
                     width: double.infinity,
-                    height: 200,
+                    height: 180,
                     fit: BoxFit.cover,
                     cacheWidth: 800,
                   ),
-                  // Tap to expand hint
                   Positioned(
-                    bottom: 8,
-                    right: 8,
+                    bottom: 12,
+                    right: 12,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
+                        color: Colors.black.withOpacity(0.7),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.zoom_out_map,
-                              color: Colors.white, size: 12),
+                          const Icon(Icons.fullscreen, color: Colors.white, size: 16),
                           const SizedBox(width: 4),
-                          Text('View full',
+                          Text('Tap to expand',
                               style: GoogleFonts.arimo(
-                                  color: Colors.white,
-                                  fontSize: 11)),
+                                  color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500)),
                         ],
                       ),
                     ),
@@ -206,97 +192,85 @@ class _LabTestDetailsScreenState extends State<LabTestDetailsScreen> {
                   : Container(
                 width: double.infinity,
                 height: 120,
-                color: const Color(0xFF1E1E1E),
+                color: theme.colorScheme.surfaceContainerHighest,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.broken_image_outlined,
-                        color: Colors.white24, size: 32),
+                    Icon(Icons.broken_image_outlined,
+                        color: theme.colorScheme.onSurfaceVariant, size: 32),
                     const SizedBox(height: 6),
                     Text('Image not found',
                         style: GoogleFonts.arimo(
-                            color: Colors.white24,
-                            fontSize: 12)),
+                            color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
                   ],
                 ),
               ),
             ),
           ),
 
+          // Details Section
           Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
                       child: Text(
                         test.testName,
                         style: GoogleFonts.arimo(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600),
+                            color: theme.colorScheme.onSurface,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700),
                       ),
                     ),
-                    // Delete button
                     GestureDetector(
                       onTap: () => _confirmDelete(context, test),
-                      child: const Icon(Icons.delete_outline,
-                          color: Colors.white24, size: 18),
+                      child: Icon(Icons.delete_outline, color: theme.colorScheme.error, size: 22),
                     ),
                   ],
                 ),
-
-                const SizedBox(height: 6),
-
+                const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Icon(Icons.calendar_today_outlined,
-                        color: Colors.white38, size: 13),
-                    const SizedBox(width: 5),
+                    Icon(Icons.calendar_today_outlined, color: _accentGreen, size: 14),
+                    const SizedBox(width: 6),
                     Text(
                       'Test date: ${_formatDate(test.testDate)}',
-                      style: GoogleFonts.arimo(
-                          color: Colors.white54, fontSize: 13),
-                    ),
-                    const SizedBox(width: 12),
-                    const Icon(Icons.access_time,
-                        color: Colors.white38, size: 13),
-                    const SizedBox(width: 5),
-                    Text(
-                      'Added: ${_formatDate(test.createdAt)}',
-                      style: GoogleFonts.arimo(
-                          color: Colors.white38, fontSize: 12),
+                      style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
                     ),
                   ],
                 ),
-
-                if (test.notes != null &&
-                    test.notes!.trim().isNotEmpty) ...[
-                  const SizedBox(height: 10),
+                if (test.notes != null && test.notes!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 12),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E1E1E),
-                      borderRadius: BorderRadius.circular(8),
+                      color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Row(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.notes_outlined,
-                            color: Colors.white38, size: 14),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            test.notes!,
-                            style: GoogleFonts.arimo(
-                                color: Colors.white70,
-                                fontSize: 13),
-                          ),
+                        Row(
+                          children: [
+                            Icon(Icons.notes, color: theme.colorScheme.onSurfaceVariant, size: 14),
+                            const SizedBox(width: 6),
+                            Text('OCR EXTRACTED NOTES',
+                                style: GoogleFonts.arimo(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.5)),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          test.notes!,
+                          style: GoogleFonts.arimo(color: theme.colorScheme.onSurface, fontSize: 13),
                         ),
                       ],
                     ),
@@ -311,24 +285,21 @@ class _LabTestDetailsScreenState extends State<LabTestDetailsScreen> {
   }
 
   void _confirmDelete(BuildContext context, LabTestEntry test) {
+    final theme = Theme.of(context);
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF2D2D2D),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
+        backgroundColor: theme.colorScheme.surface,
+        surfaceTintColor: theme.colorScheme.surfaceTint,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text('Delete Test',
-            style: GoogleFonts.arimo(
-                color: Colors.white, fontWeight: FontWeight.w600)),
-        content: Text(
-          'Delete "${test.testName}"? This cannot be undone.',
-          style: GoogleFonts.arimo(color: Colors.white70),
-        ),
+            style: GoogleFonts.arimo(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w600)),
+        content: Text('Are you sure you want to delete "${test.testName}"? This cannot be undone.',
+            style: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel',
-                style: GoogleFonts.arimo(color: Colors.white54)),
+            child: Text('Cancel', style: GoogleFonts.arimo(color: theme.colorScheme.primary)),
           ),
           TextButton(
             onPressed: () {
@@ -336,9 +307,7 @@ class _LabTestDetailsScreenState extends State<LabTestDetailsScreen> {
               Navigator.pop(context);
             },
             child: Text('Delete',
-                style: GoogleFonts.arimo(
-                    color: Colors.redAccent,
-                    fontWeight: FontWeight.w600)),
+                style: GoogleFonts.arimo(color: theme.colorScheme.error, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -348,42 +317,22 @@ class _LabTestDetailsScreenState extends State<LabTestDetailsScreen> {
 
 class _FullImageScreen extends StatelessWidget {
   final String path;
-
   const _FullImageScreen({required this.path});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // Zoomable image
-            Center(
-              child: InteractiveViewer(
-                minScale: 0.5,
-                maxScale: 5.0,
-                child: Image.file(File(path)),
-              ),
-            ),
-            // Close button
-            Positioned(
-              top: 8,
-              left: 8,
-              child: GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.close,
-                      color: Colors.white, size: 20),
-                ),
-              ),
-            ),
-          ],
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
+      ),
+      body: Center(
+        child: InteractiveViewer(
+          minScale: 0.5,
+          maxScale: 5.0,
+          child: Image.file(File(path)),
         ),
       ),
     );
