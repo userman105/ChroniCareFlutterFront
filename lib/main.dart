@@ -135,7 +135,7 @@ class RootDecider extends StatelessWidget {
           final loggedIn = snapshot.data as bool;
 
           if (loggedIn) {
-            return const MainContainer(tiles: []);
+            return const MainContainer();
           }
 
           return const SignUpScreen();

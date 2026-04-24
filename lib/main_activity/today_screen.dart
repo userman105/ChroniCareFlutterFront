@@ -14,19 +14,19 @@ import '../widgets/components.dart';
 import 'blood_log/blood_log_screen.dart';
 
 class TodayScreen extends StatefulWidget {
-  final List<HealthTile> tiles;
-
-  const TodayScreen({
-    super.key,
-    required this.tiles,
-  });
+  const TodayScreen({super.key});
 
   @override
   State<TodayScreen> createState() => _TodayScreenState();
 }
+
 class _TodayScreenState extends State<TodayScreen> {
   @override
   Widget build(BuildContext context) {
+    final healthCubit = context.watch<HealthCubit>();
+    final tiles = healthCubit.getTiles();
+    final lang = context.watch<LocaleCubit>().state;
+
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -37,7 +37,6 @@ class _TodayScreenState extends State<TodayScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               children: [
-
                 const SizedBox(height: 20),
 
                 GridView.builder(
@@ -49,27 +48,21 @@ class _TodayScreenState extends State<TodayScreen> {
                     crossAxisSpacing: 12,
                     childAspectRatio: 2.3,
                   ),
-                  itemCount: widget.tiles.length + 1,
+                  itemCount: tiles.length + 1,
                   itemBuilder: (context, index) {
-                    final lang = context.watch<LocaleCubit>().state; // Get current language
 
-                    if (index == widget.tiles.length) {
+                    /// ➕ ADD BUTTON
+                    if (index == tiles.length) {
                       return GestureDetector(
                         onTap: () async {
                           final selectedTile =
-                          await AddEntryPopup.show(context, widget.tiles);
+                          await AddEntryPopup.show(context, tiles);
+
                           if (selectedTile == null) return;
-                          setState(() {
-                            final alreadyExists = widget.tiles
-                                .any((t) => t.labelKey == selectedTile.labelKey);
-                            if (!alreadyExists) {
-                              widget.tiles.add(HealthTile(
-                                icon: selectedTile.icon,
-                                labelKey: selectedTile.labelKey,
-                                selected: false,
-                              ));
-                            }
-                          });
+
+                          context
+                              .read<HealthCubit>()
+                              .addTile(selectedTile.labelKey);
                         },
                         child: Container(
                           decoration: BoxDecoration(
@@ -84,8 +77,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                   width: 20, height: 20),
                               const SizedBox(width: 6),
                               Text(
-                                AppStrings.get('add_entry', lang), // FIX 3: Localize "Add Entry"
-                                textAlign: TextAlign.center,
+                                AppStrings.get('add_entry', lang),
                                 style: GoogleFonts.arimo(
                                   color: Colors.white,
                                   fontSize: 15,
@@ -98,49 +90,50 @@ class _TodayScreenState extends State<TodayScreen> {
                       );
                     }
 
-                    final tile = widget.tiles[index];
+                    final tile = tiles[index];
 
                     return HighlightableGridTile(
                       iconAsset: tile.icon,
-                      // FIX 4: Use translated string for the UI
                       label: AppStrings.get(tile.labelKey, lang),
-                      selected: tile.selected,
+                      selected: false, // optional: move selection to cubit if needed
                       onTap: () {
-                        setState(() {
-                          for (var t in widget.tiles) t.selected = false;
-                          tile.selected = true;
-                        });
 
-                        // Navigation by type is already safe for localization!
                         switch (tile.type) {
                           case HealthMetricType.bloodPressure:
-                            Navigator.push(context, MaterialPageRoute(
-                                builder: (_) => const BloodPressureScreen()));
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: (_) => const BloodPressureScreen()));
                             break;
+
                           case HealthMetricType.glucose:
-                            Navigator.push(context, MaterialPageRoute(
-                                builder: (_) => GlucoseScreen()));
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: (_) => GlucoseScreen()));
                             break;
+
                           case HealthMetricType.weight:
-                            Navigator.push(context, MaterialPageRoute(
-                                builder: (_) => WeightLogScreen()));
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: (_) => WeightLogScreen()));
                             break;
+
                           case HealthMetricType.meds:
-                            Navigator.push(context, MaterialPageRoute(
-                                builder: (_) => MedicationLogScreen()));
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: (_) => MedicationLogScreen()));
                             break;
+
                           case HealthMetricType.symptoms:
-                            Navigator.push(context, MaterialPageRoute(
-                                builder: (_) => SymptomScreen()));
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: (_) => SymptomScreen()));
                             break;
+
                           case HealthMetricType.food:
-                            Navigator.push(context, MaterialPageRoute(
-                                builder: (_) => FoodLogScreen()));
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: (_) => FoodLogScreen()));
                             break;
+
                           case HealthMetricType.testLogs:
-                            Navigator.push(context, MaterialPageRoute(
-                                builder: (_) => LabTestLogScreen()));
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: (_) => LabTestLogScreen()));
                             break;
+
                           default:
                             break;
                         }
@@ -152,7 +145,8 @@ class _TodayScreenState extends State<TodayScreen> {
                 const SizedBox(height: 16),
 
                 LogDrawers(
-                    reminders: context.watch<HealthCubit>().getReminders()),
+                  reminders: healthCubit.getReminders(),
+                ),
 
                 const SizedBox(height: 20),
               ],

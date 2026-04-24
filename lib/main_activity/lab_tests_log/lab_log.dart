@@ -8,6 +8,7 @@ import '../../cubit/health_cubit.dart';
 import '../../cubit/locale_cubit.dart';
 import '../../models/labTest_entry.dart';
 import '../../widgets/components.dart';
+import '../main_container.dart';
 
 class LabTestLogScreen extends StatefulWidget {
   const LabTestLogScreen({super.key});
@@ -218,7 +219,8 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
     );
 
     context.read<HealthCubit>().addLabTest(entry);
-    Navigator.pop(context);
+
+    safePopOrHome(context);
   }
 
   @override
@@ -498,5 +500,16 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
           fontWeight: FontWeight.w600,
           letterSpacing: 0.5),
     );
+  }
+
+  void safePopOrHome(BuildContext context) {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const MainContainer()),
+            (_) => false,
+      );
+    }
   }
 }

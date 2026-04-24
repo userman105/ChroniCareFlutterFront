@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import 'widgets/components.dart';
-import 'main_activity/today_screen.dart';
 import 'main_activity/main_container.dart';
+import 'cubit/health_cubit.dart';
+import 'core/lang/lang_strings.dart';
+import 'cubit/locale_cubit.dart';
 
 class PersonalizeSchedule extends StatefulWidget {
   const PersonalizeSchedule({super.key});
@@ -15,16 +19,34 @@ class _PersonalizeScheduleState extends State<PersonalizeSchedule> {
   final Set<int> selectedIndexes = {};
 
   final List<Map<String, String>> buttons = [
-    {'icon': 'assets/icons/bloodPressure.png', 'label': 'Blood Pressure'},
-    {'icon': 'assets/icons/capsule.png', 'label': 'Meds'},
-    {'icon': 'assets/icons/healthcare.png', 'label': 'Symptoms'},
-    {'icon': 'assets/icons/cutlery.png', 'label': 'Food'},
-    {'icon': 'assets/icons/weight.png', 'label': 'Weight'},
-    {'icon': 'assets/icons/diabetes.png', 'label': 'Glucose'},
+    {'icon': 'assets/icons/bloodPressure.png', 'key': 'blood_pressure'},
+    {'icon': 'assets/icons/capsule.png',       'key': 'meds'},
+    {'icon': 'assets/icons/healthcare.png',    'key': 'symptoms'},
+    {'icon': 'assets/icons/cutlery.png',       'key': 'food'},
+    {'icon': 'assets/icons/weight.png',        'key': 'weight'},
+    {'icon': 'assets/icons/diabetes.png',      'key': 'glucose'},
   ];
 
   @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final hasTiles = context.read<HealthCubit>().hasTiles();
+
+      if (hasTiles) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MainContainer()),
+        );
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final lang = context.watch<LocaleCubit>().state;
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
@@ -37,7 +59,7 @@ class _PersonalizeScheduleState extends State<PersonalizeSchedule> {
               SizedBox(
                 width: 352,
                 child: Text(
-                  'Select what you want us to help you with',
+                  AppStrings.get('personalize_title', lang),
                   textAlign: TextAlign.center,
                   style: GoogleFonts.arimo(
                     color: Theme.of(context).textTheme.bodyLarge?.color,
@@ -46,8 +68,10 @@ class _PersonalizeScheduleState extends State<PersonalizeSchedule> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 40),
 
+              /// GRID
               Container(
                 width: 412,
                 height: 282,
@@ -59,13 +83,14 @@ class _PersonalizeScheduleState extends State<PersonalizeSchedule> {
                   ),
                 ),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center, // <-- centers the grid vertically
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     GridView.builder(
                       itemCount: buttons.length,
                       physics: const NeverScrollableScrollPhysics(),
-                      shrinkWrap: true, // <-- important! makes GridView take only needed height
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      shrinkWrap: true,
+                      gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         mainAxisSpacing: 16,
                         crossAxisSpacing: 16,
@@ -73,9 +98,10 @@ class _PersonalizeScheduleState extends State<PersonalizeSchedule> {
                       ),
                       itemBuilder: (context, index) {
                         final button = buttons[index];
+
                         return ConditionGridButton(
                           iconAsset: button['icon']!,
-                          label: button['label']!,
+                          label: AppStrings.get(button['key']!, lang),
                           selected: selectedIndexes.contains(index),
                           onTap: () {
                             setState(() {
@@ -95,22 +121,22 @@ class _PersonalizeScheduleState extends State<PersonalizeSchedule> {
 
               const SizedBox(height: 50),
 
-
               MainButton(
-                text: "Proceed",
+                text: AppStrings.get('proceed', lang),
                 enabled: selectedIndexes.isNotEmpty,
                 onTap: () {
+                  final cubit = context.read<HealthCubit>();
 
-
-                  final selectedTiles =
-                  selectedIndexes.map((i) => allTiles[i]).toList();
-
-                  Navigator.pop(context, selectedTiles);
-                  if (selectedIndexes.isNotEmpty) {
-                    Navigator.push(context, MaterialPageRoute(builder: (_)=>
-                    MainContainer(tiles: selectedTiles))
-                    );
+                  for (final i in selectedIndexes) {
+                    cubit.addTile(buttons[i]['key']!);
                   }
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const MainContainer(),
+                    ),
+                        (route) => false,
+                  );
                 },
               ),
             ],

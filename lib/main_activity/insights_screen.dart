@@ -19,9 +19,8 @@ import 'med_log/medication_details_screen.dart';
 
 
 class InsightsScreen extends StatelessWidget {
-  final List<HealthTile> tiles;
 
-  const InsightsScreen({super.key, required this.tiles});
+  const InsightsScreen({super.key});
 
   String timeAgo(DateTime dateTime, String lang) {
     final now = DateTime.now();
@@ -44,6 +43,7 @@ class InsightsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tiles = context.watch<HealthCubit>().getTiles();
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final lang = context.watch<LocaleCubit>().state;

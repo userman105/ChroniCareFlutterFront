@@ -14,6 +14,7 @@ import '../services/notification_service.dart';
 import '../services/token_service.dart';
 import '../widgets/alarm_screen.dart';
 import '../models/glucose_entry.dart';
+import '../widgets/components.dart';
 
 
 class HealthCubit extends Cubit<List<BloodPressureEntry>> {
@@ -26,10 +27,13 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   static const _reminderKey = 'reminder_entries';
   static const _labKey = 'lab_test_entries';
   static const _appointmentsKey = 'appointments';
+  static const _tilesKey = 'health_tiles';
 
 
 
   HealthCubit() : super([]) {
+    tiles = List.from(allTiles);
+    _loadTiles();
     _loadEntries();
     _loadWeightEntries();
     _loadGlucoseEntries();
@@ -436,6 +440,47 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
       throw Exception(errorData['message'] ?? "Upload failed");
     }
   }
+
+  ///tiles
+  ///
+  List<HealthTile> tiles = [];
+  bool hasTiles() => _tileKeys.isNotEmpty;
+
+  List<String> _tileKeys = []; // store ONLY labelKey (important!)
+  List<String> get tileKeys => _tileKeys;
+
+
+
+  Future<void> _loadTiles() async {
+    final prefs = await SharedPreferences.getInstance();
+    _tileKeys = prefs.getStringList(_tilesKey) ?? [];
+
+    emit(List.from(state)); // trigger UI rebuild
+  }
+
+  Future<void> _saveTiles() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_tilesKey, _tileKeys);
+  }
+
+  Future<void> addTile(String labelKey) async {
+    if (_tileKeys.contains(labelKey)) return;
+
+    _tileKeys.add(labelKey);
+    await _saveTiles();
+
+    emit(List.from(state));
+  }
+
+  List<HealthTile> getTiles() {
+    return _tileKeys
+        .map((key) => allTiles.firstWhere(
+          (t) => t.labelKey == key,
+      orElse: () => allTiles.first,
+    ))
+        .toList();
+  }
+
 
 }
 
