@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../core/lang/lang_strings.dart';
 import '../../cubit/health_cubit.dart';
+import '../../cubit/locale_cubit.dart';
 import '../../models/labTest_entry.dart';
 import '../../widgets/components.dart';
 
@@ -16,13 +18,12 @@ class LabTestLogScreen extends StatefulWidget {
 
 class _LabTestLogScreenState extends State<LabTestLogScreen> {
   final _ocrNotesController = TextEditingController();
-  final _testNameCtrl = TextEditingController();
-  File? _selectedImage;
-  bool _isUploading = false;
-  final ImagePicker _picker = ImagePicker();
-  DateTime? _selectedDate;
+  final _testNameCtrl       = TextEditingController();
+  File?          _selectedImage;
+  bool           _isUploading = false;
+  final ImagePicker _picker  = ImagePicker();
+  DateTime?      _selectedDate;
 
-  // Consistent Green Accent
   final Color _accentGreen = const Color(0xFF00C950);
 
   bool get _isValid =>
@@ -43,7 +44,7 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImage(ImageSource source) async {
+  Future<void> _pickImage(ImageSource source, String lang) async {
     try {
       final XFile? pickedFile = await _picker.pickImage(
         source: source,
@@ -51,18 +52,15 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
         maxHeight: 1800,
         imageQuality: 85,
       );
-
       if (pickedFile != null) {
-        setState(() {
-          _selectedImage = File(pickedFile.path);
-        });
+        setState(() => _selectedImage = File(pickedFile.path));
       }
     } catch (e) {
-      _showSnackBar('Failed to pick image: $e');
+      _showSnackBar('${AppStrings.get('pick_failed', lang)}: $e');
     }
   }
 
-  void _showImageSourceDialog() {
+  void _showImageSourceDialog(String lang) {
     final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
@@ -71,7 +69,8 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+          borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(22)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -81,36 +80,36 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
+                  color: theme.colorScheme.onSurfaceVariant
+                      .withOpacity(0.4),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             const SizedBox(height: 20),
             Text(
-              'Select Image Source',
+              AppStrings.get('select_image_source', lang),
               style: GoogleFonts.arimo(
-                color: theme.colorScheme.onSurface,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+                  color: theme.colorScheme.onSurface,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 16),
             _imageSourceOption(
               icon: Icons.camera_alt,
-              label: 'Camera',
+              label: AppStrings.get('camera', lang),
               onTap: () {
                 Navigator.pop(context);
-                _pickImage(ImageSource.camera);
+                _pickImage(ImageSource.camera, lang);
               },
             ),
             const SizedBox(height: 12),
             _imageSourceOption(
               icon: Icons.photo_library,
-              label: 'Gallery',
+              label: AppStrings.get('gallery', lang),
               onTap: () {
                 Navigator.pop(context);
-                _pickImage(ImageSource.gallery);
+                _pickImage(ImageSource.gallery, lang);
               },
             ),
             const SizedBox(height: 8),
@@ -140,36 +139,35 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
           children: [
             Icon(icon, color: _accentGreen, size: 24),
             const SizedBox(width: 12),
-            Text(
-              label,
-              style: GoogleFonts.arimo(
-                color: theme.colorScheme.onSurface,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            Text(label,
+                style: GoogleFonts.arimo(
+                    color: theme.colorScheme.onSurface,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500)),
           ],
         ),
       ),
     );
   }
 
-  Future<void> _uploadLabTest() async {
+  Future<void> _uploadLabTest(String lang) async {
     if (_selectedImage == null) {
-      _showSnackBar('Please select an image first');
+      _showSnackBar(AppStrings.get('select_image_first', lang));
       return;
     }
 
     setState(() => _isUploading = true);
 
     try {
-      final result = await context.read<HealthCubit>().uploadLabTest(_selectedImage!);
+      final result =
+      await context.read<HealthCubit>().uploadLabTest(_selectedImage!);
       setState(() {
-        _ocrNotesController.text = result['ocr_text'] ?? 'No text extracted';
+        _ocrNotesController.text =
+            result['ocr_text'] ?? AppStrings.get('no_text_extracted', lang);
       });
-      _showSnackBar('Lab test uploaded successfully!');
+      _showSnackBar(AppStrings.get('upload_success', lang));
     } catch (e) {
-      _showSnackBar('Upload failed: $e');
+      _showSnackBar('${AppStrings.get('upload_failed', lang)}: $e');
     } finally {
       setState(() => _isUploading = false);
     }
@@ -179,7 +177,8 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
     final theme = Theme.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: GoogleFonts.arimo(color: Colors.white)),
+        content: Text(message,
+            style: GoogleFonts.arimo(color: Colors.white)),
         backgroundColor: theme.colorScheme.inverseSurface,
       ),
     );
@@ -209,9 +208,9 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
     if (!_isValid) return;
 
     final entry = LabTestEntry(
-      testName: _testNameCtrl.text.trim(),
+      testName:  _testNameCtrl.text.trim(),
       imagePath: _selectedImage!.path,
-      testDate: _selectedDate!,
+      testDate:  _selectedDate!,
       notes: _ocrNotesController.text.trim().isEmpty
           ? null
           : _ocrNotesController.text.trim(),
@@ -224,201 +223,232 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang  = context.watch<LocaleCubit>().state;
     final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: theme.colorScheme.surfaceContainer,
-        elevation: 0,
-        title: Text(
-          'Log Lab Test',
-          style: GoogleFonts.arimo(
-            color: theme.colorScheme.onSurface,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
+    final isRtl = lang == 'ar';
+
+    final dateText = _selectedDate == null
+        ? AppStrings.get('date_placeholder', lang)
+        : '${_selectedDate!.day.toString().padLeft(2, '0')} / '
+        '${_selectedDate!.month.toString().padLeft(2, '0')} / '
+        '${_selectedDate!.year}';
+
+    return Directionality(
+      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: theme.colorScheme.surfaceContainer,
+          elevation: 0,
+          title: Text(
+            AppStrings.get('log_lab_test', lang),
+            style: GoogleFonts.arimo(
+                color: theme.colorScheme.onSurface,
+                fontSize: 18,
+                fontWeight: FontWeight.w600),
+          ),
+          leading: IconButton(
+            icon: Icon(
+              isRtl ? Icons.arrow_forward : Icons.arrow_back,
+              color: theme.colorScheme.onSurface,
+            ),
+            onPressed: () => Navigator.pop(context),
           ),
         ),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _label('Lab Test Image'),
-            const SizedBox(height: 12),
-            GestureDetector(
-              onTap: _isUploading ? null : _showImageSourceDialog,
-              child: Container(
-                width: double.infinity,
-                height: 250,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: theme.colorScheme.outlineVariant,
-                    width: 1,
-                  ),
-                ),
-                child: _selectedImage == null
-                    ? Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.add_photo_alternate_outlined,
-                      color: _accentGreen,
-                      size: 64,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Tap to select image',
-                      style: GoogleFonts.arimo(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                )
-                    : ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Image.file(
-                    _selectedImage!,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            ),
-            if (_selectedImage != null) ...[
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _label(AppStrings.get('lab_test_image', lang)),
               const SizedBox(height: 12),
               GestureDetector(
-                onTap: _showImageSourceDialog,
-                child: Center(
-                  child: Text(
-                    'Change Image',
-                    style: GoogleFonts.arimo(
-                      color: _accentGreen,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                onTap: _isUploading
+                    ? null
+                    : () => _showImageSourceDialog(lang),
+                child: Container(
+                  width: double.infinity,
+                  height: 250,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                        color: theme.colorScheme.outlineVariant,
+                        width: 1),
+                  ),
+                  child: _selectedImage == null
+                      ? Column(
+                    mainAxisAlignment:
+                    MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.add_photo_alternate_outlined,
+                        color: _accentGreen,
+                        size: 64,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        AppStrings.get(
+                            'tap_to_select_image', lang),
+                        style: GoogleFonts.arimo(
+                            color: theme.colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 14),
+                      ),
+                    ],
+                  )
+                      : ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.file(
+                      _selectedImage!,
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
               ),
-            ],
-            const SizedBox(height: 32),
-            GestureDetector(
-              onTap: _isUploading ? null : _uploadLabTest,
-              child: Container(
-                width: double.infinity,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: _isUploading
-                      ? _accentGreen.withOpacity(0.5)
-                      : _accentGreen,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: _isUploading
-                      ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
+
+              if (_selectedImage != null) ...[
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: () => _showImageSourceDialog(lang),
+                  child: Center(
+                    child: Text(
+                      AppStrings.get('change_image', lang),
+                      style: GoogleFonts.arimo(
+                          color: _accentGreen,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600),
                     ),
-                  )
-                      : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.upload_file,
-                          color: Colors.white, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Upload & Extract Text',
-                        style: GoogleFonts.arimo(
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 32),
+
+              GestureDetector(
+                onTap: _isUploading
+                    ? null
+                    : () => _uploadLabTest(lang),
+                child: Container(
+                  width: double.infinity,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: _isUploading
+                        ? _accentGreen.withOpacity(0.5)
+                        : _accentGreen,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: _isUploading
+                        ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
                           color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
+                          strokeWidth: 2),
+                    )
+                        : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.upload_file,
+                            color: Colors.white, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          AppStrings.get(
+                              'upload_extract', lang),
+                          style: GoogleFonts.arimo(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              _fieldLabel(AppStrings.get('test_name', lang)),
+              const SizedBox(height: 6),
+              _textField(
+                controller: _testNameCtrl,
+                hint: AppStrings.get('eg_test_name', lang),
+                isRtl: isRtl,
+              ),
+
+              const SizedBox(height: 16),
+
+              _fieldLabel(AppStrings.get('date_of_test', lang)),
+              const SizedBox(height: 6),
+              GestureDetector(
+                onTap: _pickDate,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest
+                        .withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: theme.colorScheme.outlineVariant,
+                        width: 1),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          dateText,
+                          style: GoogleFonts.arimo(
+                            color: _selectedDate == null
+                                ? theme.colorScheme.onSurfaceVariant
+                                : theme.colorScheme.onSurface,
+                            fontSize: 16,
+                          ),
                         ),
                       ),
+                      Icon(Icons.calendar_today,
+                          color: _accentGreen, size: 20),
                     ],
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 32),
-            _fieldLabel('TEST NAME'),
-            const SizedBox(height: 6),
-            _textField(
-              controller: _testNameCtrl,
-              hint: 'e.g., Blood Test, CBC, Lipid Panel',
-            ),
-            const SizedBox(height: 16),
-            _fieldLabel('DATE OF TEST'),
-            const SizedBox(height: 6),
-            GestureDetector(
-              onTap: _pickDate,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: theme.colorScheme.outlineVariant, width: 1),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _selectedDate == null
-                            ? 'mm / dd / yyyy'
-                            : '${_selectedDate!.month.toString().padLeft(2, '0')} / ${_selectedDate!.day.toString().padLeft(2, '0')} / ${_selectedDate!.year}',
-                        style: GoogleFonts.arimo(
-                          color: _selectedDate == null
-                              ? theme.colorScheme.onSurfaceVariant
-                              : theme.colorScheme.onSurface,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    Icon(Icons.calendar_today, color: _accentGreen, size: 20),
-                  ],
-                ),
+
+              const SizedBox(height: 16),
+
+              _fieldLabel(AppStrings.get('extracted_notes', lang)),
+              const SizedBox(height: 6),
+              _textField(
+                controller: _ocrNotesController,
+                hint: AppStrings.get('ocr_hint', lang),
+                maxLines: 8,
+                isRtl: isRtl,
               ),
-            ),
-            const SizedBox(height: 16),
-            _fieldLabel('EXTRACTED NOTES (OPTIONAL)'),
-            const SizedBox(height: 6),
-            _textField(
-              controller: _ocrNotesController,
-              hint: 'OCR extracted text will appear here...',
-              maxLines: 8,
-            ),
-            const SizedBox(height: 32),
-            MainButton(
-              text: 'Add',
-              enabled: _isValid,
-              onTap: _isValid ? _submit : null,
-              // Assuming MainButton handles its own colors,
-              // otherwise ensure it uses _accentGreen internally.
-            ),
-          ],
+
+              const SizedBox(height: 32),
+
+              MainButton(
+                text: AppStrings.get('add', lang),
+                enabled: _isValid,
+                onTap: _isValid ? _submit : null,
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+
 
   Widget _fieldLabel(String label) {
     final theme = Theme.of(context);
     return Text(
       label,
       style: GoogleFonts.arimo(
-        color: theme.colorScheme.onSurface,
-        fontSize: 10,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 1.5,
-      ),
+          color: theme.colorScheme.onSurface,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.5),
     );
   }
 
@@ -426,24 +456,33 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
     required TextEditingController controller,
     required String hint,
     int maxLines = 1,
+    bool isRtl   = false,
   }) {
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: theme.colorScheme.surfaceContainerHighest
+            .withOpacity(0.3),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.colorScheme.outlineVariant, width: 1),
+        border: Border.all(
+            color: theme.colorScheme.outlineVariant, width: 1),
       ),
       child: TextField(
         controller: controller,
         maxLines: maxLines,
-        style: GoogleFonts.arimo(color: theme.colorScheme.onSurface, fontSize: 16),
+        textDirection:
+        isRtl ? TextDirection.rtl : TextDirection.ltr,
+        style: GoogleFonts.arimo(
+            color: theme.colorScheme.onSurface, fontSize: 16),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.arimo(color: theme.colorScheme.onSurfaceVariant, fontSize: 16),
+          hintStyle: GoogleFonts.arimo(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 16),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          contentPadding:
+          const EdgeInsets.symmetric(vertical: 14),
         ),
       ),
     );
@@ -454,11 +493,10 @@ class _LabTestLogScreenState extends State<LabTestLogScreen> {
     return Text(
       text,
       style: GoogleFonts.arimo(
-        color: theme.colorScheme.onSurfaceVariant,
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.5,
-      ),
+          color: theme.colorScheme.onSurfaceVariant,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5),
     );
   }
 }

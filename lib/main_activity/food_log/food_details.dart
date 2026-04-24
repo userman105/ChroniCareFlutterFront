@@ -2,21 +2,18 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/lang/lang_strings.dart';
 import '../../cubit/health_cubit.dart';
+import '../../cubit/locale_cubit.dart';
 import '../../models/food_entry.dart';
 import '../../widgets/components.dart';
 import 'food_log_screen.dart';
-
-// ─────────────────────────────────────────────────────────────
-//  FOOD DETAILS SCREEN
-// ─────────────────────────────────────────────────────────────
 
 class FoodDetailsScreen extends StatefulWidget {
   const FoodDetailsScreen({super.key});
 
   @override
-  State<FoodDetailsScreen> createState() =>
-      _FoodDetailsScreenState();
+  State<FoodDetailsScreen> createState() => _FoodDetailsScreenState();
 }
 
 class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
@@ -28,12 +25,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
   String _formatDate(DateTime dt) =>
       '${dt.day}/${dt.month}/${dt.year}';
 
-  String _monthName(int m) => const [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-  ][m - 1];
-
-  String get _dateLabel {
+  String _dateLabel(String lang) {
     final now       = DateTime.now();
     final yesterday = now.subtract(const Duration(days: 1));
     final isToday   = _viewingDate.year == now.year &&
@@ -42,13 +34,17 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
     final isYesterday = _viewingDate.year == yesterday.year &&
         _viewingDate.month == yesterday.month &&
         _viewingDate.day == yesterday.day;
-    if (isToday) return 'Today';
-    if (isYesterday) return 'Yesterday';
-    return '${_monthName(_viewingDate.month)} ${_viewingDate.day}, ${_viewingDate.year}';
+
+    if (isToday) return AppStrings.get('today_int', lang);
+    if (isYesterday) return AppStrings.get('yesterday', lang);
+
+    final monthName = AppStrings.get('month_${_viewingDate.month}', lang);
+    final month = lang == 'ar' ? monthName : monthName.substring(0, 3);
+    return '$month ${_viewingDate.day}, ${_viewingDate.year}';
   }
 
-  void _goToPreviousDay() => setState(() =>
-  _viewingDate = _viewingDate.subtract(const Duration(days: 1)));
+  void _goToPreviousDay() => setState(
+          () => _viewingDate = _viewingDate.subtract(const Duration(days: 1)));
 
   void _goToNextDay() {
     final next = _viewingDate.add(const Duration(days: 1));
@@ -67,9 +63,23 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
       double? Function(FoodEntry) getter) =>
       entries.fold(0.0, (sum, e) => sum + (getter(e) ?? 0.0));
 
+  /// Maps the internal English meal key to a localised display name.
+  String _localMeal(String meal, String lang) {
+    const keyMap = {
+      'Breakfast': 'meal_breakfast',
+      'Lunch':     'meal_lunch',
+      'Dinner':    'meal_dinner',
+      'Snack':     'meal_snack',
+      'Other':     'meal_other',
+    };
+    return AppStrings.get(keyMap[meal] ?? 'meal_other', lang);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final lang       = context.watch<LocaleCubit>().state;
     final c          = context.colors;
+    final isRtl      = lang == 'ar';
     final allEntries = context.watch<HealthCubit>().getFoodEntries();
 
     final dayEntries = allEntries
@@ -80,7 +90,8 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
         .toList()
       ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
 
-    final mealOrder = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Other'];
+    // Keep internal keys English for ordering; localise at display only
+    const mealOrder = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Other'];
     final Map<String, List<FoodEntry>> grouped = {};
     for (final e in dayEntries) {
       grouped.putIfAbsent(e.mealType ?? 'Other', () => []).add(e);
@@ -92,146 +103,152 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
     final totalFat     = _totalMacro(dayEntries, (e) => e.fat);
     final hasMacroData = dayEntries.any((e) => e.hasMacros);
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Column(
-          children: [
+    return Directionality(
+      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: SafeArea(
+          child: Column(
+            children: [
 
-            // ── Top bar ──────────────────────────────────
-            Container(
-              height: 46,
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              color: c.surface,
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Icon(Icons.arrow_back,
-                        color: c.primaryText),
-                  ),
-                  const SizedBox(width: 16),
-                  Text('Food',
+              // ── Top bar ──────────────────────────────────
+              Container(
+                height: 46,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                color: c.surface,
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Icon(
+                        isRtl ? Icons.arrow_forward : Icons.arrow_back,
+                        color: c.primaryText,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Text(
+                      AppStrings.get('food', lang),
                       style: GoogleFonts.arimo(
                           color: c.primaryText,
                           fontSize: 16,
-                          fontWeight: FontWeight.w500)),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const FoodLogScreen()),
+                          fontWeight: FontWeight.w500),
                     ),
-                    child: Image.asset('assets/icons/add.png',
-                        width: 26, height: 26),
-                  ),
-                ],
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const FoodLogScreen()),
+                      ),
+                      child: Image.asset('assets/icons/add.png',
+                          width: 26, height: 26),
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            // ── Day navigator ────────────────────────────
-            Container(
-              color: c.sectionBg,
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 14, vertical: 10),
-              child: Row(
-                mainAxisAlignment:
-                MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: _goToPreviousDay,
-                    child: Icon(Icons.chevron_left,
-                        color: c.primaryText, size: 26),
-                  ),
-                  Text(
-                    _dateLabel,
-                    style: GoogleFonts.arimo(
-                        color: c.primaryText,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600),
-                  ),
-                  GestureDetector(
-                    onTap: _canGoNext ? _goToNextDay : null,
-                    child: Icon(Icons.chevron_right,
-                        color: _canGoNext
-                            ? c.primaryText
-                            : c.ghostText,
-                        size: 26),
-                  ),
-                ],
-              ),
-            ),
-
-            Expanded(
-              child: dayEntries.isEmpty
-                  ? _emptyState(context)
-                  : SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              // ── Day navigator ────────────────────────────
+              Container(
+                color: c.sectionBg,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-
-                    if (hasMacroData)
-                      _summaryCard(context, totalCals,
-                          totalCarbs, totalProtein,
-                          totalFat, dayEntries.length),
-
-                    if (hasMacroData)
-                      const SizedBox(height: 20),
-
-                    ...mealOrder
-                        .where((m) =>
-                        grouped.containsKey(m))
-                        .map((meal) => _mealGroup(
-                      context,
-                      meal,
-                      grouped[meal]!,
-                    )),
-
-                    const SizedBox(height: 20),
-
-                    // ── All Entries button ─────────
-                    Center(
-                      child: GestureDetector(
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                AllFoodEntriesScreen(
-                                    entries: allEntries),
-                          ),
-                        ),
-                        child: Container(
-                          width: 87,
-                          height: 31,
-                          clipBehavior: Clip.antiAlias,
-                          decoration: ShapeDecoration(
-                            color: c.reminderTileBg,
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                              BorderRadius.circular(21),
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'All Entries',
-                              style: GoogleFonts.arimo(
-                                  color: c.primaryText,
-                                  fontSize: 12,
-                                  fontWeight:
-                                  FontWeight.w500),
-                            ),
-                          ),
-                        ),
+                    GestureDetector(
+                      onTap: _goToPreviousDay,
+                      child: Icon(
+                        isRtl
+                            ? Icons.chevron_right
+                            : Icons.chevron_left,
+                        color: c.primaryText,
+                        size: 26,
+                      ),
+                    ),
+                    Text(
+                      _dateLabel(lang),
+                      style: GoogleFonts.arimo(
+                          color: c.primaryText,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600),
+                    ),
+                    GestureDetector(
+                      onTap: _canGoNext ? _goToNextDay : null,
+                      child: Icon(
+                        isRtl
+                            ? Icons.chevron_left
+                            : Icons.chevron_right,
+                        color: _canGoNext ? c.primaryText : c.ghostText,
+                        size: 26,
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+
+              Expanded(
+                child: dayEntries.isEmpty
+                    ? _emptyState(context, lang)
+                    : SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+
+                      if (hasMacroData)
+                        _summaryCard(context, totalCals,
+                            totalCarbs, totalProtein, totalFat,
+                            dayEntries.length, lang),
+
+                      if (hasMacroData) const SizedBox(height: 20),
+
+                      ...mealOrder
+                          .where((m) => grouped.containsKey(m))
+                          .map((meal) => _mealGroup(
+                          context, meal,
+                          grouped[meal]!, lang)),
+
+                      const SizedBox(height: 20),
+
+                      Center(
+                        child: GestureDetector(
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => AllFoodEntriesScreen(
+                                  entries: allEntries),
+                            ),
+                          ),
+                          child: Container(
+                            width: 105,
+                            height: 31,
+                            clipBehavior: Clip.antiAlias,
+                            decoration: ShapeDecoration(
+                              color: c.reminderTileBg,
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                BorderRadius.circular(21),
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                AppStrings.get(
+                                    'all_entries_food', lang),
+                                style: GoogleFonts.arimo(
+                                    color: c.primaryText,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -239,7 +256,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
 
   // ── Empty state ───────────────────────────────────────────
 
-  Widget _emptyState(BuildContext context) {
+  Widget _emptyState(BuildContext context, String lang) {
     final c = context.colors;
     return Center(
       child: Column(
@@ -248,15 +265,16 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
           Icon(Icons.restaurant_outlined,
               color: c.ghostText, size: 48),
           const SizedBox(height: 12),
-          Text('No food logged for $_dateLabel',
-              style: GoogleFonts.arimo(
-                  color: c.subtleText, fontSize: 14)),
+          Text(
+            '${AppStrings.get('no_food_logged', lang)} ${_dateLabel(lang)}',
+            style:
+            GoogleFonts.arimo(color: c.subtleText, fontSize: 14),
+          ),
           const SizedBox(height: 16),
           GestureDetector(
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(
-                  builder: (_) => const FoodLogScreen()),
+              MaterialPageRoute(builder: (_) => const FoodLogScreen()),
             ),
             child: Container(
               padding: const EdgeInsets.symmetric(
@@ -267,11 +285,13 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                 border: Border.all(
                     color: AppColors.primary.withOpacity(0.4)),
               ),
-              child: Text('Log something',
-                  style: GoogleFonts.arimo(
-                      color: AppColors.primary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500)),
+              child: Text(
+                AppStrings.get('log_something', lang),
+                style: GoogleFonts.arimo(
+                    color: AppColors.primary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500),
+              ),
             ),
           ),
         ],
@@ -281,9 +301,14 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
 
   // ── Summary card ──────────────────────────────────────────
 
-  Widget _summaryCard(BuildContext context, int cals,
-      double carbs, double protein, double fat, int count) {
-    final c = context.colors;
+  Widget _summaryCard(BuildContext context, int cals, double carbs,
+      double protein, double fat, int count, String lang) {
+    final c      = context.colors;
+    final isRtl  = lang == 'ar';
+    final countLabel = count == 1
+        ? '1 ${AppStrings.get('item', lang)}'
+        : '$count ${AppStrings.get('items', lang)}';
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: ShapeDecoration(
@@ -301,13 +326,15 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
               const Icon(Icons.bar_chart_rounded,
                   color: AppColors.primary, size: 18),
               const SizedBox(width: 6),
-              Text('Daily Summary',
-                  style: GoogleFonts.arimo(
-                      color: c.primaryText,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600)),
+              Text(
+                AppStrings.get('daily_summary', lang),
+                style: GoogleFonts.arimo(
+                    color: c.primaryText,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600),
+              ),
               const Spacer(),
-              Text('$count item${count == 1 ? '' : 's'}',
+              Text(countLabel,
                   style: GoogleFonts.arimo(
                       color: c.subtleText, fontSize: 12)),
             ],
@@ -329,9 +356,11 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                 const SizedBox(width: 4),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
-                  child: Text('kcal',
-                      style: GoogleFonts.arimo(
-                          color: c.hintText, fontSize: 14)),
+                  child: Text(
+                    AppStrings.get('kcal', lang),
+                    style: GoogleFonts.arimo(
+                        color: c.hintText, fontSize: 14),
+                  ),
                 ),
               ],
             ),
@@ -342,16 +371,18 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
             _macroBar(carbs, protein, fat),
             const SizedBox(height: 10),
             Row(
-              mainAxisAlignment:
-              MainAxisAlignment.spaceAround,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _macroChip(context, 'Carbs',
+                _macroChip(context,
+                    AppStrings.get('macro_carbs', lang),
                     '${carbs.toStringAsFixed(1)}g',
                     const Color(0xFF3B82F6)),
-                _macroChip(context, 'Protein',
+                _macroChip(context,
+                    AppStrings.get('macro_protein', lang),
                     '${protein.toStringAsFixed(1)}g',
                     AppColors.primary),
-                _macroChip(context, 'Fat',
+                _macroChip(context,
+                    AppStrings.get('macro_fat', lang),
                     '${fat.toStringAsFixed(1)}g',
                     const Color(0xFFF59E0B)),
               ],
@@ -376,8 +407,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
           ),
           Flexible(
             flex: (protein / total * 100).round(),
-            child: Container(
-                height: 8, color: AppColors.primary),
+            child: Container(height: 8, color: AppColors.primary),
           ),
           Flexible(
             flex: (fat / total * 100).round(),
@@ -409,7 +439,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
   // ── Meal group ────────────────────────────────────────────
 
   Widget _mealGroup(BuildContext context, String meal,
-      List<FoodEntry> entries) {
+      List<FoodEntry> entries, String lang) {
     final c       = context.colors;
     final mealCals = entries
         .where((e) => e.calories != null)
@@ -422,20 +452,24 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
           padding: const EdgeInsets.only(bottom: 8),
           child: Row(
             children: [
-              Text(meal,
-                  style: GoogleFonts.arimo(
-                      color: c.primaryText,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600)),
+              Text(
+                _localMeal(meal, lang),
+                style: GoogleFonts.arimo(
+                    color: c.primaryText,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600),
+              ),
               const SizedBox(width: 8),
               if (mealCals > 0)
-                Text('$mealCals kcal',
-                    style: GoogleFonts.arimo(
-                        color: c.subtleText, fontSize: 12)),
+                Text(
+                  '$mealCals ${AppStrings.get('kcal', lang)}',
+                  style: GoogleFonts.arimo(
+                      color: c.subtleText, fontSize: 12),
+                ),
             ],
           ),
         ),
-        ...entries.map((e) => _foodTile(context, e)),
+        ...entries.map((e) => _foodTile(context, e, lang)),
         const SizedBox(height: 16),
       ],
     );
@@ -443,11 +477,12 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
 
   // ── Food tile ─────────────────────────────────────────────
 
-  Widget _foodTile(BuildContext context, FoodEntry e) {
+  Widget _foodTile(
+      BuildContext context, FoodEntry e, String lang) {
     final c = context.colors;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () => _showEntryDetails(context, e),
+      onTap: () => _showEntryDetails(context, e, lang),
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
@@ -487,7 +522,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                     Text(
                       [
                         if (e.calories != null)
-                          '${e.calories} kcal',
+                          '${e.calories} ${AppStrings.get('kcal', lang)}',
                         if (e.carbs != null)
                           'C ${e.carbs!.toStringAsFixed(0)}g',
                         if (e.protein != null)
@@ -514,7 +549,8 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
 
   // ── Entry detail sheet ────────────────────────────────────
 
-  void _showEntryDetails(BuildContext context, FoodEntry e) {
+  void _showEntryDetails(
+      BuildContext context, FoodEntry e, String lang) {
     final c = context.colors;
     showModalBottomSheet(
       context: context,
@@ -536,7 +572,8 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
             children: [
               Center(
                 child: Container(
-                  width: 40, height: 4,
+                  width: 40,
+                  height: 4,
                   decoration: BoxDecoration(
                       color: c.subtleText,
                       borderRadius: BorderRadius.circular(2)),
@@ -548,13 +585,14 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.file(File(e.imagePath!),
-                      width: double.infinity, height: 200,
-                      fit: BoxFit.cover, cacheWidth: 512),
+                      width: double.infinity,
+                      height: 200,
+                      fit: BoxFit.cover,
+                      cacheWidth: 512),
                 ),
                 const SizedBox(height: 16),
               ],
 
-              // Name + meal type badge
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -574,14 +612,16 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                         color: AppColors.primary.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                            color: AppColors.primary
-                                .withOpacity(0.3)),
+                            color:
+                            AppColors.primary.withOpacity(0.3)),
                       ),
-                      child: Text(e.mealType!,
-                          style: GoogleFonts.arimo(
-                              color: AppColors.primary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500)),
+                      child: Text(
+                        _localMeal(e.mealType!, lang),
+                        style: GoogleFonts.arimo(
+                            color: AppColors.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500),
+                      ),
                     ),
                   ],
                 ],
@@ -593,8 +633,10 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                 Row(
                   children: [
                     if (e.calories != null)
-                      _detailChip(context, 'Calories',
-                          '${e.calories} kcal',
+                      _detailChip(
+                          context,
+                          AppStrings.get('macro_calories', lang),
+                          '${e.calories} ${AppStrings.get('kcal', lang)}',
                           const Color(0xFFF59E0B)),
                   ],
                 ),
@@ -606,7 +648,9 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                     children: [
                       if (e.carbs != null) ...[
                         Expanded(
-                          child: _detailChip(context, 'Carbs',
+                          child: _detailChip(
+                              context,
+                              AppStrings.get('macro_carbs', lang),
                               '${e.carbs!.toStringAsFixed(1)}g',
                               const Color(0xFF3B82F6)),
                         ),
@@ -614,7 +658,9 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                       ],
                       if (e.protein != null) ...[
                         Expanded(
-                          child: _detailChip(context, 'Protein',
+                          child: _detailChip(
+                              context,
+                              AppStrings.get('macro_protein', lang),
                               '${e.protein!.toStringAsFixed(1)}g',
                               AppColors.primary),
                         ),
@@ -622,7 +668,9 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                       ],
                       if (e.fat != null)
                         Expanded(
-                          child: _detailChip(context, 'Fat',
+                          child: _detailChip(
+                              context,
+                              AppStrings.get('macro_fat', lang),
                               '${e.fat!.toStringAsFixed(1)}g',
                               const Color(0xFFF59E0B)),
                         ),
@@ -642,8 +690,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                 ),
               ]),
 
-              if (e.notes != null &&
-                  e.notes!.trim().isNotEmpty) ...[
+              if (e.notes != null && e.notes!.trim().isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -673,8 +720,8 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                   decoration: BoxDecoration(
                     color: Colors.red.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: Colors.red.withOpacity(0.3)),
+                    border:
+                    Border.all(color: Colors.red.withOpacity(0.3)),
                   ),
                   child: Center(
                     child: Row(
@@ -683,11 +730,13 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                         const Icon(Icons.delete_outline,
                             color: Colors.redAccent, size: 18),
                         const SizedBox(width: 6),
-                        Text('Delete Entry',
-                            style: GoogleFonts.arimo(
-                                color: Colors.redAccent,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500)),
+                        Text(
+                          AppStrings.get('delete_entry', lang),
+                          style: GoogleFonts.arimo(
+                              color: Colors.redAccent,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500),
+                        ),
                       ],
                     ),
                   ),
@@ -704,8 +753,8 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
       String value, Color color) {
     final c = context.colors;
     return Container(
-      padding: const EdgeInsets.symmetric(
-          vertical: 10, horizontal: 12),
+      padding:
+      const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       decoration: BoxDecoration(
         color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(12),
@@ -715,8 +764,8 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label,
-              style: GoogleFonts.arimo(
-                  color: c.hintText, fontSize: 11)),
+              style:
+              GoogleFonts.arimo(color: c.hintText, fontSize: 11)),
           const SizedBox(height: 2),
           Text(value,
               style: GoogleFonts.arimo(
@@ -736,19 +785,17 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
 class AllFoodEntriesScreen extends StatefulWidget {
   final List<FoodEntry> entries;
 
-  const AllFoodEntriesScreen(
-      {super.key, required this.entries});
+  const AllFoodEntriesScreen({super.key, required this.entries});
 
   @override
   State<AllFoodEntriesScreen> createState() =>
       _AllFoodEntriesScreenState();
 }
 
-class _AllFoodEntriesScreenState
-    extends State<AllFoodEntriesScreen> {
+class _AllFoodEntriesScreenState extends State<AllFoodEntriesScreen> {
   DateTime? _filterStart;
   DateTime? _filterEnd;
-  String?   _filterMeal;
+  String?   _filterMeal; // always stored as the English key
 
   String _formatTime(DateTime dt) =>
       '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
@@ -762,16 +809,15 @@ class _AllFoodEntriesScreenState
     return '$m/$d/${dt.year}';
   }
 
-  bool get _hasFilter =>
-      _filterStart != null && _filterEnd != null;
+  bool get _hasFilter => _filterStart != null && _filterEnd != null;
 
   List<FoodEntry> get _filtered {
     var sorted = List<FoodEntry>.from(widget.entries)
       ..sort((a, b) => b.dateTime.compareTo(a.dateTime));
 
     if (_hasFilter) {
-      final end = DateTime(_filterEnd!.year,
-          _filterEnd!.month, _filterEnd!.day, 23, 59, 59);
+      final end = DateTime(_filterEnd!.year, _filterEnd!.month,
+          _filterEnd!.day, 23, 59, 59);
       sorted = sorted
           .where((e) =>
       !e.dateTime.isBefore(_filterStart!) &&
@@ -781,8 +827,7 @@ class _AllFoodEntriesScreenState
 
     if (_filterMeal != null) {
       sorted = sorted
-          .where((e) =>
-      (e.mealType ?? 'Other') == _filterMeal)
+          .where((e) => (e.mealType ?? 'Other') == _filterMeal)
           .toList();
     }
 
@@ -797,273 +842,294 @@ class _AllFoodEntriesScreenState
       builder: (_) => Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 16, right: 16, top: 16,
+          left: 16,
+          right: 16,
+          top: 16,
         ),
         child: DateRangePickerWidget(
           initialStart: _filterStart,
           initialEnd: _filterEnd,
-          onApply: (s, e) => setState(
-                  () { _filterStart = s; _filterEnd = e; }),
+          onApply: (s, e) =>
+              setState(() {
+                _filterStart = s;
+                _filterEnd   = e;
+              }),
         ),
       ),
     );
+  }
+
+  String _localMeal(String meal, String lang) {
+    const keyMap = {
+      'Breakfast': 'meal_breakfast',
+      'Lunch':     'meal_lunch',
+      'Dinner':    'meal_dinner',
+      'Snack':     'meal_snack',
+      'Other':     'meal_other',
+    };
+    return AppStrings.get(keyMap[meal] ?? 'meal_other', lang);
   }
 
   @override
   Widget build(BuildContext context) {
+    final lang    = context.watch<LocaleCubit>().state;
     final c       = context.colors;
+    final isRtl   = lang == 'ar';
     final entries = _filtered;
-    final meals   = [
-      'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Other'
-    ];
 
-    return Scaffold(
-      backgroundColor:
-      Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Column(
-          children: [
+    // English keys used for filtering logic; localised only for display
+    const meals = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Other'];
 
-            // ── Top bar ────────────────────────────────────
-            Container(
-              height: 46,
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 14),
-              color: c.surface,
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Icon(Icons.arrow_back,
-                        color: c.primaryText),
-                  ),
-                  const SizedBox(width: 16),
-                  Text('All Entries',
+    return Directionality(
+      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: SafeArea(
+          child: Column(
+            children: [
+
+              // ── Top bar ────────────────────────────────
+              Container(
+                height: 46,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                color: c.surface,
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Icon(
+                        isRtl ? Icons.arrow_forward : Icons.arrow_back,
+                        color: c.primaryText,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Text(
+                      AppStrings.get('all_entries_food', lang),
                       style: GoogleFonts.arimo(
                           color: c.primaryText,
                           fontSize: 16,
-                          fontWeight: FontWeight.w500)),
-                  const Spacer(),
-                  Text('${entries.length} items',
+                          fontWeight: FontWeight.w500),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${entries.length} ${entries.length == 1 ? AppStrings.get('item', lang) : AppStrings.get('items', lang)}',
                       style: GoogleFonts.arimo(
-                          color: c.hintText, fontSize: 13)),
-                ],
+                          color: c.hintText, fontSize: 13),
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-            // ── Date filter pill ──────────────────────────
-            Padding(
-              padding: const EdgeInsets.only(left: 16),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: GestureDetector(
-                  onTap: _hasFilter
-                      ? () => setState(() {
-                    _filterStart = null;
-                    _filterEnd   = null;
-                  })
-                      : _openPicker,
-                  child: _hasFilter
-                      ? Container(
-                    height: 32,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14),
-                    decoration: ShapeDecoration(
-                      color: c.reminderTileBg,
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                        BorderRadius.circular(25),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '${_formatShort(_filterStart!)} – ${_formatShort(_filterEnd!)}',
-                          style: GoogleFonts.arimo(
-                              color: c.primaryText,
-                              fontSize: 12,
-                              fontWeight:
-                              FontWeight.w500),
+              // ── Date filter pill ────────────────────────
+              Padding(
+                padding: EdgeInsets.only(
+                    left: isRtl ? 0 : 16, right: isRtl ? 16 : 0),
+                child: Align(
+                  alignment: isRtl
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
+                  child: GestureDetector(
+                    onTap: _hasFilter
+                        ? () => setState(() {
+                      _filterStart = null;
+                      _filterEnd   = null;
+                    })
+                        : _openPicker,
+                    child: _hasFilter
+                        ? Container(
+                      height: 32,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14),
+                      decoration: ShapeDecoration(
+                        color: c.reminderTileBg,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
                         ),
-                        const SizedBox(width: 6),
-                        Icon(Icons.close,
-                            color: c.primaryText,
-                            size: 14),
-                      ],
-                    ),
-                  )
-                      : Container(
-                    width: 118,
-                    height: 32,
-                    decoration: ShapeDecoration(
-                      color: c.surface,
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                        BorderRadius.circular(25),
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        const SizedBox(width: 12),
-                        Image.asset(
-                            'assets/icons/calendar.png',
-                            height: 20, width: 20),
-                        const SizedBox(width: 10),
-                        Text('All Time',
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${_formatShort(_filterStart!)} – ${_formatShort(_filterEnd!)}',
+                            style: GoogleFonts.arimo(
+                                color: c.primaryText,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500),
+                          ),
+                          const SizedBox(width: 6),
+                          Icon(Icons.close,
+                              color: c.primaryText, size: 14),
+                        ],
+                      ),
+                    )
+                        : Container(
+                      width: 118,
+                      height: 32,
+                      decoration: ShapeDecoration(
+                        color: c.surface,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 12),
+                          Image.asset('assets/icons/calendar.png',
+                              height: 20, width: 20),
+                          const SizedBox(width: 10),
+                          Text(
+                            AppStrings.get('all_time', lang),
                             style: GoogleFonts.arimo(
                                 color: c.primaryText,
                                 fontSize: 15,
-                                fontWeight:
-                                FontWeight.w500)),
-                      ],
+                                fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
 
-            const SizedBox(height: 10),
+              const SizedBox(height: 10),
 
-            // ── Meal filter pills ─────────────────────────
-            SizedBox(
-              height: 32,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16),
-                children: [
-                  _mealPill(context, 'All',
+              // ── Meal filter pills ───────────────────────
+              SizedBox(
+                height: 32,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  children: [
+                    _mealPill(
+                      context,
+                      AppStrings.get('all_filter', lang),
                       _filterMeal == null,
-                          () => setState(
-                              () => _filterMeal = null)),
-                  ...meals.map((m) => _mealPill(
-                    context,
-                    m,
-                    _filterMeal == m,
-                        () => setState(() => _filterMeal =
-                    _filterMeal == m ? null : m),
-                  )),
-                ],
+                          () => setState(() => _filterMeal = null),
+                    ),
+                    ...meals.map((m) => _mealPill(
+                      context,
+                      _localMeal(m, lang),
+                      _filterMeal == m,
+                          () => setState(() =>
+                      _filterMeal = _filterMeal == m ? null : m),
+                    )),
+                  ],
+                ),
               ),
-            ),
 
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-            // ── Entry list ─────────────────────────────────
-            Expanded(
-              child: entries.isEmpty
-                  ? Center(
-                child: Text('No entries found',
-                    style: GoogleFonts.arimo(
-                        color: c.hintText)),
-              )
-                  : ListView.builder(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16),
-                itemCount: entries.length,
-                itemBuilder: (context, index) {
-                  final e = entries[index];
-                  return GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => _showEntryDetails(
-                        context, e),
-                    child: Container(
-                      margin: const EdgeInsets.only(
-                          bottom: 10),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: c.surface,
-                        borderRadius:
-                        BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          ClipRRect(
-                            borderRadius:
-                            BorderRadius.circular(8),
-                            child: e.hasImage &&
-                                File(e.imagePath!)
-                                    .existsSync()
-                                ? Image.file(
-                                File(e.imagePath!),
+              // ── Entry list ──────────────────────────────
+              Expanded(
+                child: entries.isEmpty
+                    ? Center(
+                  child: Text(
+                    AppStrings.get('no_entries_found', lang),
+                    style: GoogleFonts.arimo(color: c.hintText),
+                  ),
+                )
+                    : ListView.builder(
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: entries.length,
+                  itemBuilder: (context, index) {
+                    final e = entries[index];
+                    return GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () =>
+                          _showEntryDetails(context, e, lang),
+                      child: Container(
+                        margin:
+                        const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: c.surface,
+                          borderRadius:
+                          BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            ClipRRect(
+                              borderRadius:
+                              BorderRadius.circular(8),
+                              child: e.hasImage &&
+                                  File(e.imagePath!)
+                                      .existsSync()
+                                  ? Image.file(
+                                  File(e.imagePath!),
+                                  width: 50,
+                                  height: 50,
+                                  fit: BoxFit.cover,
+                                  cacheWidth: 100)
+                                  : Container(
                                 width: 50,
                                 height: 50,
-                                fit: BoxFit.cover,
-                                cacheWidth: 100)
-                                : Container(
-                              width: 50,
-                              height: 50,
-                              color: c.sectionBg,
-                              child: Icon(
-                                  Icons
-                                      .restaurant_outlined,
-                                  color:
-                                  c.ghostText,
-                                  size: 22),
+                                color: c.sectionBg,
+                                child: Icon(
+                                    Icons
+                                        .restaurant_outlined,
+                                    color: c.ghostText,
+                                    size: 22),
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment
-                                  .start,
-                              children: [
-                                Text(e.name,
-                                    style: GoogleFonts
-                                        .arimo(
-                                        color: c
-                                            .primaryText,
-                                        fontSize: 14,
-                                        fontWeight:
-                                        FontWeight
-                                            .w600),
-                                    overflow: TextOverflow
-                                        .ellipsis),
-                                if (e.mealType != null)
-                                  Text(e.mealType!,
-                                      style: GoogleFonts
-                                          .arimo(
-                                          color: AppColors
-                                              .primary,
-                                          fontSize:
-                                          11)),
-                                Text(
-                                  '${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}',
-                                  style: GoogleFonts.arimo(
-                                      color: c.subtleText,
-                                      fontSize: 11),
-                                ),
-                                if (e.calories != null)
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                                children: [
+                                  Text(e.name,
+                                      style: GoogleFonts.arimo(
+                                          color: c.primaryText,
+                                          fontSize: 14,
+                                          fontWeight:
+                                          FontWeight.w600),
+                                      overflow:
+                                      TextOverflow.ellipsis),
+                                  if (e.mealType != null)
+                                    Text(
+                                      _localMeal(
+                                          e.mealType!, lang),
+                                      style: GoogleFonts.arimo(
+                                          color:
+                                          AppColors.primary,
+                                          fontSize: 11),
+                                    ),
                                   Text(
-                                    '${e.calories} kcal',
+                                    '${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}',
                                     style: GoogleFonts.arimo(
-                                        color: c.hintText,
+                                        color: c.subtleText,
                                         fontSize: 11),
                                   ),
-                              ],
+                                  if (e.calories != null)
+                                    Text(
+                                      '${e.calories} ${AppStrings.get('kcal', lang)}',
+                                      style: GoogleFonts.arimo(
+                                          color: c.hintText,
+                                          fontSize: 11),
+                                    ),
+                                ],
+                              ),
                             ),
-                          ),
-                          Icon(Icons.chevron_right,
-                              color: c.ghostText,
-                              size: 18),
-                        ],
+                            Icon(Icons.chevron_right,
+                                color: c.ghostText, size: 18),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // ── Meal filter pill ──────────────────────────────────────
+  // ── Meal filter pill ────────────────────────────────────
 
   Widget _mealPill(BuildContext context, String label,
       bool active, VoidCallback onTap) {
@@ -1072,32 +1138,29 @@ class _AllFoodEntriesScreenState
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(
-            horizontal: 14, vertical: 6),
+        padding:
+        const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
           color: active
               ? AppColors.primary.withOpacity(0.15)
               : c.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: active
-                  ? AppColors.primary
-                  : Colors.transparent),
+              color: active ? AppColors.primary : Colors.transparent),
         ),
         child: Text(label,
             style: GoogleFonts.arimo(
-                color: active
-                    ? AppColors.primary
-                    : c.hintText,
+                color: active ? AppColors.primary : c.hintText,
                 fontSize: 12,
                 fontWeight: FontWeight.w500)),
       ),
     );
   }
 
-  // ── Entry detail sheet ────────────────────────────────────
+  // ── Entry detail sheet ──────────────────────────────────
 
-  void _showEntryDetails(BuildContext context, FoodEntry e) {
+  void _showEntryDetails(
+      BuildContext context, FoodEntry e, String lang) {
     final c = context.colors;
     showModalBottomSheet(
       context: context,
@@ -1119,7 +1182,8 @@ class _AllFoodEntriesScreenState
             children: [
               Center(
                 child: Container(
-                  width: 40, height: 4,
+                  width: 40,
+                  height: 4,
                   decoration: BoxDecoration(
                       color: c.subtleText,
                       borderRadius: BorderRadius.circular(2)),
@@ -1127,13 +1191,14 @@ class _AllFoodEntriesScreenState
               ),
               const SizedBox(height: 20),
 
-              if (e.hasImage &&
-                  File(e.imagePath!).existsSync()) ...[
+              if (e.hasImage && File(e.imagePath!).existsSync()) ...[
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.file(File(e.imagePath!),
-                      width: double.infinity, height: 200,
-                      fit: BoxFit.cover, cacheWidth: 512),
+                      width: double.infinity,
+                      height: 200,
+                      fit: BoxFit.cover,
+                      cacheWidth: 512),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -1145,44 +1210,51 @@ class _AllFoodEntriesScreenState
                       fontWeight: FontWeight.bold)),
               const SizedBox(height: 6),
               if (e.mealType != null)
-                Text(e.mealType!,
-                    style: GoogleFonts.arimo(
-                        color: AppColors.primary,
-                        fontSize: 13)),
+                Text(
+                  _localMeal(e.mealType!, lang),
+                  style: GoogleFonts.arimo(
+                      color: AppColors.primary, fontSize: 13),
+                ),
 
               const SizedBox(height: 16),
 
               if (e.calories != null) ...[
-                Text('${e.calories} kcal',
-                    style: GoogleFonts.arimo(
-                        color: c.primaryText,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold)),
+                Text(
+                  '${e.calories} ${AppStrings.get('kcal', lang)}',
+                  style: GoogleFonts.arimo(
+                      color: c.primaryText,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 12),
               ],
 
-              if (e.carbs != null ||
-                  e.protein != null ||
-                  e.fat != null)
+              if (e.carbs != null || e.protein != null || e.fat != null)
                 Row(
                   children: [
                     if (e.carbs != null) ...[
                       Expanded(
-                          child: _chip(context, 'Carbs',
+                          child: _chip(
+                              context,
+                              AppStrings.get('macro_carbs', lang),
                               '${e.carbs!.toStringAsFixed(1)}g',
                               const Color(0xFF3B82F6))),
                       const SizedBox(width: 8),
                     ],
                     if (e.protein != null) ...[
                       Expanded(
-                          child: _chip(context, 'Protein',
+                          child: _chip(
+                              context,
+                              AppStrings.get('macro_protein', lang),
                               '${e.protein!.toStringAsFixed(1)}g',
                               AppColors.primary)),
                       const SizedBox(width: 8),
                     ],
                     if (e.fat != null)
                       Expanded(
-                          child: _chip(context, 'Fat',
+                          child: _chip(
+                              context,
+                              AppStrings.get('macro_fat', lang),
                               '${e.fat!.toStringAsFixed(1)}g',
                               const Color(0xFFF59E0B))),
                   ],
@@ -1201,12 +1273,10 @@ class _AllFoodEntriesScreenState
                 ),
               ]),
 
-              if (e.notes != null &&
-                  e.notes!.trim().isNotEmpty) ...[
+              if (e.notes != null && e.notes!.trim().isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Row(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(Icons.notes_outlined,
                         color: c.subtleText, size: 16),
@@ -1214,8 +1284,7 @@ class _AllFoodEntriesScreenState
                     Expanded(
                       child: Text(e.notes!,
                           style: GoogleFonts.arimo(
-                              color: c.secondaryText,
-                              fontSize: 14)),
+                              color: c.secondaryText, fontSize: 14)),
                     ),
                   ],
                 ),
@@ -1233,8 +1302,8 @@ class _AllFoodEntriesScreenState
                   decoration: BoxDecoration(
                     color: Colors.red.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: Colors.red.withOpacity(0.3)),
+                    border:
+                    Border.all(color: Colors.red.withOpacity(0.3)),
                   ),
                   child: Center(
                     child: Row(
@@ -1243,11 +1312,13 @@ class _AllFoodEntriesScreenState
                         const Icon(Icons.delete_outline,
                             color: Colors.redAccent, size: 18),
                         const SizedBox(width: 6),
-                        Text('Delete Entry',
-                            style: GoogleFonts.arimo(
-                                color: Colors.redAccent,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500)),
+                        Text(
+                          AppStrings.get('delete_entry', lang),
+                          style: GoogleFonts.arimo(
+                              color: Colors.redAccent,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500),
+                        ),
                       ],
                     ),
                   ),
@@ -1264,8 +1335,8 @@ class _AllFoodEntriesScreenState
       String value, Color color) {
     final c = context.colors;
     return Container(
-      padding: const EdgeInsets.symmetric(
-          vertical: 10, horizontal: 12),
+      padding:
+      const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       decoration: BoxDecoration(
         color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(12),
@@ -1275,8 +1346,8 @@ class _AllFoodEntriesScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label,
-              style: GoogleFonts.arimo(
-                  color: c.hintText, fontSize: 11)),
+              style:
+              GoogleFonts.arimo(color: c.hintText, fontSize: 11)),
           Text(value,
               style: GoogleFonts.arimo(
                   color: color,

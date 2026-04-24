@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/lang/lang_strings.dart';
 import '../../widgets/components.dart';
 import '../../widgets/log_screen.dart';
 import '../../cubit/health_cubit.dart';
+import '../../cubit/locale_cubit.dart';
 import '../../models/blood_pressure_entry.dart';
 import 'blood_pressure_reminder_screen.dart';
 
@@ -14,8 +16,7 @@ class BloodPressureScreen extends StatefulWidget {
 }
 
 class _BloodPressureScreenState extends State<BloodPressureScreen> {
-
-  final systolicController = TextEditingController();
+  final systolicController  = TextEditingController();
   final diastolicController = TextEditingController();
   final heartRateController = TextEditingController();
 
@@ -24,7 +25,6 @@ class _BloodPressureScreenState extends State<BloodPressureScreen> {
   @override
   void initState() {
     super.initState();
-
     systolicController.addListener(_validate);
     diastolicController.addListener(_validate);
   }
@@ -34,11 +34,7 @@ class _BloodPressureScreenState extends State<BloodPressureScreen> {
         systolicController.text.isNotEmpty &&
             diastolicController.text.isNotEmpty;
 
-    if (enabled != buttonEnabled) {
-      setState(() {
-        buttonEnabled = enabled;
-      });
-    }
+    if (enabled != buttonEnabled) setState(() => buttonEnabled = enabled);
   }
 
   @override
@@ -51,8 +47,10 @@ class _BloodPressureScreenState extends State<BloodPressureScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.watch<LocaleCubit>().state;
+
     return LogEntryScreen(
-      title: "Log Blood Pressure",
+      title: AppStrings.get('log_blood_pressure', lang),
 
       buttonEnabled: buttonEnabled,
 
@@ -64,7 +62,7 @@ class _BloodPressureScreenState extends State<BloodPressureScreen> {
       ),
 
       onSubmit: (selectedDateTime, notes) {
-        final systolic = int.tryParse(systolicController.text);
+        final systolic  = int.tryParse(systolicController.text);
         final diastolic = int.tryParse(diastolicController.text);
         final heartRate = int.tryParse(heartRateController.text);
 
@@ -83,19 +81,13 @@ class _BloodPressureScreenState extends State<BloodPressureScreen> {
         Navigator.pop(context);
       },
 
-
-
       content: [
-
         BloodPressureInputs(
           systolicController: systolicController,
           diastolicController: diastolicController,
           heartRateController: heartRateController,
         ),
-
       ],
     );
   }
-
-
 }

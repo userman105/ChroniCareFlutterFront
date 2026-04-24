@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/lang/lang_strings.dart';
 import '../../cubit/health_cubit.dart';
+import '../../cubit/locale_cubit.dart';
 import '../../models/appointment_entry.dart';
 import '../../widgets/components.dart';
 import 'appointment_log_screen.dart';
@@ -9,133 +11,144 @@ import 'appointment_log_screen.dart';
 class AppointmentDetailsScreen extends StatelessWidget {
   const AppointmentDetailsScreen({super.key});
 
-  String _formatDate(DateTime dt) {
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+  String _formatDate(DateTime dt, String lang) {
+    final monthKey = 'month_${dt.month}';
+    final monthName = AppStrings.get(monthKey, lang);
+    // Use 3-char abbreviation for English, full name for Arabic
+    final month = lang == 'ar' ? monthName : monthName.substring(0, 3);
+    return '$month ${dt.day}, ${dt.year}';
   }
 
   String _formatTime(DateTime dt) {
-    final h = dt.hour == 0
-        ? 12
-        : dt.hour > 12
-        ? dt.hour - 12
-        : dt.hour;
-    final m  = dt.minute.toString().padLeft(2, '0');
-    final p  = dt.hour < 12 ? 'AM' : 'PM';
+    final h = dt.hour == 0 ? 12 : dt.hour > 12 ? dt.hour - 12 : dt.hour;
+    final m = dt.minute.toString().padLeft(2, '0');
+    final p = dt.hour < 12 ? 'AM' : 'PM';
     return '$h:$m $p';
   }
 
-  String _timeUntil(DateTime dt) {
+  String _monthShort(DateTime dt, String lang) {
+    final monthKey  = 'month_${dt.month}';
+    final monthName = AppStrings.get(monthKey, lang);
+    return lang == 'ar' ? monthName : monthName.substring(0, 3);
+  }
+
+  String _timeUntil(DateTime dt, String lang) {
     final diff = dt.difference(DateTime.now());
-    if (diff.isNegative) return 'Past';
-    if (diff.inDays > 0)
-      return 'In ${diff.inDays} day${diff.inDays == 1 ? '' : 's'}';
-    if (diff.inHours > 0)
-      return 'In ${diff.inHours}h ${diff.inMinutes % 60}m';
-    if (diff.inMinutes > 0) return 'In ${diff.inMinutes} min';
-    return 'Now';
+    if (diff.isNegative) return AppStrings.get('status_past', lang);
+    if (diff.inDays > 0) {
+      final key = diff.inDays == 1 ? 'in_days_one' : 'in_days_many';
+      return AppStrings.get(key, lang)
+          .replaceAll('{n}', diff.inDays.toString());
+    }
+    if (diff.inHours > 0) {
+      return AppStrings.get('in_hours_min', lang)
+          .replaceAll('{h}', diff.inHours.toString())
+          .replaceAll('{m}', (diff.inMinutes % 60).toString());
+    }
+    if (diff.inMinutes > 0) {
+      return AppStrings.get('in_min', lang)
+          .replaceAll('{n}', diff.inMinutes.toString());
+    }
+    return AppStrings.get('status_now', lang);
   }
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
+    final lang  = context.watch<LocaleCubit>().state;
+    final c     = context.colors;
+    final isRtl = lang == 'ar';
 
     final all = List<AppointmentEntry>.from(
       context.watch<HealthCubit>().getAppointments(),
-    )..sort((a, b) => a.appointmentDateTime
-        .compareTo(b.appointmentDateTime));
+    )..sort((a, b) =>
+        a.appointmentDateTime.compareTo(b.appointmentDateTime));
 
     final upcoming = all
-        .where((e) =>
-        e.appointmentDateTime.isAfter(DateTime.now()))
+        .where((e) => e.appointmentDateTime.isAfter(DateTime.now()))
         .toList();
     final past = all
-        .where((e) =>
-    !e.appointmentDateTime.isAfter(DateTime.now()))
+        .where((e) => !e.appointmentDateTime.isAfter(DateTime.now()))
         .toList()
         .reversed
         .toList();
 
-    return Scaffold(
-      backgroundColor:
-      Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Column(
-          children: [
-
-            Container(
-              height: 46,
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 14),
-              color: c.surface,
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Icon(Icons.arrow_back,
-                        color: c.primaryText),
-                  ),
-                  const SizedBox(width: 16),
-                  Text(
-                    'Appointments',
-                    style: GoogleFonts.arimo(
+    return Directionality(
+      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: SafeArea(
+          child: Column(
+            children: [
+              Container(
+                height: 46,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                color: c.surface,
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Icon(
+                        isRtl ? Icons.arrow_forward : Icons.arrow_back,
                         color: c.primaryText,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500),
-                  ),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) =>
-                          const AppointmentLogScreen()),
+                      ),
                     ),
-                    child: Image.asset(
-                        'assets/icons/add.png',
-                        width: 26,
-                        height: 26),
-                  ),
-                ],
+                    const SizedBox(width: 16),
+                    Text(
+                      AppStrings.get('appointments', lang),
+                      style: GoogleFonts.arimo(
+                          color: c.primaryText,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500),
+                    ),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const AppointmentLogScreen()),
+                      ),
+                      child: Image.asset(
+                          'assets/icons/add.png', width: 26, height: 26),
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            Expanded(
-              child: all.isEmpty
-                  ? _emptyState(context)
-                  : ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  if (upcoming.isNotEmpty) ...[
-                    _sectionHeader(
-                        'Upcoming', AppColors.primary),
-                    const SizedBox(height: 10),
-                    ...upcoming.map((e) =>
-                        _appointmentCard(context, e)),
-                    const SizedBox(height: 20),
+              Expanded(
+                child: all.isEmpty
+                    ? _emptyState(context, lang)
+                    : ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    if (upcoming.isNotEmpty) ...[
+                      _sectionHeader(
+                          AppStrings.get('upcoming', lang),
+                          AppColors.primary),
+                      const SizedBox(height: 10),
+                      ...upcoming.map((e) =>
+                          _appointmentCard(context, e, lang)),
+                      const SizedBox(height: 20),
+                    ],
+                    if (past.isNotEmpty) ...[
+                      _sectionHeader(
+                          AppStrings.get('past_section', lang),
+                          c.subtleText),
+                      const SizedBox(height: 10),
+                      ...past.map((e) =>
+                          _appointmentCard(context, e, lang,
+                              isPast: true)),
+                    ],
                   ],
-                  if (past.isNotEmpty) ...[
-                    _sectionHeader(
-                        'Past', c.subtleText),
-                    const SizedBox(height: 10),
-                    ...past.map((e) =>
-                        _appointmentCard(context, e,
-                            isPast: true)),
-                  ],
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-
-  Widget _emptyState(BuildContext context) {
+  Widget _emptyState(BuildContext context, String lang) {
     final c = context.colors;
     return Center(
       child: Column(
@@ -155,7 +168,7 @@ class AppointmentDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'No appointments yet',
+            AppStrings.get('no_appointments_yet', lang),
             style: GoogleFonts.arimo(
                 color: c.primaryText,
                 fontSize: 16,
@@ -163,17 +176,16 @@ class AppointmentDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Tap + to schedule one',
-            style: GoogleFonts.arimo(
-                color: c.subtleText, fontSize: 13),
+            AppStrings.get('tap_to_schedule', lang),
+            style:
+            GoogleFonts.arimo(color: c.subtleText, fontSize: 13),
           ),
           const SizedBox(height: 24),
           GestureDetector(
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (_) =>
-                  const AppointmentLogScreen()),
+                  builder: (_) => const AppointmentLogScreen()),
             ),
             child: Container(
               padding: const EdgeInsets.symmetric(
@@ -185,7 +197,7 @@ class AppointmentDetailsScreen extends StatelessWidget {
                     color: AppColors.primary.withOpacity(0.4)),
               ),
               child: Text(
-                'Add appointment',
+                AppStrings.get('add_appointment', lang),
                 style: GoogleFonts.arimo(
                     color: AppColors.primary,
                     fontSize: 14,
@@ -198,7 +210,6 @@ class AppointmentDetailsScreen extends StatelessWidget {
     );
   }
 
-
   Widget _sectionHeader(String label, Color color) {
     return Row(
       children: [
@@ -206,8 +217,7 @@ class AppointmentDetailsScreen extends StatelessWidget {
           width: 3,
           height: 14,
           decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(2)),
+              color: color, borderRadius: BorderRadius.circular(2)),
         ),
         const SizedBox(width: 8),
         Text(
@@ -222,17 +232,15 @@ class AppointmentDetailsScreen extends StatelessWidget {
     );
   }
 
-
-
   Widget _appointmentCard(
-      BuildContext context, AppointmentEntry e,
+      BuildContext context, AppointmentEntry e, String lang,
       {bool isPast = false}) {
     final c      = context.colors;
     final accent = isPast ? c.subtleText : AppColors.primary;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () => _showDetails(context, e),
+      onTap: () => _showDetails(context, e, lang),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         decoration: ShapeDecoration(
@@ -249,10 +257,11 @@ class AppointmentDetailsScreen extends StatelessWidget {
         ),
         child: Row(
           children: [
+
+            // Date column
             Container(
               width: 60,
-              padding:
-              const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: 16),
               decoration: BoxDecoration(
                 color: accent.withOpacity(0.1),
                 borderRadius: const BorderRadius.only(
@@ -266,42 +275,33 @@ class AppointmentDetailsScreen extends StatelessWidget {
                   Text(
                     e.appointmentDateTime.day.toString(),
                     style: GoogleFonts.arimo(
-                        color: isPast
-                            ? c.subtleText
-                            : c.primaryText,
+                        color: isPast ? c.subtleText : c.primaryText,
                         fontSize: 22,
                         fontWeight: FontWeight.w700),
                   ),
                   Text(
-                    const [
-                      'Jan', 'Feb', 'Mar', 'Apr', 'May',
-                      'Jun', 'Jul', 'Aug', 'Sep', 'Oct',
-                      'Nov', 'Dec',
-                    ][e.appointmentDateTime.month - 1],
-                    style: GoogleFonts.arimo(
-                        color: accent, fontSize: 12),
+                    _monthShort(e.appointmentDateTime, lang),
+                    style:
+                    GoogleFonts.arimo(color: accent, fontSize: 12),
                   ),
                 ],
               ),
             ),
 
+            // Content
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 14, vertical: 12),
                 child: Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       e.appointmentName,
                       style: GoogleFonts.arimo(
-                        color: isPast
-                            ? c.hintText
-                            : c.primaryText,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
+                          color: isPast ? c.hintText : c.primaryText,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 4),
                     Row(
@@ -310,11 +310,9 @@ class AppointmentDetailsScreen extends StatelessWidget {
                             color: c.subtleText, size: 12),
                         const SizedBox(width: 4),
                         Text(
-                          _formatTime(
-                              e.appointmentDateTime),
+                          _formatTime(e.appointmentDateTime),
                           style: GoogleFonts.arimo(
-                              color: c.hintText,
-                              fontSize: 12),
+                              color: c.hintText, fontSize: 12),
                         ),
                       ],
                     ),
@@ -322,19 +320,15 @@ class AppointmentDetailsScreen extends StatelessWidget {
                       const SizedBox(height: 3),
                       Row(
                         children: [
-                          Icon(
-                              Icons.location_on_outlined,
-                              color: c.subtleText,
-                              size: 12),
+                          Icon(Icons.location_on_outlined,
+                              color: c.subtleText, size: 12),
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
                               e.location!,
                               style: GoogleFonts.arimo(
-                                  color: c.subtleText,
-                                  fontSize: 12),
-                              overflow:
-                              TextOverflow.ellipsis,
+                                  color: c.subtleText, fontSize: 12),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -345,6 +339,7 @@ class AppointmentDetailsScreen extends StatelessWidget {
               ),
             ),
 
+            // Time-until badge
             Padding(
               padding: const EdgeInsets.only(right: 12),
               child: Column(
@@ -354,11 +349,10 @@ class AppointmentDetailsScreen extends StatelessWidget {
                         horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: accent.withOpacity(0.12),
-                      borderRadius:
-                      BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      _timeUntil(e.appointmentDateTime),
+                      _timeUntil(e.appointmentDateTime, lang),
                       style: GoogleFonts.arimo(
                           color: accent,
                           fontSize: 11,
@@ -377,14 +371,11 @@ class AppointmentDetailsScreen extends StatelessWidget {
     );
   }
 
-
   void _showDetails(
-      BuildContext context, AppointmentEntry e) {
+      BuildContext context, AppointmentEntry e, String lang) {
     final c      = context.colors;
-    final isPast =
-    !e.appointmentDateTime.isAfter(DateTime.now());
-    final accent =
-    isPast ? c.hintText : AppColors.primary;
+    final isPast = !e.appointmentDateTime.isAfter(DateTime.now());
+    final accent = isPast ? c.hintText : AppColors.primary;
 
     showModalBottomSheet(
       context: context,
@@ -394,8 +385,8 @@ class AppointmentDetailsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: c.bottomSheet,
-          borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(22)),
+          borderRadius:
+          const BorderRadius.vertical(top: Radius.circular(22)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -423,10 +414,8 @@ class AppointmentDetailsScreen extends StatelessWidget {
                     color: accent.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(
-                      Icons.calendar_month_outlined,
-                      color: accent,
-                      size: 20),
+                  child: Icon(Icons.calendar_month_outlined,
+                      color: accent, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -438,7 +427,6 @@ class AppointmentDetailsScreen extends StatelessWidget {
                         fontWeight: FontWeight.w700),
                   ),
                 ),
-                // Status chip
                 Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 10, vertical: 4),
@@ -448,9 +436,8 @@ class AppointmentDetailsScreen extends StatelessWidget {
                   ),
                   child: Text(
                     isPast
-                        ? 'Past'
-                        : _timeUntil(
-                        e.appointmentDateTime),
+                        ? AppStrings.get('status_past', lang)
+                        : _timeUntil(e.appointmentDateTime, lang),
                     style: GoogleFonts.arimo(
                         color: accent,
                         fontSize: 12,
@@ -464,7 +451,7 @@ class AppointmentDetailsScreen extends StatelessWidget {
 
             _detailRow(context,
                 icon: Icons.calendar_today_outlined,
-                label: _formatDate(e.appointmentDateTime)),
+                label: _formatDate(e.appointmentDateTime, lang)),
             const SizedBox(height: 10),
             _detailRow(context,
                 icon: Icons.access_time,
@@ -473,16 +460,13 @@ class AppointmentDetailsScreen extends StatelessWidget {
             if (e.location != null) ...[
               const SizedBox(height: 10),
               _detailRow(context,
-                  icon: Icons.location_on_outlined,
-                  label: e.location!),
+                  icon: Icons.location_on_outlined, label: e.location!),
             ],
 
-            if (e.notes != null &&
-                e.notes!.trim().isNotEmpty) ...[
+            if (e.notes != null && e.notes!.trim().isNotEmpty) ...[
               const SizedBox(height: 10),
               _detailRow(context,
-                  icon: Icons.notes_outlined,
-                  label: e.notes!),
+                  icon: Icons.notes_outlined, label: e.notes!),
             ],
 
             const SizedBox(height: 24),
@@ -490,9 +474,7 @@ class AppointmentDetailsScreen extends StatelessWidget {
             // Delete button
             GestureDetector(
               onTap: () {
-                context
-                    .read<HealthCubit>()
-                    .deleteAppointment(e);
+                context.read<HealthCubit>().deleteAppointment(e);
                 Navigator.pop(context);
               },
               child: Container(
@@ -500,19 +482,18 @@ class AppointmentDetailsScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.red.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: Colors.red.withOpacity(0.3)),
+                  border:
+                  Border.all(color: Colors.red.withOpacity(0.3)),
                 ),
                 child: Center(
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(Icons.delete_outline,
-                          color: Colors.redAccent,
-                          size: 18),
+                          color: Colors.redAccent, size: 18),
                       const SizedBox(width: 6),
                       Text(
-                        'Delete Appointment',
+                        AppStrings.get('delete_appointment', lang),
                         style: GoogleFonts.arimo(
                             color: Colors.redAccent,
                             fontSize: 14,

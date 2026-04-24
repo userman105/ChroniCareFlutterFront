@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/lang/lang_strings.dart';
 import '../../cubit/health_cubit.dart';
+import '../../cubit/locale_cubit.dart';
 import '../../models/med_entry.dart';
 import '../../widgets/components.dart';
 import 'medication_log_screen.dart';
@@ -19,37 +21,54 @@ class _MedicationDetailsScreenState
   int _selectedRange = 7;
   int? _expandedDot;
 
-  String _formatTime(DateTime dt) {
-    final h = dt.hour.toString().padLeft(2, '0');
-    final m = dt.minute.toString().padLeft(2, '0');
-    return '$h:$m';
-  }
+  String _formatTime(DateTime dt) =>
+      '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
 
   String _formatDate(DateTime dt) =>
       '${dt.day}/${dt.month}/${dt.year}';
 
+  String _localForm(String form, String lang) {
+    const map = {
+      'tablet':    'form_tablet',
+      'capsule':   'form_capsule',
+      'syrup':     'form_syrup',
+      'injection': 'form_injection',
+      'drops':     'form_drops',
+      'inhaler':   'form_inhaler',
+      'patch':     'form_patch',
+    };
+    return AppStrings.get(map[form] ?? form, lang);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
+    final lang = context.watch<LocaleCubit>().state;
+    final c    = context.colors;
+    final isRtl = lang == 'ar';
 
     final allEntries = List<MedicationEntry>.from(
       context.watch<HealthCubit>().getMedicationEntries(),
     )..sort((a, b) => a.dateTime.compareTo(b.dateTime));
 
     if (allEntries.isEmpty) {
-      return Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: SafeArea(
-          child: Column(
-            children: [
-              _topBar(context),
-              Expanded(
-                child: Center(
-                  child: Text('No Data',
-                      style: TextStyle(color: c.primaryText)),
+      return Directionality(
+        textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+        child: Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          body: SafeArea(
+            child: Column(
+              children: [
+                _topBar(context, lang, isRtl),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      AppStrings.get('no_data', lang),
+                      style: TextStyle(color: c.primaryText),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       );
@@ -62,86 +81,95 @@ class _MedicationDetailsScreenState
         .isAfter(rangeStart.subtract(const Duration(seconds: 1))))
         .toList();
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _topBar(context),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _latestCard(context, allEntries.last),
-                    const SizedBox(height: 20),
-                    _dotChartCard(context, chartEntries),
-                    const SizedBox(height: 20),
+    return Directionality(
+      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: SafeArea(
+          child: Column(
+            children: [
 
-                    Text('History',
+              _topBar(context, lang, isRtl),
+
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+
+                      _latestCard(context, allEntries.last, lang),
+
+                      const SizedBox(height: 20),
+
+                      _dotChartCard(context, chartEntries, lang),
+
+                      const SizedBox(height: 20),
+
+                      Text(
+                        AppStrings.get('history', lang),
                         style: GoogleFonts.arimo(
                             color: c.primaryText,
                             fontSize: 16,
-                            fontWeight: FontWeight.w600)),
+                            fontWeight: FontWeight.w600),
+                      ),
 
-                    const SizedBox(height: 10),
+                      const SizedBox(height: 10),
 
-                    ...allEntries.reversed
-                        .take(3)
-                        .map((e) => _historyTile(context, e)),
+                      ...allEntries.reversed
+                          .take(3)
+                          .map((e) => _historyTile(context, e, lang)),
 
-                    const SizedBox(height: 12),
+                      const SizedBox(height: 12),
 
-                    // ── All Entries button ─────────────────
-                    Center(
-                      child: GestureDetector(
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                AllMedicationEntriesScreen(
-                                    entries: allEntries),
-                          ),
-                        ),
-                        child: Container(
-                          width: 87,
-                          height: 31,
-                          clipBehavior: Clip.antiAlias,
-                          decoration: ShapeDecoration(
-                            color: c.reminderTileBg,
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                              BorderRadius.circular(21),
+                      Center(
+                        child: GestureDetector(
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  AllMedicationEntriesScreen(
+                                      entries: allEntries),
                             ),
                           ),
-                          child: Center(
-                            child: Text(
-                              'All Entries',
-                              style: GoogleFonts.arimo(
-                                  color: c.primaryText,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500),
+                          child: Container(
+                            width: 105,
+                            height: 31,
+                            clipBehavior: Clip.antiAlias,
+                            decoration: ShapeDecoration(
+                              color: c.reminderTileBg,
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                BorderRadius.circular(21),
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                AppStrings.get('all_entries', lang),
+                                style: GoogleFonts.arimo(
+                                    color: c.primaryText,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 20),
-                  ],
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // ── Top bar ───────────────────────────────────────────────
 
-  Widget _topBar(BuildContext context) {
+  Widget _topBar(BuildContext context, String lang, bool isRtl) {
     final c = context.colors;
     return Container(
       height: 46,
@@ -151,14 +179,19 @@ class _MedicationDetailsScreenState
         children: [
           GestureDetector(
             onTap: () => Navigator.pop(context),
-            child: Icon(Icons.arrow_back, color: c.primaryText),
+            child: Icon(
+              isRtl ? Icons.arrow_forward : Icons.arrow_back,
+              color: c.primaryText,
+            ),
           ),
           const SizedBox(width: 16),
-          Text('Medication',
-              style: GoogleFonts.arimo(
-                  color: c.primaryText,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500)),
+          Text(
+            AppStrings.get('medication', lang),
+            style: GoogleFonts.arimo(
+                color: c.primaryText,
+                fontSize: 16,
+                fontWeight: FontWeight.w500),
+          ),
           const Spacer(),
           GestureDetector(
             onTap: () => Navigator.push(
@@ -174,9 +207,8 @@ class _MedicationDetailsScreenState
     );
   }
 
-  // ── Latest card ───────────────────────────────────────────
-
-  Widget _latestCard(BuildContext context, MedicationEntry e) {
+  Widget _latestCard(
+      BuildContext context, MedicationEntry e, String lang) {
     final c = context.colors;
     return Container(
       width: double.infinity,
@@ -196,9 +228,11 @@ class _MedicationDetailsScreenState
               const Icon(Icons.medication_outlined,
                   color: AppColors.primary, size: 20),
               const SizedBox(width: 8),
-              Text('Latest Entry',
-                  style: GoogleFonts.arimo(
-                      color: c.primaryText, fontSize: 16)),
+              Text(
+                AppStrings.get('latest_entry_med', lang),
+                style: GoogleFonts.arimo(
+                    color: c.primaryText, fontSize: 16),
+              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -216,12 +250,12 @@ class _MedicationDetailsScreenState
               const SizedBox(width: 6),
               _chip('x${e.quantity}'),
               const SizedBox(width: 6),
-              _chip(e.form),
+              _chip(_localForm(e.form, lang)),
             ],
           ),
           const SizedBox(height: 8),
           Text(
-            'Taken ${_formatDate(e.dateTime)} at ${_formatTime(e.dateTime)}',
+            '${AppStrings.get('taken', lang)} ${_formatDate(e.dateTime)} ${AppStrings.get('at_time', lang)} ${_formatTime(e.dateTime)}',
             style: GoogleFonts.arimo(color: c.secondaryText),
           ),
         ],
@@ -235,8 +269,8 @@ class _MedicationDetailsScreenState
     decoration: BoxDecoration(
       color: AppColors.primary.withOpacity(0.15),
       borderRadius: BorderRadius.circular(12),
-      border: Border.all(
-          color: AppColors.primary.withOpacity(0.3)),
+      border:
+      Border.all(color: AppColors.primary.withOpacity(0.3)),
     ),
     child: Text(label,
         style: GoogleFonts.arimo(
@@ -245,10 +279,9 @@ class _MedicationDetailsScreenState
             fontWeight: FontWeight.w500)),
   );
 
-  // ── Dot chart card ────────────────────────────────────────
 
-  Widget _dotChartCard(
-      BuildContext context, List<MedicationEntry> entries) {
+  Widget _dotChartCard(BuildContext context,
+      List<MedicationEntry> entries, String lang) {
     final c = context.colors;
     return Container(
       padding: const EdgeInsets.all(16),
@@ -265,12 +298,14 @@ class _MedicationDetailsScreenState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Intake Chart',
-                  style: GoogleFonts.arimo(
-                      color: c.primaryText,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600)),
-              _rangePicker(context),
+              Text(
+                AppStrings.get('intake_chart', lang),
+                style: GoogleFonts.arimo(
+                    color: c.primaryText,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600),
+              ),
+              _rangePicker(context, lang),
             ],
           ),
           const SizedBox(height: 16),
@@ -279,20 +314,23 @@ class _MedicationDetailsScreenState
             child: Padding(
               padding:
               const EdgeInsets.symmetric(vertical: 40),
-              child: Text('No data in range',
-                  style: GoogleFonts.arimo(
-                      color: c.hintText)),
+              child: Text(
+                AppStrings.get('no_data_range', lang),
+                style:
+                GoogleFonts.arimo(color: c.hintText),
+              ),
             ),
           )
-              : _dotChart(context, entries),
+              : _dotChart(context, entries, lang),
         ],
       ),
     );
   }
 
-  Widget _dotChart(
-      BuildContext context, List<MedicationEntry> entries) {
+  Widget _dotChart(BuildContext context,
+      List<MedicationEntry> entries, String lang) {
     final c = context.colors;
+    final isRtl = lang == 'ar';
 
     final Map<int, List<MedicationEntry>> byDay = {};
     for (final e in entries) {
@@ -309,10 +347,10 @@ class _MedicationDetailsScreenState
           Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('More',
+              Text(AppStrings.get('more_label', lang),
                   style: GoogleFonts.arimo(
                       color: c.subtleText, fontSize: 10)),
-              Text('Less',
+              Text(AppStrings.get('less_label', lang),
                   style: GoogleFonts.arimo(
                       color: c.subtleText, fontSize: 10)),
             ],
@@ -336,9 +374,11 @@ class _MedicationDetailsScreenState
                           children: dayEntries
                               .asMap()
                               .entries
-                              .map((e) {
-                            final idx    = entries.indexOf(e.value);
-                            final isExpanded = _expandedDot == idx;
+                              .map((mapEntry) {
+                            final idx = entries
+                                .indexOf(mapEntry.value);
+                            final isExpanded =
+                                _expandedDot == idx;
 
                             return GestureDetector(
                               onTap: () => setState(() =>
@@ -351,7 +391,8 @@ class _MedicationDetailsScreenState
                                     bottom: 4),
                                 padding: isExpanded
                                     ? const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 4)
+                                    horizontal: 8,
+                                    vertical: 4)
                                     : EdgeInsets.zero,
                                 decoration: BoxDecoration(
                                   color: isExpanded
@@ -368,21 +409,27 @@ class _MedicationDetailsScreenState
                                 child: isExpanded
                                     ? Column(
                                   crossAxisAlignment:
-                                  CrossAxisAlignment.start,
+                                  CrossAxisAlignment
+                                      .start,
                                   children: [
                                     Text(
-                                      e.value.medicationName,
-                                      style: GoogleFonts.arimo(
-                                          color: c.primaryText,
+                                      mapEntry.value
+                                          .medicationName,
+                                      style: GoogleFonts
+                                          .arimo(
+                                          color: c
+                                              .primaryText,
                                           fontSize: 10,
                                           fontWeight:
-                                          FontWeight.w600),
+                                          FontWeight
+                                              .w600),
                                     ),
                                     Text(
-                                      '${e.value.dose}${e.value.doseUnit} x${e.value.quantity}',
-                                      style: GoogleFonts.arimo(
-                                          color:
-                                          AppColors.primary,
+                                      '${mapEntry.value.dose}${mapEntry.value.doseUnit} x${mapEntry.value.quantity}',
+                                      style:
+                                      GoogleFonts.arimo(
+                                          color: AppColors
+                                              .primary,
                                           fontSize: 9),
                                     ),
                                   ],
@@ -418,7 +465,7 @@ class _MedicationDetailsScreenState
     );
   }
 
-  Widget _rangePicker(BuildContext context) {
+  Widget _rangePicker(BuildContext context, String lang) {
     final c = context.colors;
     return DropdownButtonHideUnderline(
       child: DropdownButton<int>(
@@ -426,19 +473,20 @@ class _MedicationDetailsScreenState
         dropdownColor: c.cardBg,
         style: GoogleFonts.arimo(
             color: c.primaryText, fontSize: 13),
-        icon: Icon(Icons.arrow_drop_down, color: c.primaryText),
+        icon:
+        Icon(Icons.arrow_drop_down, color: c.primaryText),
         items: [
           DropdownMenuItem(
               value: 7,
-              child: Text('Last 7 days',
+              child: Text(AppStrings.get('last_7_days', lang),
                   style: TextStyle(color: c.primaryText))),
           DropdownMenuItem(
               value: 14,
-              child: Text('Last 14 days',
+              child: Text(AppStrings.get('last_14_days', lang),
                   style: TextStyle(color: c.primaryText))),
           DropdownMenuItem(
               value: 30,
-              child: Text('Last 30 days',
+              child: Text(AppStrings.get('last_30_days', lang),
                   style: TextStyle(color: c.primaryText))),
         ],
         onChanged: (v) => setState(() => _selectedRange = v!),
@@ -446,17 +494,16 @@ class _MedicationDetailsScreenState
     );
   }
 
-  // ── History tile ──────────────────────────────────────────
-
-  Widget _historyTile(BuildContext context, MedicationEntry e) {
+  Widget _historyTile(
+      BuildContext context, MedicationEntry e, String lang) {
     final c = context.colors;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () => _showEntryDetails(context, e),
+      onTap: () => _showEntryDetails(context, e, lang),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
-        padding:
-        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+            horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: c.surface,
           borderRadius: BorderRadius.circular(10),
@@ -477,7 +524,7 @@ class _MedicationDetailsScreenState
                           fontWeight: FontWeight.w600)),
                   const SizedBox(height: 2),
                   Text(
-                    '${e.dose} ${e.doseUnit} · x${e.quantity} · ${e.form}',
+                    '${e.dose} ${e.doseUnit} · x${e.quantity} · ${_localForm(e.form, lang)}',
                     style: GoogleFonts.arimo(
                         color: c.hintText, fontSize: 12),
                   ),
@@ -497,9 +544,8 @@ class _MedicationDetailsScreenState
     );
   }
 
-  // ── Entry detail sheet ────────────────────────────────────
-
-  void _showEntryDetails(BuildContext context, MedicationEntry e) {
+  void _showEntryDetails(
+      BuildContext context, MedicationEntry e, String lang) {
     final c = context.colors;
     showModalBottomSheet(
       context: context,
@@ -508,8 +554,8 @@ class _MedicationDetailsScreenState
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: c.bottomSheet,
-          borderRadius:
-          const BorderRadius.vertical(top: Radius.circular(22)),
+          borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(22)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -530,11 +576,13 @@ class _MedicationDetailsScreenState
                 const Icon(Icons.medication_outlined,
                     color: AppColors.primary, size: 22),
                 const SizedBox(width: 8),
-                Text('Medication Entry',
-                    style: GoogleFonts.arimo(
-                        color: c.primaryText,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600)),
+                Text(
+                  AppStrings.get('medication_entry', lang),
+                  style: GoogleFonts.arimo(
+                      color: c.primaryText,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600),
+                ),
                 if (e.isCustom) ...[
                   const SizedBox(width: 8),
                   Container(
@@ -544,9 +592,11 @@ class _MedicationDetailsScreenState
                       color: Colors.orange.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text('Custom',
-                        style: GoogleFonts.arimo(
-                            color: Colors.orange, fontSize: 11)),
+                    child: Text(
+                      AppStrings.get('custom_badge', lang),
+                      style: GoogleFonts.arimo(
+                          color: Colors.orange, fontSize: 11),
+                    ),
                   ),
                 ],
               ],
@@ -560,19 +610,27 @@ class _MedicationDetailsScreenState
             const SizedBox(height: 12),
             Row(
               children: [
-                _detailChip(context, 'Dose', '${e.dose} ${e.doseUnit}'),
+                _detailChip(context,
+                    AppStrings.get('dose', lang),
+                    '${e.dose} ${e.doseUnit}'),
                 const SizedBox(width: 12),
-                _detailChip(context, 'Qty', 'x${e.quantity}'),
+                _detailChip(context,
+                    AppStrings.get('qty', lang), 'x${e.quantity}'),
                 const SizedBox(width: 12),
-                _detailChip(context, 'Form', e.form),
+                _detailChip(context,
+                    AppStrings.get('form_label', lang),
+                    _localForm(e.form, lang)),
               ],
             ),
             const SizedBox(height: 16),
-            _detailRow(context, Icons.calendar_today_outlined,
+            _detailRow(
+                context,
+                Icons.calendar_today_outlined,
                 '${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}'),
             if (e.notes != null && e.notes!.trim().isNotEmpty) ...[
               const SizedBox(height: 12),
-              _detailRow(context, Icons.notes_outlined, e.notes!),
+              _detailRow(
+                  context, Icons.notes_outlined, e.notes!),
             ],
             const SizedBox(height: 24),
           ],
@@ -581,11 +639,13 @@ class _MedicationDetailsScreenState
     );
   }
 
-  Widget _detailChip(BuildContext context, String label, String value) {
+  Widget _detailChip(
+      BuildContext context, String label, String value) {
     final c = context.colors;
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        padding: const EdgeInsets.symmetric(
+            vertical: 10, horizontal: 12),
         decoration: BoxDecoration(
           color: c.surface,
           borderRadius: BorderRadius.circular(12),
@@ -626,9 +686,6 @@ class _MedicationDetailsScreenState
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-//  ALL ENTRIES SCREEN
-// ─────────────────────────────────────────────────────────────
 
 class AllMedicationEntriesScreen extends StatefulWidget {
   final List<MedicationEntry> entries;
@@ -646,11 +703,8 @@ class _AllMedicationEntriesScreenState
   DateTime? _filterStart;
   DateTime? _filterEnd;
 
-  String _formatTime(DateTime dt) {
-    final h = dt.hour.toString().padLeft(2, '0');
-    final m = dt.minute.toString().padLeft(2, '0');
-    return '$h:$m';
-  }
+  String _formatTime(DateTime dt) =>
+      '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
 
   String _formatDate(DateTime dt) =>
       '${dt.day}/${dt.month}/${dt.year}';
@@ -676,6 +730,19 @@ class _AllMedicationEntriesScreenState
         .toList();
   }
 
+  String _localForm(String form, String lang) {
+    const map = {
+      'tablet':    'form_tablet',
+      'capsule':   'form_capsule',
+      'syrup':     'form_syrup',
+      'injection': 'form_injection',
+      'drops':     'form_drops',
+      'inhaler':   'form_inhaler',
+      'patch':     'form_patch',
+    };
+    return AppStrings.get(map[form] ?? form, lang);
+  }
+
   void _openPicker() {
     showModalBottomSheet(
       context: context,
@@ -691,11 +758,10 @@ class _AllMedicationEntriesScreenState
         child: DateRangePickerWidget(
           initialStart: _filterStart,
           initialEnd: _filterEnd,
-          onApply: (s, e) =>
-              setState(() {
-                _filterStart = s;
-                _filterEnd   = e;
-              }),
+          onApply: (s, e) => setState(() {
+            _filterStart = s;
+            _filterEnd   = e;
+          }),
         ),
       ),
     );
@@ -703,200 +769,225 @@ class _AllMedicationEntriesScreenState
 
   @override
   Widget build(BuildContext context) {
+    final lang    = context.watch<LocaleCubit>().state;
     final c       = context.colors;
+    final isRtl   = lang == 'ar';
     final entries = _filtered;
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Column(
-          children: [
+    return Directionality(
+      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: SafeArea(
+          child: Column(
+            children: [
 
-            // ── Top bar ──────────────────────────────────────
-            Container(
-              height: 46,
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              color: c.surface,
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Icon(Icons.arrow_back,
-                        color: c.primaryText),
-                  ),
-                  const SizedBox(width: 16),
-                  Text('All Entries',
+              Container(
+                height: 46,
+                padding:
+                const EdgeInsets.symmetric(horizontal: 14),
+                color: c.surface,
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Icon(
+                        isRtl
+                            ? Icons.arrow_forward
+                            : Icons.arrow_back,
+                        color: c.primaryText,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Text(
+                      AppStrings.get('all_entries', lang),
                       style: GoogleFonts.arimo(
                           color: c.primaryText,
                           fontSize: 16,
-                          fontWeight: FontWeight.w500)),
-                  const Spacer(),
-                  Text('${entries.length} records',
+                          fontWeight: FontWeight.w500),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${entries.length} ${AppStrings.get('records', lang)}',
                       style: GoogleFonts.arimo(
-                          color: c.hintText, fontSize: 13)),
-                ],
+                          color: c.hintText, fontSize: 13),
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-            // ── Date filter pill ─────────────────────────────
-            Padding(
-              padding: const EdgeInsets.only(left: 16),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: GestureDetector(
-                  onTap: _hasFilter
-                      ? () => setState(() {
-                    _filterStart = null;
-                    _filterEnd   = null;
-                  })
-                      : _openPicker,
-                  child: _hasFilter
-                      ? Container(
-                    height: 32,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14),
-                    decoration: ShapeDecoration(
-                      color: c.reminderTileBg,
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                        BorderRadius.circular(25),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '${_formatShort(_filterStart!)} – ${_formatShort(_filterEnd!)}',
-                          style: GoogleFonts.arimo(
-                              color: c.primaryText,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500),
+              Padding(
+                padding: EdgeInsets.only(
+                    left: isRtl ? 0 : 16,
+                    right: isRtl ? 16 : 0),
+                child: Align(
+                  alignment: isRtl
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
+                  child: GestureDetector(
+                    onTap: _hasFilter
+                        ? () => setState(() {
+                      _filterStart = null;
+                      _filterEnd   = null;
+                    })
+                        : _openPicker,
+                    child: _hasFilter
+                        ? Container(
+                      height: 32,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14),
+                      decoration: ShapeDecoration(
+                        color: c.reminderTileBg,
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                          BorderRadius.circular(25),
                         ),
-                        const SizedBox(width: 6),
-                        Icon(Icons.close,
-                            color: c.primaryText, size: 14),
-                      ],
-                    ),
-                  )
-                      : Container(
-                    width: 118,
-                    height: 32,
-                    decoration: ShapeDecoration(
-                      color: c.surface,
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                        BorderRadius.circular(25),
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        const SizedBox(width: 12),
-                        Image.asset(
-                            'assets/icons/calendar.png',
-                            height: 20,
-                            width: 20),
-                        const SizedBox(width: 10),
-                        Text('All Time',
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${_formatShort(_filterStart!)} – ${_formatShort(_filterEnd!)}',
+                            style: GoogleFonts.arimo(
+                                color: c.primaryText,
+                                fontSize: 12,
+                                fontWeight:
+                                FontWeight.w500),
+                          ),
+                          const SizedBox(width: 6),
+                          Icon(Icons.close,
+                              color: c.primaryText,
+                              size: 14),
+                        ],
+                      ),
+                    )
+                        : Container(
+                      width: 118,
+                      height: 32,
+                      decoration: ShapeDecoration(
+                        color: c.surface,
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                          BorderRadius.circular(25),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 12),
+                          Image.asset(
+                              'assets/icons/calendar.png',
+                              height: 20,
+                              width: 20),
+                          const SizedBox(width: 10),
+                          Text(
+                            AppStrings.get(
+                                'all_time', lang),
                             style: GoogleFonts.arimo(
                                 color: c.primaryText,
                                 fontSize: 15,
                                 fontWeight:
-                                FontWeight.w500)),
-                      ],
+                                FontWeight.w500),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
 
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-            // ── Entry list ───────────────────────────────────
-            Expanded(
-              child: entries.isEmpty
-                  ? Center(
-                child: Text(
-                  _hasFilter
-                      ? 'No entries in this range'
-                      : 'No entries',
-                  style: GoogleFonts.arimo(
-                      color: c.hintText),
-                ),
-              )
-                  : ListView.builder(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16),
-                itemCount: entries.length,
-                itemBuilder: (context, index) {
-                  final e = entries[index];
-                  return GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () =>
-                        _showEntryDetails(context, e),
-                    child: Container(
-                      margin: const EdgeInsets.only(
-                          bottom: 10),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: c.surface,
-                        borderRadius:
-                        BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                              Icons.medication_outlined,
-                              color: AppColors.primary,
-                              size: 22),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                              children: [
-                                Text(e.medicationName,
-                                    style:
-                                    GoogleFonts.arimo(
-                                        color: c.primaryText,
-                                        fontSize: 15,
-                                        fontWeight:
-                                        FontWeight
-                                            .w600)),
-                                Text(
-                                  '${e.dose} ${e.doseUnit} · x${e.quantity} · ${e.form}',
-                                  style: GoogleFonts.arimo(
-                                      color: c.hintText,
-                                      fontSize: 12),
-                                ),
-                                Text(
-                                  '${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}',
-                                  style: GoogleFonts.arimo(
-                                      color: c.subtleText,
-                                      fontSize: 11),
-                                ),
-                              ],
+              Expanded(
+                child: entries.isEmpty
+                    ? Center(
+                  child: Text(
+                    _hasFilter
+                        ? AppStrings.get(
+                        'no_entries_range', lang)
+                        : AppStrings.get(
+                        'no_entries', lang),
+                    style: GoogleFonts.arimo(
+                        color: c.hintText),
+                  ),
+                )
+                    : ListView.builder(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16),
+                  itemCount: entries.length,
+                  itemBuilder: (context, index) {
+                    final e = entries[index];
+                    return GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => _showEntryDetails(
+                          context, e, lang),
+                      child: Container(
+                        margin: const EdgeInsets.only(
+                            bottom: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: c.surface,
+                          borderRadius:
+                          BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                                Icons.medication_outlined,
+                                color: AppColors.primary,
+                                size: 22),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment:
+                                CrossAxisAlignment
+                                    .start,
+                                children: [
+                                  Text(e.medicationName,
+                                      style:
+                                      GoogleFonts.arimo(
+                                          color: c
+                                              .primaryText,
+                                          fontSize: 15,
+                                          fontWeight:
+                                          FontWeight
+                                              .w600)),
+                                  Text(
+                                    '${e.dose} ${e.doseUnit} · x${e.quantity} · ${_localForm(e.form, lang)}',
+                                    style: GoogleFonts.arimo(
+                                        color: c.hintText,
+                                        fontSize: 12),
+                                  ),
+                                  Text(
+                                    '${_formatDate(e.dateTime)}  ${_formatTime(e.dateTime)}',
+                                    style: GoogleFonts.arimo(
+                                        color: c.subtleText,
+                                        fontSize: 11),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          Icon(Icons.chevron_right,
-                              color: c.subtleText,
-                              size: 18),
-                        ],
+                            Icon(Icons.chevron_right,
+                                color: c.subtleText,
+                                size: 18),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  void _showEntryDetails(BuildContext context, MedicationEntry e) {
+  void _showEntryDetails(
+      BuildContext context, MedicationEntry e, String lang) {
     final c = context.colors;
     showModalBottomSheet(
       context: context,
@@ -942,22 +1033,27 @@ class _AllMedicationEntriesScreenState
                       color: Colors.orange.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text('Custom',
-                        style: GoogleFonts.arimo(
-                            color: Colors.orange,
-                            fontSize: 11)),
+                    child: Text(
+                      AppStrings.get('custom_badge', lang),
+                      style: GoogleFonts.arimo(
+                          color: Colors.orange, fontSize: 11),
+                    ),
                   ),
               ],
             ),
             const SizedBox(height: 16),
             Row(
               children: [
-                _detailChip(context, 'Dose',
+                _detailChip(context,
+                    AppStrings.get('dose', lang),
                     '${e.dose} ${e.doseUnit}'),
                 const SizedBox(width: 8),
-                _detailChip(context, 'Qty', 'x${e.quantity}'),
+                _detailChip(context,
+                    AppStrings.get('qty', lang), 'x${e.quantity}'),
                 const SizedBox(width: 8),
-                _detailChip(context, 'Form', e.form),
+                _detailChip(context,
+                    AppStrings.get('form_label', lang),
+                    _localForm(e.form, lang)),
               ],
             ),
             const SizedBox(height: 16),
@@ -973,8 +1069,7 @@ class _AllMedicationEntriesScreenState
                 ),
               ],
             ),
-            if (e.notes != null &&
-                e.notes!.trim().isNotEmpty) ...[
+            if (e.notes != null && e.notes!.trim().isNotEmpty) ...[
               const SizedBox(height: 12),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,

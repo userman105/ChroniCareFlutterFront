@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../cubit/health_cubit.dart';
+import '../cubit/locale_cubit.dart';
+import '../core/lang/lang_strings.dart';
 import 'components.dart';
 
 class LogEntryScreen extends StatefulWidget {
@@ -338,3 +340,5 @@ class _LogEntryScreenState extends State<LogEntryScreen> {
     });
   }
 }
+
+

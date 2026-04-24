@@ -15,96 +15,77 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../cubit/health_cubit.dart';
+import '../cubit/locale_cubit.dart';
+import '../core/lang/lang_strings.dart';
 import '../main_activity/blood_log/blood_log_screen.dart';
 import '../main_activity/weight_log/weight_log_screen.dart';
 import '../models/appointment_entry.dart';
 import 'alarm_screen.dart';
 
-// ─────────────────────────────────────────────────────────────
-//  ADAPTIVE COLOUR SYSTEM
-// ─────────────────────────────────────────────────────────────
-
 class AppColors {
   final bool isDark;
   const AppColors(this.isDark);
 
-  // ── Backgrounds ──────────────────────────────────────────
-  /// Main scaffold background
-  Color get scaffoldBg => isDark ? const Color(0xFF111111) : Colors.white;
-
-  /// Bars, nav, calendar rows
-  Color get surface => isDark ? const Color(0xFF2D2D2D) : const Color(0xFFF2F2F2);
-
-  /// Bottom-sheets, modal containers
-  Color get bottomSheet => isDark ? const Color(0xFF212121) : Colors.white;
-
-  /// Cards / condition buttons
-  Color get cardBg => isDark ? const Color(0xFF383838) : const Color(0xFFEBEBEB);
-
-  /// ReminderTile background
+  Color get scaffoldBg     => isDark ? const Color(0xFF111111) : Colors.white;
+  Color get surface        => isDark ? const Color(0xFF2D2D2D) : const Color(0xFFF2F2F2);
+  Color get bottomSheet    => isDark ? const Color(0xFF212121) : Colors.white;
+  Color get cardBg         => isDark ? const Color(0xFF383838) : const Color(0xFFEBEBEB);
   Color get reminderTileBg => isDark ? const Color(0xFF444444) : const Color(0xFFE4E4E4);
+  Color get inputFill      => isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF0F0F0);
+  Color get compactInput   => isDark ? const Color(0xFF111111) : const Color(0xFFE8E8E8);
+  Color get sectionBg      => isDark ? const Color(0xFF1E1E1E) : const Color(0xFFEEEEEE);
+  Color get toggleBg       => isDark ? const Color(0xFF0F0F0F) : const Color(0xFFDDDDDD);
+  Color get notesFill      => isDark ? const Color(0xFF0C0C0C) : const Color(0xFFEEEEEE);
+  Color get editFieldFill  => isDark ? const Color(0xFF4F4F4F) : const Color(0xFFDDDDDD);
+  Color get logTileBg      => isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F5F5);
+  Color get datePickerBg   => isDark ? const Color(0xFF1C1C1C) : Colors.white;
 
-  /// Large text-field fill (login box)
-  Color get inputFill => isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF0F0F0);
+  Color get primaryText    => isDark ? Colors.white        : Colors.black;
+  Color get secondaryText  => isDark ? Colors.white70      : Colors.black54;
+  Color get hintText       => isDark ? Colors.white54      : Colors.black38;
+  Color get subtleText     => isDark ? Colors.white38      : Colors.black26;
+  Color get ghostText      => isDark ? Colors.white24      : Colors.black12;
+  Color get navInactive    => isDark ? const Color(0xFF929292) : const Color(0xFF666666);
+  Color get hintGrey       => isDark ? const Color(0xFFB4B4B4) : const Color(0xFF888888);
+  Color get offMonthText   => isDark ? Colors.white24      : Colors.black26;
 
-  /// Compact inline input fields (bp, weight, glucose)
-  Color get compactInput => isDark ? const Color(0xFF111111) : const Color(0xFFE8E8E8);
+  Color get border         => isDark ? Colors.white        : Colors.black87;
+  Color get divider        => isDark ? Colors.white12      : Colors.black12;
+  Color get subtleBorder   => isDark ? Colors.white.withOpacity(0.10) : Colors.black.withOpacity(0.10);
+  Color get optionBorder   => isDark ? Colors.white        : Colors.black38;
 
-  /// Section container inside edit sheet
-  Color get sectionBg => isDark ? const Color(0xFF1E1E1E) : const Color(0xFFEEEEEE);
+  Color get disabledBg     => isDark ? const Color(0xFF474747) : const Color(0xFFCCCCCC);
+  Color get disabledText   => isDark ? Colors.white54      : Colors.black38;
 
-  /// Toggle pill background
-  Color get toggleBg => isDark ? const Color(0xFF0F0F0F) : const Color(0xFFDDDDDD);
-
-  /// Notes / small editable field fill
-  Color get notesFill => isDark ? const Color(0xFF0C0C0C) : const Color(0xFFEEEEEE);
-
-  /// Name text-field fill inside edit sheet
-  Color get editFieldFill => isDark ? const Color(0xFF4F4F4F) : const Color(0xFFDDDDDD);
-
-  /// Log-tile row background
-  Color get logTileBg => isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F5F5);
-
-  /// DateRangePicker outer container
-  Color get datePickerBg => isDark ? const Color(0xFF1C1C1C) : Colors.white;
-
-  // ── Text ─────────────────────────────────────────────────
-  Color get primaryText   => isDark ? Colors.white        : Colors.black;
-  Color get secondaryText => isDark ? Colors.white70      : Colors.black54;
-  Color get hintText      => isDark ? Colors.white54      : Colors.black38;
-  Color get subtleText    => isDark ? Colors.white38      : Colors.black26;
-  Color get ghostText     => isDark ? Colors.white24      : Colors.black12;
-
-  Color get navInactive   => isDark ? const Color(0xFF929292) : const Color(0xFF666666);
-  Color get hintGrey      => isDark ? const Color(0xFFB4B4B4) : const Color(0xFF888888);
-
-  /// Calendar out-of-month day text
-  Color get offMonthText  => isDark ? Colors.white24      : Colors.black26;
-
-  // ── Borders & dividers ────────────────────────────────────
-  Color get border        => isDark ? Colors.white        : Colors.black87;
-  Color get divider       => isDark ? Colors.white12      : Colors.black12;
-  Color get subtleBorder  => isDark ? Colors.white.withOpacity(0.10)
-      : Colors.black.withOpacity(0.10);
-  Color get optionBorder  => isDark ? Colors.white        : Colors.black38;
-
-  // ── Disabled states ───────────────────────────────────────
-  Color get disabledBg    => isDark ? const Color(0xFF474747) : const Color(0xFFCCCCCC);
-  Color get disabledText  => isDark ? Colors.white54      : Colors.black38;
-
-  // ── Accents (same for both themes) ───────────────────────
   static const Color primary    = Color(0xFF00C950);
   static const Color primaryAlt = Color(0xFF05DF72);
 }
 
 extension AppThemeX on BuildContext {
-  bool       get isDark => Theme.of(this).brightness == Brightness.dark;
-  AppColors  get colors => AppColors(isDark);
+  bool      get isDark => Theme.of(this).brightness == Brightness.dark;
+  AppColors get colors => AppColors(isDark);
 }
 
-// ─────────────────────────────────────────────────────────────
-//  COMPONENTS
-// ─────────────────────────────────────────────────────────────
+
+String translateFrequency(String freq, String lang) {
+  switch (freq) {
+    case 'Daily':      return AppStrings.get('daily', lang);
+    case 'Weekly':     return AppStrings.get('weekly', lang);
+    case 'Every 2 days': return AppStrings.get('every_2_days', lang);
+    case 'Monthly':    return AppStrings.get('monthly', lang);
+    default:           return freq;
+  }
+}
+
+String formatTimeLocalized(TimeOfDay t, String lang) {
+  final h = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
+  final m = t.minute.toString().padLeft(2, '0');
+  final period = t.period == DayPeriod.am
+      ? AppStrings.get('am_label', lang)
+      : AppStrings.get('pm_label', lang);
+  return '$h:$m $period';
+}
+
 
 class RoundedInputBox extends StatelessWidget {
   final String hintTop;
@@ -150,13 +131,13 @@ class RoundedInputBox extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide(color: c.border, width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+        contentPadding:
+        const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────
 
 class MainButton extends StatelessWidget {
   final String text;
@@ -183,17 +164,15 @@ class MainButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x19000000),
-              blurRadius: 6,
-              offset: Offset(0, 4),
-              spreadRadius: -4,
-            ),
+                color: Color(0x19000000),
+                blurRadius: 6,
+                offset: Offset(0, 4),
+                spreadRadius: -4),
             BoxShadow(
-              color: Color(0x19000000),
-              blurRadius: 15,
-              offset: Offset(0, 10),
-              spreadRadius: -3,
-            ),
+                color: Color(0x19000000),
+                blurRadius: 15,
+                offset: Offset(0, 10),
+                spreadRadius: -3),
           ],
         ),
         alignment: Alignment.center,
@@ -212,7 +191,6 @@ class MainButton extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
 
 class ChronicLogo extends StatelessWidget {
   final double logoHeight;
@@ -260,7 +238,6 @@ class ChronicLogo extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
 
 class ConditionButton extends StatelessWidget {
   final String iconAsset;
@@ -313,23 +290,18 @@ class ConditionButton extends StatelessWidget {
                 ),
                 boxShadow: [
                   const BoxShadow(
-                    color: Color(0x19000000),
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                    spreadRadius: -2,
-                  ),
+                      color: Color(0x19000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                      spreadRadius: -2),
                   const BoxShadow(
-                    color: Color(0x19000000),
-                    blurRadius: 6,
-                    offset: Offset(0, 4),
-                    spreadRadius: -1,
-                  ),
+                      color: Color(0x19000000),
+                      blurRadius: 6,
+                      offset: Offset(0, 4),
+                      spreadRadius: -1),
                   if (selected)
                     const BoxShadow(
-                      color: Color(0x6605DF72),
-                      blurRadius: 12,
-                      spreadRadius: 1,
-                    ),
+                        color: Color(0x6605DF72), blurRadius: 12, spreadRadius: 1),
                 ],
               ),
               child: Row(
@@ -338,8 +310,7 @@ class ConditionButton extends StatelessWidget {
                     width: iconSize,
                     height: iconSize,
                     child: Center(
-                      child: Image.asset(iconAsset, height: iconSize + 10),
-                    ),
+                        child: Image.asset(iconAsset, height: iconSize + 10)),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -347,49 +318,36 @@ class ConditionButton extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          title,
-                          style: GoogleFonts.arimo(
-                            color: c.primaryText,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+                        Text(title,
+                            style: GoogleFonts.arimo(
+                                color: c.primaryText,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700)),
                         const SizedBox(height: 4),
-                        Text(
-                          description,
-                          style: GoogleFonts.arimo(
-                            color: c.secondaryText,
-                            fontSize: 14,
-                          ),
-                        ),
+                        Text(description,
+                            style: GoogleFonts.arimo(
+                                color: c.secondaryText, fontSize: 14)),
                       ],
                     ),
                   ),
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
                     transitionBuilder: (child, animation) => ScaleTransition(
-                      scale: animation,
-                      child: FadeTransition(opacity: animation, child: child),
-                    ),
+                        scale: animation,
+                        child: FadeTransition(opacity: animation, child: child)),
                     child: selected
                         ? Container(
                       key: const ValueKey("check"),
                       width: 34,
                       height: 34,
                       decoration: const BoxDecoration(
-                        color: AppColors.primaryAlt,
-                        shape: BoxShape.circle,
-                      ),
+                          color: AppColors.primaryAlt, shape: BoxShape.circle),
                       child: const Center(
-                        child: Text(
-                          "✓",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: Text("✓",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold)),
                       ),
                     )
                         : const SizedBox.shrink(key: ValueKey("empty")),
@@ -403,8 +361,6 @@ class ConditionButton extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────
 
 class ConditionGridButton extends StatelessWidget {
   final String iconAsset;
@@ -436,9 +392,7 @@ class ConditionGridButton extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           decoration: ShapeDecoration(
             color: selected ? Colors.green[400] : c.cardBg,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(11),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
             shadows: [
               BoxShadow(
                 color: selected
@@ -459,23 +413,18 @@ class ConditionGridButton extends StatelessWidget {
                   height: 26,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage(iconAsset),
-                      fit: BoxFit.cover,
-                    ),
+                        image: AssetImage(iconAsset), fit: BoxFit.cover),
                   ),
                 ),
               ),
               Positioned(
                 left: 37,
                 top: 14.5,
-                child: Text(
-                  label,
-                  style: GoogleFonts.arimo(
-                    color: c.primaryText,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                child: Text(label,
+                    style: GoogleFonts.arimo(
+                        color: c.primaryText,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500)),
               ),
             ],
           ),
@@ -485,7 +434,6 @@ class ConditionGridButton extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
 
 class TodayDateBar extends StatefulWidget {
   final String calendarIconAsset;
@@ -539,9 +487,7 @@ class _TodayDateBarState extends State<TodayDateBar> {
     if (picked != null) {
       context.read<HealthCubit>().setSelectedDate(picked);
       Future.delayed(
-        const Duration(milliseconds: 50),
-            () => _scrollToSelected(picked),
-      );
+          const Duration(milliseconds: 50), () => _scrollToSelected(picked));
     }
   }
 
@@ -557,13 +503,13 @@ class _TodayDateBarState extends State<TodayDateBar> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final lang = context.watch<LocaleCubit>().state;
     final cubit = context.watch<HealthCubit>();
     final selectedDate = cubit.selectedDate;
     final dateText = DateFormat('MMM d, yyyy').format(selectedDate);
 
     return Column(
       children: [
-        // ── Header bar ──────────────────────────────────────
         Container(
           width: double.infinity,
           height: 46,
@@ -574,23 +520,22 @@ class _TodayDateBarState extends State<TodayDateBar> {
             children: [
               Row(
                 children: [
-                  if (isToday(selectedDate))
+                  if (isToday(selectedDate)) ...[
                     Text(
-                      "Today",
+                      AppStrings.get('today', lang),
                       style: GoogleFonts.arimo(
-                        color: c.primaryText,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
+                          color: c.primaryText,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500),
                     ),
-                  if (isToday(selectedDate)) const SizedBox(width: 8),
+                    const SizedBox(width: 8),
+                  ],
                   Text(
                     dateText,
                     style: GoogleFonts.arimo(
-                      color: c.secondaryText,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
+                        color: c.secondaryText,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500),
                   ),
                 ],
               ),
@@ -602,7 +547,6 @@ class _TodayDateBarState extends State<TodayDateBar> {
           ),
         ),
 
-        // ── Horizontal day strip ─────────────────────────────
         SizedBox(
           height: 73,
           child: ListView.builder(
@@ -631,10 +575,9 @@ class _TodayDateBarState extends State<TodayDateBar> {
                       Text(
                         DateFormat('EEE').format(date),
                         style: GoogleFonts.arimo(
-                          color: c.primaryText,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                        ),
+                            color: c.primaryText,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500),
                       ),
                       const SizedBox(height: 6),
                       AnimatedContainer(
@@ -644,7 +587,6 @@ class _TodayDateBarState extends State<TodayDateBar> {
                         height: 31,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          // Selected circle: white in dark, black in light
                           color: selected
                               ? (context.isDark ? Colors.white : Colors.black)
                               : Colors.transparent,
@@ -655,7 +597,6 @@ class _TodayDateBarState extends State<TodayDateBar> {
                           style: GoogleFonts.arimo(
                             fontSize: 20,
                             fontWeight: FontWeight.w500,
-                            // Flip text colour when circle is filled
                             color: selected
                                 ? (context.isDark ? Colors.black : Colors.white)
                                 : c.hintGrey,
@@ -675,7 +616,6 @@ class _TodayDateBarState extends State<TodayDateBar> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
 
 class TodayHeader extends StatelessWidget {
   final DateTime selectedDate;
@@ -697,6 +637,7 @@ class TodayHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final lang = context.watch<LocaleCubit>().state;
     final dateText = DateFormat('MMM d, yyyy').format(selectedDate);
 
     return Container(
@@ -709,23 +650,22 @@ class TodayHeader extends StatelessWidget {
         children: [
           Row(
             children: [
-              if (isToday(selectedDate))
+              if (isToday(selectedDate)) ...[
                 Text(
-                  "Today",
+                  AppStrings.get('today', lang),
                   style: GoogleFonts.arimo(
-                    color: c.primaryText,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
+                      color: c.primaryText,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500),
                 ),
-              if (isToday(selectedDate)) const SizedBox(width: 8),
+                const SizedBox(width: 8),
+              ],
               Text(
                 dateText,
                 style: GoogleFonts.arimo(
-                  color: c.secondaryText,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
+                    color: c.secondaryText,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500),
               ),
             ],
           ),
@@ -739,59 +679,49 @@ class TodayHeader extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-//  DATA MODELS (no colour changes needed)
-// ─────────────────────────────────────────────────────────────
 
 enum HealthMetricType {
-  bloodPressure,
-  glucose,
-  weight,
-  meds,
-  symptoms,
-  food,
-  testLogs,
-  unknown,
+  bloodPressure, glucose, weight, meds, symptoms, food, testLogs, unknown,
 }
 
 class HealthTile {
   final String icon;
-  final String label;
+  final String labelKey; // The unique key for AppStrings
   final HealthMetricType type;
   bool selected;
 
   HealthTile({
     required this.icon,
-    required this.label,
+    required this.labelKey, // Required key for localization
     this.selected = false,
     HealthMetricType? type,
-  }) : type = type ?? _inferType(label);
+  }) : type = type ?? _inferType(labelKey);
 
-  static HealthMetricType _inferType(String label) {
-    switch (label.toLowerCase()) {
-      case 'blood pressure': return HealthMetricType.bloodPressure;
+  static HealthMetricType _inferType(String key) {
+    // We match against the keys now, which are more stable than localized strings
+    switch (key.toLowerCase()) {
+      case 'blood_pressure': return HealthMetricType.bloodPressure;
       case 'glucose':        return HealthMetricType.glucose;
       case 'weight':         return HealthMetricType.weight;
       case 'meds':           return HealthMetricType.meds;
       case 'symptoms':       return HealthMetricType.symptoms;
       case 'food':           return HealthMetricType.food;
-      case 'test logs':      return HealthMetricType.testLogs;
+      case 'test_logs':      return HealthMetricType.testLogs;
       default:               return HealthMetricType.unknown;
     }
   }
 }
 
 List<HealthTile> allTiles = [
-  HealthTile(icon: 'assets/icons/bloodPressure.png', label: 'Blood Pressure'),
-  HealthTile(icon: 'assets/icons/capsule.png',       label: 'Meds'),
-  HealthTile(icon: 'assets/icons/healthcare.png',    label: 'Symptoms'),
-  HealthTile(icon: 'assets/icons/cutlery.png',       label: 'Food'),
-  HealthTile(icon: 'assets/icons/weight.png',        label: 'Weight'),
-  HealthTile(icon: 'assets/icons/diabetes.png',      label: 'Glucose'),
-  HealthTile(icon: 'assets/icons/testImage.png',     label: 'Test Logs'),
+  HealthTile(icon: 'assets/icons/bloodPressure.png', labelKey: 'blood_pressure'),
+  HealthTile(icon: 'assets/icons/capsule.png',       labelKey: 'meds'),
+  HealthTile(icon: 'assets/icons/healthcare.png',    labelKey: 'symptoms'),
+  HealthTile(icon: 'assets/icons/cutlery.png',       labelKey: 'food'),
+  HealthTile(icon: 'assets/icons/weight.png',        labelKey: 'weight'),
+  HealthTile(icon: 'assets/icons/diabetes.png',      labelKey: 'glucose'),
+  HealthTile(icon: 'assets/icons/testImage.png',     labelKey: 'test_logs'),
 ];
 
-// ─────────────────────────────────────────────────────────────
 
 class HighlightableGridTile extends StatelessWidget {
   final String iconAsset;
@@ -821,9 +751,7 @@ class HighlightableGridTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: ShapeDecoration(
             color: selected ? Colors.green[400] : c.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             shadows: [
               BoxShadow(
                 color: selected
@@ -842,10 +770,9 @@ class HighlightableGridTile extends StatelessWidget {
                 child: Text(
                   label,
                   style: GoogleFonts.arimo(
-                    color: c.primaryText,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
+                      color: c.primaryText,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500),
                   softWrap: true,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
@@ -859,7 +786,6 @@ class HighlightableGridTile extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
 
 class BottomNavigationBarCustom extends StatelessWidget {
   final int currentIndex;
@@ -876,25 +802,23 @@ class BottomNavigationBarCustom extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final lang = context.watch<LocaleCubit>().state;
 
     Widget navItem(int index, String icon, String activeIcon, String label) {
       final bool isActive = currentIndex == index;
+
       return GestureDetector(
         onTap: () => onTabSelected(index),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              isActive ? activeIcon : icon,
-              width: 28,
-              height: 28,
-            ),
+            Image.asset(isActive ? activeIcon : icon, width: 26, height: 26),
             const SizedBox(height: 4),
             Text(
               label,
               style: GoogleFonts.arimo(
                 color: isActive ? AppColors.primary : c.navInactive,
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -903,53 +827,120 @@ class BottomNavigationBarCustom extends StatelessWidget {
       );
     }
 
-    Widget addButton() {
-      return Transform.translate(
-        offset: const Offset(9, 0),
-        child: GestureDetector(
-          onTap: () {
-            AddEventSlider.show(
-              context,
-              onAddDoctorAppointment: () {},
-              onScheduleReminder: () {},
-              onAddOneTimeEntry: () {},
-              onTileSelected: onTileSelected,
-            );
-          },
-          child: Container(
-            width: 50,
-            height: 50,
-            decoration: const ShapeDecoration(
-              color: AppColors.primary,
-              shape: OvalBorder(),
-            ),
-            child: const Center(
-              child: Icon(Icons.add, color: Colors.white, size: 28),
-            ),
+    Widget floatingButton() {
+      return GestureDetector(
+        onTap: () {
+          AddEventSlider.show(
+            context,
+            onAddDoctorAppointment: () {},
+            onScheduleReminder: () {},
+            onAddOneTimeEntry: () {},
+            onTileSelected: onTileSelected,
+          );
+        },
+        child: Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.25),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
+          child: const Icon(Icons.add, color: Colors.white, size: 30),
         ),
       );
     }
 
-    return Container(
-      height: 80,
-      color: c.surface,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return SizedBox(
+      height: 100, // more space for floating button
+      child: Stack(
+        alignment: Alignment.bottomCenter,
         children: [
-          navItem(0, 'assets/icons/today.png',     'assets/icons/today_active.png',     'Today'),
-          navItem(1, 'assets/icons/insights.png',  'assets/icons/insights_active.png',  'Insights'),
-          addButton(),
-          navItem(2, 'assets/icons/reminders.png', 'assets/icons/reminders_active.png', 'Reminders'),
-          navItem(3, 'assets/icons/profile.png',   'assets/icons/profile_active.png',   'Profile'),
+
+          /// NAV BAR
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              top: false,
+              child: Container(
+                height: 75,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                decoration: BoxDecoration(
+                  color: c.surface,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 10,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+
+                    Expanded(
+                      child: navItem(
+                        0,
+                        'assets/icons/today.png',
+                        'assets/icons/today_active.png',
+                        AppStrings.get('today', lang),
+                      ),
+                    ),
+
+                    Expanded(
+                      child: navItem(
+                        1,
+                        'assets/icons/insights.png',
+                        'assets/icons/insights_active.png',
+                        AppStrings.get('insights', lang),
+                      ),
+                    ),
+
+                    /// GAP FOR CENTER BUTTON
+                    const SizedBox(width: 70),
+
+                    Expanded(
+                      child: navItem(
+                        2,
+                        'assets/icons/reminders.png',
+                        'assets/icons/reminders_active.png',
+                        AppStrings.get('reminders', lang),
+                      ),
+                    ),
+
+                    Expanded(
+                      child: navItem(
+                        3,
+                        'assets/icons/profile.png',
+                        'assets/icons/profile_active.png',
+                        AppStrings.get('profile', lang),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          /// FLOATING BUTTON
+          Positioned(
+            bottom: 35, // 🔥 controls how high it floats
+            child: floatingButton(),
+          ),
         ],
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────
+
 
 class AddEntryPopup extends StatefulWidget {
   final List<HealthTile> currentTiles;
@@ -983,6 +974,8 @@ class _AddEntryPopupState extends State<AddEntryPopup> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final lang = context.watch<LocaleCubit>().state;
+
     return Container(
       height: 420,
       decoration: BoxDecoration(
@@ -997,16 +990,16 @@ class _AddEntryPopupState extends State<AddEntryPopup> {
               children: [
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: Image.asset("assets/icons/close.png", width: 22, height: 22),
+                  child: Image.asset("assets/icons/close.png",
+                      width: 22, height: 22),
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  "Select Type",
+                  AppStrings.get('select_type', lang),
                   style: GoogleFonts.arimo(
-                    color: c.primaryText,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                  ),
+                      color: c.primaryText,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -1022,41 +1015,48 @@ class _AddEntryPopupState extends State<AddEntryPopup> {
                 ),
                 itemBuilder: (context, index) {
                   final tile = tiles[index];
+                  // Get the current language from your LocaleCubit
+                  final lang = context.watch<LocaleCubit>().state;
+
                   return HighlightableGridTile(
                     iconAsset: tile.icon,
-                    label: tile.label,
+                    // Use the localization key instead of the hardcoded label
+                    label: AppStrings.get(tile.labelKey, lang),
                     selected: selectedIndex == index,
                     onTap: () {
                       Navigator.pop(context, tile);
                       Future.microtask(() {
-                        switch (tile.label) {
-                          case "Blood Pressure":
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (_) => const BloodPressureScreen()));
+                        // CRITICAL: Switch on tile.type (Enum), NOT the label string
+                        switch (tile.type) {
+                          case HealthMetricType.bloodPressure:
+                            Navigator.push(context, MaterialPageRoute(
+                                builder: (_) => const BloodPressureScreen()));
                             break;
-                          case "Meds":
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (_) => const MedicationLogScreen()));
+                          case HealthMetricType.meds:
+                            Navigator.push(context, MaterialPageRoute(
+                                builder: (_) => const MedicationLogScreen()));
                             break;
-                          case "Symptoms":
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (_) => const SymptomScreen()));
+                          case HealthMetricType.symptoms:
+                            Navigator.push(context, MaterialPageRoute(
+                                builder: (_) => const SymptomScreen()));
                             break;
-                          case "Food":
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (_) => const FoodLogScreen()));
+                          case HealthMetricType.food:
+                            Navigator.push(context, MaterialPageRoute(
+                                builder: (_) => const FoodLogScreen()));
                             break;
-                          case "Weight":
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (_) => WeightLogScreen()));
+                          case HealthMetricType.weight:
+                            Navigator.push(context, MaterialPageRoute(
+                                builder: (_) => WeightLogScreen()));
                             break;
-                          case "Glucose":
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (_) => GlucoseScreen()));
+                          case HealthMetricType.glucose:
+                            Navigator.push(context, MaterialPageRoute(
+                                builder: (_) => GlucoseScreen()));
                             break;
-                          case "Test Logs":
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (_) => LabTestLogScreen()));
+                          case HealthMetricType.testLogs:
+                            Navigator.push(context, MaterialPageRoute(
+                                builder: (_) => LabTestLogScreen()));
+                            break;
+                          default:
                             break;
                         }
                       });
@@ -1072,7 +1072,6 @@ class _AddEntryPopupState extends State<AddEntryPopup> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
 
 class AddReminderPopup extends StatefulWidget {
   final List<HealthTile> currentTiles;
@@ -1100,13 +1099,23 @@ class _AddReminderPopupState extends State<AddReminderPopup> {
   @override
   void initState() {
     super.initState();
-    const allowed = {'Blood Pressure', 'Meds', 'Weight', 'Glucose'};
-    tiles = allTiles.where((t) => allowed.contains(t.label)).toList();
+
+    final allowedTypes = {
+      HealthMetricType.bloodPressure,
+      HealthMetricType.meds,
+      HealthMetricType.weight,
+      HealthMetricType.glucose,
+    };
+
+
+    tiles = allTiles.where((t) => allowedTypes.contains(t.type)).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final lang = context.watch<LocaleCubit>().state;
+
     return Container(
       height: 420,
       decoration: BoxDecoration(
@@ -1121,16 +1130,16 @@ class _AddReminderPopupState extends State<AddReminderPopup> {
               children: [
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: Image.asset("assets/icons/close.png", width: 22, height: 22),
+                  child: Image.asset("assets/icons/close.png",
+                      width: 22, height: 22),
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  "Select Type",
+                  AppStrings.get('select_type', lang),
                   style: GoogleFonts.arimo(
-                    color: c.primaryText,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                  ),
+                      color: c.primaryText,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -1146,29 +1155,35 @@ class _AddReminderPopupState extends State<AddReminderPopup> {
                 ),
                 itemBuilder: (context, index) {
                   final tile = tiles[index];
+                  final lang = context.watch<LocaleCubit>().state; // Get current language
+
                   return HighlightableGridTile(
                     iconAsset: tile.icon,
-                    label: tile.label,
+                    label: AppStrings.get(tile.labelKey, lang), // Translates the UI text
                     selected: selectedIndex == index,
                     onTap: () {
                       Navigator.pop(context, tile);
                       Future.microtask(() {
-                        switch (tile.label) {
-                          case "Blood Pressure":
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (_) => const BloodPressureReminderScreen()));
+                        // FIX: Switch on tile.type (the Enum) instead of tile.label
+                        switch (tile.type) {
+                          case HealthMetricType.bloodPressure:
+                            Navigator.push(context, MaterialPageRoute(
+                                builder: (_) => const BloodPressureReminderScreen()));
                             break;
-                          case "Meds":
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (_) => const MedicationReminderScreen()));
+                          case HealthMetricType.meds:
+                            Navigator.push(context, MaterialPageRoute(
+                                builder: (_) => const MedicationReminderScreen()));
                             break;
-                          case "Weight":
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (_) => WeightReminderScreen()));
+                          case HealthMetricType.weight:
+                            Navigator.push(context, MaterialPageRoute(
+                                builder: (_) => const WeightReminderScreen()));
                             break;
-                          case "Glucose":
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (_) => GlucoseReminderScreen()));
+                          case HealthMetricType.glucose:
+                            Navigator.push(context, MaterialPageRoute(
+                                builder: (_) => const GlucoseReminderScreen()));
+                            break;
+                          default:
+                          // Handle other cases or test logs if necessary
                             break;
                         }
                       });
@@ -1184,7 +1199,6 @@ class _AddReminderPopupState extends State<AddReminderPopup> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
 
 class AddEventSlider {
   static void show(
@@ -1223,6 +1237,7 @@ class _AddEventSliderContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final lang = context.watch<LocaleCubit>().state;
 
     Widget optionTile({
       required String title,
@@ -1257,27 +1272,22 @@ class _AddEventSliderContent extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: GoogleFonts.arimo(
-                          color: c.primaryText.withOpacity(0.8),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      Text(title,
+                          style: GoogleFonts.arimo(
+                              color: c.primaryText.withOpacity(0.8),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600)),
                       const SizedBox(height: 6),
-                      Text(
-                        description,
-                        style: GoogleFonts.arimo(
-                          color: c.primaryText.withOpacity(0.6),
-                          fontSize: 12,
-                        ),
-                      ),
+                      Text(description,
+                          style: GoogleFonts.arimo(
+                              color: c.primaryText.withOpacity(0.6),
+                              fontSize: 12)),
                     ],
                   ),
                 ),
                 const SizedBox(width: 8),
-                Image.asset("assets/icons/Chevronup.png", width: 18, height: 18),
+                Image.asset("assets/icons/Chevronup.png",
+                    width: 18, height: 18),
               ],
             ),
           ),
@@ -1287,9 +1297,8 @@ class _AddEventSliderContent extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.75,
-      ),
+      constraints:
+      BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
       decoration: BoxDecoration(
         color: c.bottomSheet,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(21)),
@@ -1303,68 +1312,69 @@ class _AddEventSliderContent extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      "Select what you want to do",
+                      AppStrings.get('select_what_to_do', lang),
                       style: GoogleFonts.arimo(
-                        color: c.primaryText,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500,
-                      ),
+                          color: c.primaryText,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500),
                     ),
                   ),
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Image.asset("assets/icons/close.png", width: 22, height: 22),
+                    child: Image.asset("assets/icons/close.png",
+                        width: 22, height: 22),
                   ),
                 ],
               ),
               const SizedBox(height: 18),
               optionTile(
-                title: "Add a doctor appointment",
-                description: "Set reminders to help you for your appointments",
+                title: AppStrings.get('add_doctor_appointment', lang),
+                description: AppStrings.get('add_doctor_desc', lang),
                 icon: "assets/icons/calendarEdit.png",
                 onTap: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => AppointmentLogScreen()));
+                  Navigator.push(context, MaterialPageRoute(
+                      builder: (_) => AppointmentLogScreen()));
                 },
               ),
               const SizedBox(height: 12),
               optionTile(
-                title: "Schedule a reminder",
-                description:
-                "Add medications and reminders for measurements, activities, symptoms and appointments.",
+                title: AppStrings.get('schedule_reminder', lang),
+                description: AppStrings.get('schedule_reminder_desc', lang),
                 icon: "assets/icons/bellCalendar.png",
                 onTap: () async {
-                  final selectedTile = await AddReminderPopup.show(context, allTiles);
+                  final selectedTile =
+                  await AddReminderPopup.show(context, allTiles);
                   if (selectedTile == null) return;
                   onTileSelected(selectedTile);
                 },
               ),
               const SizedBox(height: 12),
               optionTile(
-                title: "Add a one-time entry",
-                description:
-                "Document spontaneous medication intakes or other entries like measurements, activities or symptoms.",
+                title: AppStrings.get('add_one_time_entry', lang),
+                description: AppStrings.get('add_one_time_desc', lang),
                 icon: "assets/icons/calendarSlider.png",
                 onTap: () async {
-                  final selectedTile = await AddEntryPopup.show(context, allTiles);
+                  final selectedTile =
+                  await AddEntryPopup.show(context, allTiles);
                   if (selectedTile == null) return;
                   onTileSelected(selectedTile);
                 },
               ),
               const SizedBox(height: 12),
               optionTile(
-                title: "Photograph medical tests",
-                description:
-                "Save medical information related to lab tests for feature insights.",
+                title: AppStrings.get('photograph_tests', lang),
+                description: AppStrings.get('photograph_tests_desc', lang),
                 icon: "assets/icons/calendarSlider.png",
                 onTap: () {
                   final testTile = HealthTile(
                     icon: 'assets/icons/testImage.png',
-                    label: 'Test Logs',
+                    labelKey: 'test_logs',
                   );
+
                   onTileSelected(testTile);
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => LabTestLogScreen()));
+
+                  Navigator.push(context, MaterialPageRoute(
+                      builder: (_) => const LabTestLogScreen()));
                 },
               ),
             ],
@@ -1375,7 +1385,6 @@ class _AddEventSliderContent extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
 
 class BloodPressureInputs extends StatelessWidget {
   final TextEditingController systolicController;
@@ -1392,27 +1401,26 @@ class BloodPressureInputs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final lang = context.watch<LocaleCubit>().state;
 
-    Widget _compactField(TextEditingController ctrl,
+    Widget compactField(TextEditingController ctrl,
         {bool digitsOnly = false, double width = 68}) {
       return Container(
         width: width,
         height: 30,
         decoration: BoxDecoration(
-          color: c.compactInput,
-          borderRadius: BorderRadius.circular(3),
-        ),
+            color: c.compactInput, borderRadius: BorderRadius.circular(3)),
         child: TextField(
           controller: ctrl,
-          inputFormatters: digitsOnly
-              ? [FilteringTextInputFormatter.digitsOnly]
-              : null,
+          inputFormatters:
+          digitsOnly ? [FilteringTextInputFormatter.digitsOnly] : null,
           keyboardType: TextInputType.number,
           style: TextStyle(color: c.primaryText),
           decoration: const InputDecoration(
             border: InputBorder.none,
             isDense: true,
-            contentPadding: EdgeInsets.symmetric(horizontal: 7, vertical: 6),
+            contentPadding:
+            EdgeInsets.symmetric(horizontal: 7, vertical: 6),
           ),
           textAlignVertical: TextAlignVertical.center,
         ),
@@ -1423,37 +1431,37 @@ class BloodPressureInputs extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Blood Pressure (systolic/diastolic)",
+          AppStrings.get('blood_pressure_label', lang),
           style: GoogleFonts.arimo(color: c.primaryText, fontSize: 16),
         ),
         const SizedBox(height: 8),
         Row(
           children: [
-            _compactField(systolicController, digitsOnly: true),
+            compactField(systolicController, digitsOnly: true),
             const SizedBox(width: 4),
-            Text("/", style: GoogleFonts.arimo(color: c.primaryText, fontSize: 16)),
+            Text("/",
+                style: GoogleFonts.arimo(color: c.primaryText, fontSize: 16)),
             const SizedBox(width: 4),
-            _compactField(diastolicController, digitsOnly: true),
+            compactField(diastolicController, digitsOnly: true),
             const SizedBox(width: 8),
             Text(
-              "mmHg",
+              AppStrings.get('mmhg', lang),
               style: GoogleFonts.arimo(color: c.hintText, fontSize: 16),
             ),
           ],
         ),
         const SizedBox(height: 20),
         Text(
-          "Heart Rate (optional)",
+          AppStrings.get('heart_rate_optional', lang),
           style: GoogleFonts.arimo(color: c.primaryText, fontSize: 14),
         ),
         const SizedBox(height: 6),
-        _compactField(heartRateController, width: 79),
+        compactField(heartRateController, width: 79),
       ],
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────
 
 class DateRangePickerWidget extends StatefulWidget {
   final DateTime? initialStart;
@@ -1478,28 +1486,28 @@ class _DateRangePickerWidgetState extends State<DateRangePickerWidget> {
   late int _year;
 
   final List<String> _monthNames = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan','Feb','Mar','Apr','May','Jun',
+    'Jul','Aug','Sep','Oct','Nov','Dec',
   ];
 
   @override
   void initState() {
     super.initState();
     _start = widget.initialStart;
-    _end = widget.initialEnd;
+    _end   = widget.initialEnd;
     final now = DateTime.now();
     _month = now.month;
-    _year = now.year;
+    _year  = now.year;
   }
 
   void _onDayTap(DateTime tapped) {
     setState(() {
       if (_start == null || (_start != null && _end != null)) {
         _start = tapped;
-        _end = null;
+        _end   = null;
       } else {
         if (tapped.isBefore(_start!)) {
-          _end = _start;
+          _end   = _start;
           _start = tapped;
         } else {
           _end = tapped;
@@ -1533,7 +1541,7 @@ class _DateRangePickerWidgetState extends State<DateRangePickerWidget> {
   }
 
   List<DateTime?> _buildCalendarDays() {
-    final firstDay = DateTime(_year, _month, 1);
+    final firstDay    = DateTime(_year, _month, 1);
     final daysInMonth = DateTime(_year, _month + 1, 0).day;
     final startWeekday = firstDay.weekday % 7;
     final List<DateTime?> days = [];
@@ -1557,25 +1565,23 @@ class _DateRangePickerWidgetState extends State<DateRangePickerWidget> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final lang = context.watch<LocaleCubit>().state;
     final days = _buildCalendarDays();
     final yearList = List.generate(30, (i) => DateTime.now().year - 10 + i);
     final canApply = _start != null && _end != null;
 
     return Container(
       decoration: BoxDecoration(
-        color: c.datePickerBg,
-        borderRadius: BorderRadius.circular(16),
-      ),
+          color: c.datePickerBg, borderRadius: BorderRadius.circular(16)),
       padding: const EdgeInsets.all(16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ── Start / End display ───────────────────────────
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _dateDisplay(context, "Start Date", _start),
-              _dateDisplay(context, "End Date",   _end, alignRight: true),
+              _dateDisplay(context, AppStrings.get('start_date_display', lang), _start, lang),
+              _dateDisplay(context, AppStrings.get('end_date_display', lang),   _end,   lang, alignRight: true),
             ],
           ),
 
@@ -1583,20 +1589,17 @@ class _DateRangePickerWidgetState extends State<DateRangePickerWidget> {
 
           Container(
             decoration: BoxDecoration(
-              color: c.surface,
-              borderRadius: BorderRadius.circular(16),
-            ),
+                color: c.surface, borderRadius: BorderRadius.circular(16)),
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // ── Month / year navigation ────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     GestureDetector(
-                      onTap: _prevMonth,
-                      child: Icon(Icons.chevron_left, color: c.primaryText, size: 28),
-                    ),
+                        onTap: _prevMonth,
+                        child: Icon(Icons.chevron_left,
+                            color: c.primaryText, size: 28)),
                     _styledDropdown<int>(
                       context: context,
                       value: _month,
@@ -1613,15 +1616,14 @@ class _DateRangePickerWidgetState extends State<DateRangePickerWidget> {
                       onChanged: (v) => setState(() => _year = v),
                     ),
                     GestureDetector(
-                      onTap: _nextMonth,
-                      child: Icon(Icons.chevron_right, color: c.primaryText, size: 28),
-                    ),
+                        onTap: _nextMonth,
+                        child: Icon(Icons.chevron_right,
+                            color: c.primaryText, size: 28)),
                   ],
                 ),
 
                 const SizedBox(height: 16),
 
-                // ── Weekday labels ─────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
@@ -1638,7 +1640,6 @@ class _DateRangePickerWidgetState extends State<DateRangePickerWidget> {
 
                 const SizedBox(height: 8),
 
-                // ── Day grid ───────────────────────────────
                 GridView.count(
                   crossAxisCount: 7,
                   shrinkWrap: true,
@@ -1659,9 +1660,7 @@ class _DateRangePickerWidgetState extends State<DateRangePickerWidget> {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? (context.isDark ? Colors.white : Colors.black)
-                              : isR
-                              ? c.hintText
-                              : Colors.transparent,
+                              : isR ? c.hintText : Colors.transparent,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Center(
@@ -1690,7 +1689,6 @@ class _DateRangePickerWidgetState extends State<DateRangePickerWidget> {
 
           const SizedBox(height: 16),
 
-          // ── Apply button ───────────────────────────────────
           GestureDetector(
             onTap: canApply
                 ? () {
@@ -1709,7 +1707,7 @@ class _DateRangePickerWidgetState extends State<DateRangePickerWidget> {
               ),
               child: Center(
                 child: Text(
-                  "Apply",
+                  AppStrings.get('apply', lang),
                   style: GoogleFonts.arimo(
                     color: canApply
                         ? (context.isDark ? Colors.black : Colors.white)
@@ -1726,7 +1724,7 @@ class _DateRangePickerWidgetState extends State<DateRangePickerWidget> {
     );
   }
 
-  Widget _dateDisplay(BuildContext context, String label, DateTime? dt,
+  Widget _dateDisplay(BuildContext context, String label, DateTime? dt, String lang,
       {bool alignRight = false}) {
     final c = context.colors;
     return Column(
@@ -1742,13 +1740,14 @@ class _DateRangePickerWidgetState extends State<DateRangePickerWidget> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: c.compactInput,
-            borderRadius: BorderRadius.circular(4),
-          ),
+              color: c.compactInput,
+              borderRadius: BorderRadius.circular(4)),
           child: Text(
             _formatDisplay(dt),
             style: GoogleFonts.arimo(
-                color: c.primaryText, fontSize: 16, fontWeight: FontWeight.w500),
+                color: c.primaryText,
+                fontSize: 16,
+                fontWeight: FontWeight.w500),
           ),
         ),
       ],
@@ -1767,16 +1766,16 @@ class _DateRangePickerWidgetState extends State<DateRangePickerWidget> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         decoration: BoxDecoration(
-          border: Border.all(color: c.border),
-          borderRadius: BorderRadius.circular(20),
-        ),
+            border: Border.all(color: c.border),
+            borderRadius: BorderRadius.circular(20)),
         child: DropdownButton<T>(
           value: value,
           dropdownColor: c.surface,
           icon: Icon(Icons.keyboard_arrow_down, color: c.primaryText, size: 20),
           style: GoogleFonts.arimo(color: c.primaryText, fontSize: 15),
           items: items
-              .map((v) => DropdownMenuItem<T>(value: v, child: Text(label(v))))
+              .map((v) =>
+              DropdownMenuItem<T>(value: v, child: Text(label(v))))
               .toList(),
           onChanged: (v) { if (v != null) onChanged(v); },
         ),
@@ -1785,7 +1784,6 @@ class _DateRangePickerWidgetState extends State<DateRangePickerWidget> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
 
 class WeightInputs extends StatefulWidget {
   final TextEditingController kgController;
@@ -1855,19 +1853,17 @@ class _WeightInputsState extends State<WeightInputs> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final lang = context.watch<LocaleCubit>().state;
 
-    Widget _field(TextEditingController ctrl, String hint) {
+    Widget field(TextEditingController ctrl, String hint) {
       return Container(
         width: 80,
         height: 30,
         decoration: BoxDecoration(
-          color: c.compactInput,
-          borderRadius: BorderRadius.circular(3),
-        ),
+            color: c.compactInput, borderRadius: BorderRadius.circular(3)),
         child: TextField(
           controller: ctrl,
-          keyboardType:
-          const TextInputType.numberWithOptions(decimal: true),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
           style: TextStyle(color: c.primaryText),
           decoration: InputDecoration(
             hintText: hint,
@@ -1885,19 +1881,19 @@ class _WeightInputsState extends State<WeightInputs> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Weight",
+        Text(AppStrings.get('weight', lang),
             style: GoogleFonts.arimo(color: c.primaryText, fontSize: 16)),
         const SizedBox(height: 8),
         Row(
           children: [
-            _field(widget.kgController, "kg"),
+            field(widget.kgController, AppStrings.get('kg', lang).toLowerCase()),
             const SizedBox(width: 6),
-            Text("KG",
+            Text(AppStrings.get('kg', lang),
                 style: GoogleFonts.arimo(color: c.hintText, fontSize: 14)),
             const SizedBox(width: 16),
-            _field(widget.lbsController, "lbs"),
+            field(widget.lbsController, AppStrings.get('lbs', lang).toLowerCase()),
             const SizedBox(width: 6),
-            Text("LBS",
+            Text(AppStrings.get('lbs', lang),
                 style: GoogleFonts.arimo(color: c.hintText, fontSize: 14)),
           ],
         ),
@@ -1906,7 +1902,6 @@ class _WeightInputsState extends State<WeightInputs> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
 
 class ReminderTile extends StatefulWidget {
   final ReminderEntry entry;
@@ -1930,14 +1925,14 @@ class _ReminderTileState extends State<ReminderTile> {
   @override
   void initState() {
     super.initState();
-    _frequency      = widget.entry.frequency;
-    _isRecurring    = widget.entry.schedule == 'Recurring';
-    _times          = List.from(widget.entry.times);
-    _startDate      = widget.entry.startDate;
-    _endDate        = widget.entry.endDate;
-    _nameCtrl       = TextEditingController(text: widget.entry.medicineName);
+    _frequency        = widget.entry.frequency;
+    _isRecurring      = widget.entry.schedule == 'Recurring';
+    _times            = List.from(widget.entry.times);
+    _startDate        = widget.entry.startDate;
+    _endDate          = widget.entry.endDate;
+    _nameCtrl         = TextEditingController(text: widget.entry.medicineName);
     _reminderNameCtrl = TextEditingController(text: widget.entry.reminderName ?? '');
-    _notesCtrl      = TextEditingController(text: widget.entry.notes ?? '');
+    _notesCtrl        = TextEditingController(text: widget.entry.notes ?? '');
   }
 
   @override
@@ -1960,14 +1955,12 @@ class _ReminderTileState extends State<ReminderTile> {
     }
   }
 
-  String get _scheduleLabel {
-    final times = _times.map((t) {
-      final h = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
-      final m = t.minute.toString().padLeft(2, '0');
-      final p = t.period == DayPeriod.am ? 'am' : 'pm';
-      return '$h:$m $p';
-    }).join(', ');
-    return '${_isRecurring ? _frequency : 'Once'} - $times';
+  String _scheduleLabel(String lang) {
+    final timesStr = _times.map((t) => formatTimeLocalized(t, lang)).join(', ');
+    final freq = _isRecurring
+        ? translateFrequency(_frequency, lang)
+        : AppStrings.get('once', lang);
+    return '$freq - $timesStr';
   }
 
   String _formatDate(DateTime dt) {
@@ -1978,13 +1971,6 @@ class _ReminderTileState extends State<ReminderTile> {
     return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
   }
 
-  String _formatTime(TimeOfDay t) {
-    final h = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
-    final m = t.minute.toString().padLeft(2, '0');
-    final period = t.period == DayPeriod.am ? 'AM' : 'PM';
-    return '$h:$m $period';
-  }
-
   Future<void> _pickTime(int index, StateSetter sheetSetState) async {
     final picked = await showTimePicker(
       context: context,
@@ -1992,9 +1978,7 @@ class _ReminderTileState extends State<ReminderTile> {
       builder: (ctx, child) => Theme(
         data: ThemeData.dark().copyWith(
           colorScheme: const ColorScheme.dark(
-            primary: AppColors.primary,
-            surface: Color(0xFF2D2D2D),
-          ),
+              primary: AppColors.primary, surface: Color(0xFF2D2D2D)),
         ),
         child: child!,
       ),
@@ -2005,9 +1989,11 @@ class _ReminderTileState extends State<ReminderTile> {
     }
   }
 
-  void _pickFrequency(StateSetter sheetSetState) {
+  void _pickFrequency(StateSetter sheetSetState, String lang) {
     final c = context.colors;
-    final options = ['Daily', 'Weekly', 'Every 2 days', 'Monthly'];
+    const optionCodes = ['Daily', 'Weekly', 'Every 2 days', 'Monthly'];
+    final optionKeys  = ['daily', 'weekly', 'every_2_days', 'monthly'];
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -2023,51 +2009,54 @@ class _ReminderTileState extends State<ReminderTile> {
           children: [
             Center(
               child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                    color: c.subtleText,
-                    borderRadius: BorderRadius.circular(2)),
-              ),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                      color: c.subtleText,
+                      borderRadius: BorderRadius.circular(2))),
             ),
             const SizedBox(height: 20),
-            Text('Frequency',
+            Text(AppStrings.get('frequency', lang),
                 style: GoogleFonts.arimo(
                     color: c.primaryText,
                     fontSize: 18,
                     fontWeight: FontWeight.w600)),
             const SizedBox(height: 16),
-            ...options.map((o) => GestureDetector(
-              onTap: () {
-                sheetSetState(() => _frequency = o);
-                setState(() {});
-                Navigator.pop(context);
-              },
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                margin: const EdgeInsets.only(bottom: 10),
-                decoration: BoxDecoration(
-                  color: _frequency == o
-                      ? AppColors.primary.withOpacity(0.15)
-                      : c.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: _frequency == o
-                          ? AppColors.primary
-                          : Colors.transparent),
+            ...List.generate(optionCodes.length, (i) {
+              final code  = optionCodes[i];
+              final label = AppStrings.get(optionKeys[i], lang);
+              return GestureDetector(
+                onTap: () {
+                  sheetSetState(() => _frequency = code);
+                  setState(() {});
+                  Navigator.pop(context);
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  margin: const EdgeInsets.only(bottom: 10),
+                  decoration: BoxDecoration(
+                    color: _frequency == code
+                        ? AppColors.primary.withOpacity(0.15)
+                        : c.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: _frequency == code
+                            ? AppColors.primary
+                            : Colors.transparent),
+                  ),
+                  child: Center(
+                    child: Text(label,
+                        style: GoogleFonts.arimo(
+                            color: _frequency == code
+                                ? AppColors.primary
+                                : c.primaryText,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500)),
+                  ),
                 ),
-                child: Center(
-                  child: Text(o,
-                      style: GoogleFonts.arimo(
-                          color: _frequency == o
-                              ? AppColors.primary
-                              : c.primaryText,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500)),
-                ),
-              ),
-            )),
+              );
+            }),
           ],
         ),
       ),
@@ -2117,7 +2106,7 @@ class _ReminderTileState extends State<ReminderTile> {
     Navigator.pop(context);
   }
 
-  void _openEditSheet() {
+  void _openEditSheet(String lang) {
     final c = context.colors;
     showModalBottomSheet(
       context: context,
@@ -2139,12 +2128,11 @@ class _ReminderTileState extends State<ReminderTile> {
                 const SizedBox(height: 12),
                 Center(
                   child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                        color: c.subtleText,
-                        borderRadius: BorderRadius.circular(2)),
-                  ),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                          color: c.subtleText,
+                          borderRadius: BorderRadius.circular(2))),
                 ),
                 const SizedBox(height: 12),
                 Padding(
@@ -2153,7 +2141,7 @@ class _ReminderTileState extends State<ReminderTile> {
                     children: [
                       Image.asset(_iconAsset, width: 20, height: 20),
                       const SizedBox(width: 8),
-                      Text('Edit Reminder',
+                      Text(AppStrings.get('edit_reminder', lang),
                           style: GoogleFonts.arimo(
                               color: c.primaryText,
                               fontSize: 16,
@@ -2172,16 +2160,16 @@ class _ReminderTileState extends State<ReminderTile> {
                     controller: scrollCtrl,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     children: [
-                      // Name
-                      Text('Name',
+                      // Name field
+                      Text(AppStrings.get('name', lang),
                           style: GoogleFonts.arimo(
                               color: c.hintText, fontSize: 13)),
                       const SizedBox(height: 6),
                       TextField(
                         controller: _nameCtrl,
                         onChanged: (_) => sheetSetState(() {}),
-                        style: GoogleFonts.arimo(
-                            color: c.primaryText, fontSize: 16),
+                        style:
+                        GoogleFonts.arimo(color: c.primaryText, fontSize: 16),
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: c.editFieldFill,
@@ -2198,31 +2186,35 @@ class _ReminderTileState extends State<ReminderTile> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 12),
                         decoration: BoxDecoration(
-                          color: c.sectionBg,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
+                            color: c.sectionBg,
+                            borderRadius: BorderRadius.circular(14)),
                         child: Column(
                           children: [
-                            // Toggle
+                            // Recurring / Once toggle
                             Center(
                               child: Container(
                                 height: 26,
                                 padding: const EdgeInsets.all(3),
                                 decoration: BoxDecoration(
-                                  color: c.toggleBg,
-                                  borderRadius: BorderRadius.circular(34),
-                                ),
+                                    color: c.toggleBg,
+                                    borderRadius: BorderRadius.circular(34)),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    _toggleOption('Recurring', _isRecurring,
-                                            () => sheetSetState(
-                                                () => _isRecurring = true),
-                                        sheetSetState),
-                                    _toggleOption('Once', !_isRecurring,
-                                            () => sheetSetState(
-                                                () => _isRecurring = false),
-                                        sheetSetState),
+                                    _toggleOption(
+                                      AppStrings.get('recurring', lang),
+                                      _isRecurring,
+                                          () => sheetSetState(
+                                              () => _isRecurring = true),
+                                      sheetSetState,
+                                    ),
+                                    _toggleOption(
+                                      AppStrings.get('once', lang),
+                                      !_isRecurring,
+                                          () => sheetSetState(
+                                              () => _isRecurring = false),
+                                      sheetSetState,
+                                    ),
                                   ],
                                 ),
                               ),
@@ -2230,10 +2222,12 @@ class _ReminderTileState extends State<ReminderTile> {
                             const SizedBox(height: 16),
                             _sheetInfoRow(
                               context: context,
-                              label: 'Schedule',
-                              value: _isRecurring ? _frequency : 'Once',
+                              label: AppStrings.get('schedule', lang),
+                              value: _isRecurring
+                                  ? translateFrequency(_frequency, lang)
+                                  : AppStrings.get('once', lang),
                               onTap: _isRecurring
-                                  ? () => _pickFrequency(sheetSetState)
+                                  ? () => _pickFrequency(sheetSetState, lang)
                                   : null,
                             ),
                             _divider(context),
@@ -2243,8 +2237,10 @@ class _ReminderTileState extends State<ReminderTile> {
                               return Column(children: [
                                 _sheetInfoRow(
                                   context: context,
-                                  label: i == 0 ? 'Times' : '',
-                                  value: _formatTime(t),
+                                  label: i == 0
+                                      ? AppStrings.get('times', lang)
+                                      : '',
+                                  value: formatTimeLocalized(t, lang),
                                   onTap: () => _pickTime(i, sheetSetState),
                                   trailing: i > 0
                                       ? GestureDetector(
@@ -2259,12 +2255,10 @@ class _ReminderTileState extends State<ReminderTile> {
                             }),
                             GestureDetector(
                               onTap: () => sheetSetState(() =>
-                                  _times.add(
-                                      const TimeOfDay(hour: 8, minute: 0))),
+                                  _times.add(const TimeOfDay(hour: 8, minute: 0))),
                               child: Padding(
-                                padding:
-                                const EdgeInsets.symmetric(vertical: 6),
-                                child: Text('+ Add time',
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                child: Text(AppStrings.get('add_time', lang),
                                     style: GoogleFonts.arimo(
                                         color: AppColors.primary,
                                         fontSize: 13,
@@ -2278,35 +2272,37 @@ class _ReminderTileState extends State<ReminderTile> {
                               child: Column(children: [
                                 _sheetInfoRow(
                                     context: context,
-                                    label: 'Start date',
+                                    label: AppStrings.get('start_date', lang),
                                     value: _formatDate(_startDate),
                                     onTap: null),
                                 _divider(context),
                                 _sheetInfoRow(
                                     context: context,
-                                    label: 'End date',
+                                    label: AppStrings.get('end_date', lang),
                                     value: _endDate != null
                                         ? _formatDate(_endDate!)
-                                        : 'Never',
+                                        : AppStrings.get('never', lang),
                                     onTap: null),
                               ]),
                             ),
                             _divider(context),
                             _editableField(
                               context: context,
-                              label: 'Reminder name',
-                              hint: 'eg. Morning meds',
+                              label: AppStrings.get('reminder_name', lang),
+                              hint: AppStrings.get('eg_morning_meds', lang),
                               controller: _reminderNameCtrl,
                               optional: true,
+                              optionalLabel: AppStrings.get('optional', lang),
                               sheetSetState: sheetSetState,
                             ),
                             _divider(context),
                             _editableField(
                               context: context,
-                              label: 'Notes',
-                              hint: 'eg. take after food',
+                              label: AppStrings.get('notes', lang),
+                              hint: AppStrings.get('eg_take_after_food', lang),
                               controller: _notesCtrl,
                               optional: true,
+                              optionalLabel: AppStrings.get('optional', lang),
                               sheetSetState: sheetSetState,
                             ),
                           ],
@@ -2314,7 +2310,7 @@ class _ReminderTileState extends State<ReminderTile> {
                       ),
                       const SizedBox(height: 24),
                       MainButton(
-                        text: 'Save',
+                        text: AppStrings.get('save', lang),
                         enabled: _nameCtrl.text.trim().isNotEmpty,
                         onTap: _save,
                       ),
@@ -2392,6 +2388,7 @@ class _ReminderTileState extends State<ReminderTile> {
     required String hint,
     required TextEditingController controller,
     bool optional = false,
+    String optionalLabel = 'optional',
     required StateSetter sheetSetState,
   }) {
     final c = context.colors;
@@ -2408,9 +2405,8 @@ class _ReminderTileState extends State<ReminderTile> {
                     fontWeight: FontWeight.w400)),
             const Spacer(),
             if (optional)
-              Text('optional',
-                  style: GoogleFonts.arimo(
-                      color: c.hintText, fontSize: 14)),
+              Text(optionalLabel,
+                  style: GoogleFonts.arimo(color: c.hintText, fontSize: 14)),
           ]),
           const SizedBox(height: 6),
           TextField(
@@ -2419,8 +2415,7 @@ class _ReminderTileState extends State<ReminderTile> {
             style: GoogleFonts.arimo(color: c.primaryText, fontSize: 14),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: GoogleFonts.arimo(
-                  color: c.hintGrey, fontSize: 14),
+              hintStyle: GoogleFonts.arimo(color: c.hintGrey, fontSize: 14),
               filled: true,
               fillColor: c.notesFill,
               contentPadding:
@@ -2439,27 +2434,26 @@ class _ReminderTileState extends State<ReminderTile> {
   Widget _divider(BuildContext context) =>
       Container(height: 0.5, color: context.colors.divider);
 
-  void _confirmDelete() {
+  void _confirmDelete(String lang) {
     final c = context.colors;
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: c.surface,
-        shape:
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Delete Reminder',
+          AppStrings.get('delete_reminder', lang),
           style: GoogleFonts.arimo(
               color: c.primaryText, fontWeight: FontWeight.w600),
         ),
         content: Text(
-          'Are you sure you want to delete "${widget.entry.medicineName}"?',
+          '${AppStrings.get('delete_confirm', lang)} "${widget.entry.medicineName}"?',
           style: GoogleFonts.arimo(color: c.secondaryText),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel',
+            child: Text(AppStrings.get('cancel', lang),
                 style: GoogleFonts.arimo(color: c.hintText)),
           ),
           TextButton(
@@ -2467,10 +2461,9 @@ class _ReminderTileState extends State<ReminderTile> {
               context.read<HealthCubit>().deleteReminder(widget.entry);
               Navigator.pop(context);
             },
-            child: Text('Delete',
+            child: Text(AppStrings.get('delete', lang),
                 style: GoogleFonts.arimo(
-                    color: Colors.redAccent,
-                    fontWeight: FontWeight.w600)),
+                    color: Colors.redAccent, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -2480,6 +2473,8 @@ class _ReminderTileState extends State<ReminderTile> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final lang = context.watch<LocaleCubit>().state;
+
     return Container(
       width: double.infinity,
       height: 84,
@@ -2515,7 +2510,7 @@ class _ReminderTileState extends State<ReminderTile> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _scheduleLabel,
+                    _scheduleLabel(lang),
                     style: GoogleFonts.arimo(
                         color: c.secondaryText,
                         fontSize: 13,
@@ -2527,13 +2522,13 @@ class _ReminderTileState extends State<ReminderTile> {
             Row(
               children: [
                 GestureDetector(
-                  onTap: _confirmDelete,
+                  onTap: () => _confirmDelete(lang),
                   child: const Icon(Icons.delete_outline,
                       color: Colors.redAccent, size: 20),
                 ),
                 const SizedBox(width: 10),
                 GestureDetector(
-                  onTap: _openEditSheet,
+                  onTap: () => _openEditSheet(lang),
                   child: Icon(Icons.edit_outlined, color: c.hintText, size: 20),
                 ),
               ],
@@ -2571,10 +2566,12 @@ class _GlucoseInputState extends State<GlucoseInput> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final lang = context.watch<LocaleCubit>().state;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Glucose',
+        Text(AppStrings.get('glucose', lang),
             style: TextStyle(color: c.primaryText, fontSize: 16)),
         const SizedBox(height: 10),
         Row(
@@ -2583,9 +2580,8 @@ class _GlucoseInputState extends State<GlucoseInput> {
               width: 90,
               height: 40,
               decoration: BoxDecoration(
-                color: c.compactInput,
-                borderRadius: BorderRadius.circular(6),
-              ),
+                  color: c.compactInput,
+                  borderRadius: BorderRadius.circular(6)),
               child: TextField(
                 controller: widget.controller,
                 keyboardType: TextInputType.number,
@@ -2600,9 +2596,8 @@ class _GlucoseInputState extends State<GlucoseInput> {
             Container(
               height: 40,
               decoration: BoxDecoration(
-                color: c.compactInput,
-                borderRadius: BorderRadius.circular(6),
-              ),
+                  color: c.compactInput,
+                  borderRadius: BorderRadius.circular(6)),
               child: Row(
                 children: [
                   _unitButton(context, 'mg/dl'),
@@ -2630,10 +2625,7 @@ class _GlucoseInputState extends State<GlucoseInput> {
         child: Text(
           unit,
           style: TextStyle(
-            // Always white on green, else adaptive
-            color: isSelected
-                ? Colors.white
-                : context.colors.secondaryText,
+            color: isSelected ? Colors.white : context.colors.secondaryText,
             fontSize: 13,
           ),
         ),
@@ -2682,8 +2674,8 @@ class LogDrawersState extends State<LogDrawers> {
             ? 'missed'
             : 'upcoming';
 
-        instances.add(_LogInstance(
-            reminder: reminder, timeIndex: i, due: due, status: status));
+        instances.add(
+            _LogInstance(reminder: reminder, timeIndex: i, due: due, status: status));
       }
     }
 
@@ -2697,13 +2689,6 @@ class LogDrawersState extends State<LogDrawers> {
 
     instances.sort((a, b) => a.due.compareTo(b.due));
     return instances;
-  }
-
-  String _formatTime(TimeOfDay t) {
-    final h = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
-    final m = t.minute.toString().padLeft(2, '0');
-    final p = t.period == DayPeriod.am ? 'AM' : 'PM';
-    return '$h:$m $p';
   }
 
   String _iconAsset(String type) {
@@ -2723,20 +2708,20 @@ class LogDrawersState extends State<LogDrawers> {
 
     switch (instance.reminder!.type) {
       case 'blood_pressure':
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const BloodPressureScreen()));
+        Navigator.push(context, MaterialPageRoute(
+            builder: (_) => const BloodPressureScreen()));
         break;
       case 'meds':
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const MedicationLogScreen()));
+        Navigator.push(context, MaterialPageRoute(
+            builder: (_) => const MedicationLogScreen()));
         break;
       case 'weight':
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const WeightLogScreen()));
+        Navigator.push(context, MaterialPageRoute(
+            builder: (_) => const WeightLogScreen()));
         break;
       case 'glucose':
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const GlucoseScreen()));
+        Navigator.push(context, MaterialPageRoute(
+            builder: (_) => const GlucoseScreen()));
         break;
     }
     cubit.resolveReminderLog(instance.reminder!, instance.timeIndex!, today);
@@ -2750,6 +2735,7 @@ class LogDrawersState extends State<LogDrawers> {
 
   @override
   Widget build(BuildContext context) {
+    final lang      = context.watch<LocaleCubit>().state;
     final instances = _buildInstances(context);
 
     final missed   = instances.where((i) => i.status == 'missed').toList();
@@ -2761,33 +2747,33 @@ class LogDrawersState extends State<LogDrawers> {
     return Column(
       children: [
         _drawer(
-          label: 'Missed logs',
+          label: AppStrings.get('missed_logs', lang),
           count: missed.length,
           expanded: _missedExpanded,
           accentColor: Colors.redAccent,
           onTap: () => setState(() => _missedExpanded = !_missedExpanded),
           instances: missed,
-          context: context,
+          lang: lang,
         ),
         const SizedBox(height: 12),
         _drawer(
-          label: 'Upcoming logs',
+          label: AppStrings.get('upcoming_logs', lang),
           count: upcoming.length,
           expanded: _upcomingExpanded,
           accentColor: AppColors.primary,
           onTap: () => setState(() => _upcomingExpanded = !_upcomingExpanded),
           instances: upcoming,
-          context: context,
+          lang: lang,
         ),
         const SizedBox(height: 12),
         _drawer(
-          label: 'Resolved logs',
+          label: AppStrings.get('resolved_logs', lang),
           count: resolved.length,
           expanded: _resolvedExpanded,
           accentColor: context.colors.hintText,
           onTap: () => setState(() => _resolvedExpanded = !_resolvedExpanded),
           instances: resolved,
-          context: context,
+          lang: lang,
         ),
         const SizedBox(height: 20),
       ],
@@ -2801,7 +2787,7 @@ class LogDrawersState extends State<LogDrawers> {
     required Color accentColor,
     required VoidCallback onTap,
     required List<_LogInstance> instances,
-    required BuildContext context,
+    required String lang,
   }) {
     final c = context.colors;
     return Column(
@@ -2810,12 +2796,9 @@ class LogDrawersState extends State<LogDrawers> {
           onTap: onTap,
           child: Container(
             width: double.infinity,
-            padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             decoration: BoxDecoration(
-              color: c.surface,
-              borderRadius: BorderRadius.circular(12),
-            ),
+                color: c.surface, borderRadius: BorderRadius.circular(12)),
             child: Row(
               children: [
                 AnimatedRotation(
@@ -2840,11 +2823,12 @@ class LogDrawersState extends State<LogDrawers> {
         ),
         AnimatedCrossFade(
           duration: const Duration(milliseconds: 250),
-          crossFadeState: expanded
-              ? CrossFadeState.showFirst
-              : CrossFadeState.showSecond,
+          crossFadeState:
+          expanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
           firstChild: Column(
-            children: instances.map((i) => _logTile(context, i)).toList(),
+            children: instances
+                .map((i) => _logTile(context, i, lang))
+                .toList(),
           ),
           secondChild: const SizedBox(),
         ),
@@ -2852,10 +2836,11 @@ class LogDrawersState extends State<LogDrawers> {
     );
   }
 
-  Widget _logTile(BuildContext context, _LogInstance instance) {
+  Widget _logTile(BuildContext context, _LogInstance instance, String lang) {
     final c = context.colors;
     final isAppointment = instance.appointment != null;
-    final isDone = instance.status == 'resolved' || instance.status == 'skipped';
+    final isDone =
+        instance.status == 'resolved' || instance.status == 'skipped';
 
     final title = isAppointment
         ? instance.appointment!.appointmentName
@@ -2869,9 +2854,7 @@ class LogDrawersState extends State<LogDrawers> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: c.logTileBg,
-        borderRadius: BorderRadius.circular(10),
-      ),
+          color: c.logTileBg, borderRadius: BorderRadius.circular(10)),
       child: Row(
         children: [
           isAppointment
@@ -2885,10 +2868,9 @@ class LogDrawersState extends State<LogDrawers> {
               children: [
                 Text(title,
                     style: GoogleFonts.arimo(
-                      color: isDone ? c.hintText : c.primaryText,
-                      fontWeight: FontWeight.w600,
-                    )),
-                Text(_formatTime(time),
+                        color: isDone ? c.hintText : c.primaryText,
+                        fontWeight: FontWeight.w600)),
+                Text(formatTimeLocalized(time, lang),
                     style: GoogleFonts.arimo(color: c.hintText)),
               ],
             ),
@@ -2909,7 +2891,6 @@ class LogDrawersState extends State<LogDrawers> {
     );
   }
 }
-
 
 class _LogInstance {
   final ReminderEntry? reminder;

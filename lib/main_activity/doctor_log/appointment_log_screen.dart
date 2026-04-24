@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/lang/lang_strings.dart';
 import '../../cubit/health_cubit.dart';
+import '../../cubit/locale_cubit.dart';
 import '../../models/appointment_entry.dart';
 import '../../widgets/components.dart';
-
-// ─────────────────────────────────────────────────────────────
-//  APPOINTMENT LOG SCREEN
-// ─────────────────────────────────────────────────────────────
 
 class AppointmentLogScreen extends StatefulWidget {
   const AppointmentLogScreen({super.key});
@@ -17,25 +15,23 @@ class AppointmentLogScreen extends StatefulWidget {
       _AppointmentLogScreenState();
 }
 
-class _AppointmentLogScreenState
-    extends State<AppointmentLogScreen> {
+class _AppointmentLogScreenState extends State<AppointmentLogScreen> {
   final _nameCtrl     = TextEditingController();
   final _locationCtrl = TextEditingController();
   final _notesCtrl    = TextEditingController();
 
-  DateTime _selectedDate =
+  DateTime  _selectedDate =
   DateTime.now().add(const Duration(days: 1));
-  TimeOfDay _selectedTime =
-  const TimeOfDay(hour: 9, minute: 0);
-  String _currentDate = '';
-  String _currentTime = '';
+  TimeOfDay _selectedTime = const TimeOfDay(hour: 9, minute: 0);
+  String    _currentDate  = '';
+  String    _currentTime  = '';
 
   bool get _canSubmit => _nameCtrl.text.trim().isNotEmpty;
 
   @override
   void initState() {
     super.initState();
-    _updateDateLabel(_selectedDate);
+    // Labels are language-aware, so we defer to first build
     _updateTimeLabel(_selectedTime);
     _nameCtrl.addListener(() => setState(() {}));
   }
@@ -48,12 +44,14 @@ class _AppointmentLogScreenState
     super.dispose();
   }
 
-  String _monthName(int m) => const [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-  ][m - 1];
+  // ── Label builders ──────────────────────────────────────
 
-  void _updateDateLabel(DateTime date) {
+  String _monthShort(DateTime date, String lang) {
+    final name = AppStrings.get('month_${date.month}', lang);
+    return lang == 'ar' ? name : name.substring(0, 3);
+  }
+
+  void _updateDateLabel(DateTime date, String lang) {
     final now      = DateTime.now();
     final tomorrow = now.add(const Duration(days: 1));
     final isToday  = date.year == now.year &&
@@ -64,15 +62,15 @@ class _AppointmentLogScreenState
         date.day == tomorrow.day;
 
     setState(() {
+      final month = _monthShort(date, lang);
       if (isToday) {
         _currentDate =
-        'Today: ${_monthName(date.month)} ${date.day}';
+        '${AppStrings.get('today_int', lang)}: $month ${date.day}';
       } else if (isTomorrow) {
         _currentDate =
-        'Tomorrow: ${_monthName(date.month)} ${date.day}';
+        '${AppStrings.get('tomorrow', lang)}: $month ${date.day}';
       } else {
-        _currentDate =
-        '${_monthName(date.month)} ${date.day}, ${date.year}';
+        _currentDate = '$month ${date.day}, ${date.year}';
       }
     });
   }
@@ -84,14 +82,15 @@ class _AppointmentLogScreenState
     setState(() => _currentTime = '$h:$m$p');
   }
 
-  Future<void> _pickDate() async {
+  // ── Pickers ─────────────────────────────────────────────
+
+  Future<void> _pickDate(String lang) async {
     final isDark = context.isDark;
     final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime.now(),
-      lastDate:
-      DateTime.now().add(const Duration(days: 365 * 5)),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
       builder: (ctx, child) => Theme(
         data: isDark
             ? ThemeData.dark().copyWith(
@@ -110,7 +109,7 @@ class _AppointmentLogScreenState
     );
     if (picked != null) {
       setState(() => _selectedDate = picked);
-      _updateDateLabel(picked);
+      _updateDateLabel(picked, lang);
     }
   }
 
@@ -167,124 +166,134 @@ class _AppointmentLogScreenState
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
+    final lang  = context.watch<LocaleCubit>().state;
+    final c     = context.colors;
+    final isRtl = lang == 'ar';
 
-    return Scaffold(
-      backgroundColor: c.bottomSheet,
-      body: SafeArea(
-        child: Column(
-          children: [
+    // Keep date label in sync with language changes
+    if (_currentDate.isEmpty) _updateDateLabel(_selectedDate, lang);
 
-            // ── Top bar ──────────────────────────────────
-            Container(
-              height: 46,
-              color: c.surface,
-              padding:
-              const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back_ios_new,
-                        color: c.primaryText, size: 20),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  Text(
-                    'Log Appointment',
-                    style: GoogleFonts.arimo(
-                        color: c.primaryText,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
-            ),
-
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                    20, 25, 20, 0),
-                child: Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.start,
+    return Directionality(
+      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: c.bottomSheet,
+        body: SafeArea(
+          child: Column(
+            children: [
+              Container(
+                height: 46,
+                color: c.surface,
+                padding:
+                const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
                   children: [
-
+                    IconButton(
+                      icon: Icon(
+                        isRtl
+                            ? Icons.arrow_forward_ios
+                            : Icons.arrow_back_ios_new,
+                        color: c.primaryText,
+                        size: 20,
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                    ),
                     Text(
-                      'Date/Time:',
+                      AppStrings.get('log_appointment', lang),
                       style: GoogleFonts.arimo(
                           color: c.primaryText,
-                          fontSize: 16),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500),
                     ),
-                    const SizedBox(height: 14),
-
-                    Row(
-                      children: [
-                        _chip(
-                          context: context,
-                          onTap: _pickDate,
-                          icon: 'assets/icons/calendar.png',
-                          label: _currentDate,
-                        ),
-                        const SizedBox(width: 10),
-                        _chip(
-                          context: context,
-                          onTap: _pickTime,
-                          icon: 'assets/icons/clock.png',
-                          label: _currentTime,
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 25),
-                    _fieldLabel(context, 'Appointment Name'),
-                    const SizedBox(height: 8),
-                    _textField(
-                      context: context,
-                      controller: _nameCtrl,
-                      hint: 'eg. Cardiology checkup',
-                    ),
-
-                    const SizedBox(height: 20),
-                    _fieldLabel(context, 'Location'),
-                    const SizedBox(height: 8),
-                    _textField(
-                      context: context,
-                      controller: _locationCtrl,
-                      hint: 'eg. Cairo Medical Center, Room 204',
-                      prefixIcon: Icons.location_on_outlined,
-                    ),
-
-                    const SizedBox(height: 20),
-                    _fieldLabel(context, 'Notes'),
-                    const SizedBox(height: 8),
-                    _textField(
-                      context: context,
-                      controller: _notesCtrl,
-                      hint: 'eg. Bring previous test results',
-                      maxLines: 3,
-                    ),
-
-                    const SizedBox(height: 32),
                   ],
                 ),
               ),
-            ),
 
-            Padding(
-              padding:
-              const EdgeInsets.fromLTRB(20, 12, 20, 24),
-              child: MainButton(
-                text: 'Add',
-                enabled: _canSubmit,
-                onTap: _canSubmit ? _submit : null,
+              Expanded(
+                child: SingleChildScrollView(
+                  padding:
+                  const EdgeInsets.fromLTRB(20, 25, 20, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+
+                      Text(
+                        '${AppStrings.get('date_time', lang)}:',
+                        style: GoogleFonts.arimo(
+                            color: c.primaryText, fontSize: 16),
+                      ),
+                      const SizedBox(height: 14),
+
+                      Row(
+                        children: [
+                          _chip(
+                            context: context,
+                            onTap: () => _pickDate(lang),
+                            icon: 'assets/icons/calendar.png',
+                            label: _currentDate,
+                          ),
+                          const SizedBox(width: 10),
+                          _chip(
+                            context: context,
+                            onTap: _pickTime,
+                            icon: 'assets/icons/clock.png',
+                            label: _currentTime,
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 25),
+                      _fieldLabel(context,
+                          AppStrings.get('appointment_name', lang)),
+                      const SizedBox(height: 8),
+                      _textField(
+                        context: context,
+                        controller: _nameCtrl,
+                        hint: AppStrings.get('eg_appointment', lang),
+                      ),
+
+                      const SizedBox(height: 20),
+                      _fieldLabel(context,
+                          AppStrings.get('location', lang)),
+                      const SizedBox(height: 8),
+                      _textField(
+                        context: context,
+                        controller: _locationCtrl,
+                        hint: AppStrings.get('eg_location', lang),
+                        prefixIcon: Icons.location_on_outlined,
+                      ),
+
+                      const SizedBox(height: 20),
+                      _fieldLabel(context,
+                          AppStrings.get('notes', lang)),
+                      const SizedBox(height: 8),
+                      _textField(
+                        context: context,
+                        controller: _notesCtrl,
+                        hint: AppStrings.get('eg_bring_results', lang),
+                        maxLines: 3,
+                      ),
+
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ],
+
+              Padding(
+                padding:
+                const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                child: MainButton(
+                  text: AppStrings.get('add', lang),
+                  enabled: _canSubmit,
+                  onTap: _canSubmit ? _submit : null,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
-
-  // ── Helpers ────────────────────────────────────────────
 
   Widget _chip({
     required BuildContext context,
@@ -315,14 +324,13 @@ class _AppointmentLogScreenState
     );
   }
 
-  Widget _fieldLabel(BuildContext context, String label) =>
-      Text(
-        label,
-        style: GoogleFonts.arimo(
-            color: context.colors.primaryText,
-            fontSize: 14,
-            fontWeight: FontWeight.w500),
-      );
+  Widget _fieldLabel(BuildContext context, String label) => Text(
+    label,
+    style: GoogleFonts.arimo(
+        color: context.colors.primaryText,
+        fontSize: 14,
+        fontWeight: FontWeight.w500),
+  );
 
   Widget _textField({
     required BuildContext context,
@@ -335,12 +343,14 @@ class _AppointmentLogScreenState
     return TextField(
       controller: controller,
       maxLines: maxLines,
-      style:
-      GoogleFonts.arimo(color: c.primaryText, fontSize: 15),
+      textDirection: context.watch<LocaleCubit>().state == 'ar'
+          ? TextDirection.rtl
+          : TextDirection.ltr,
+      style: GoogleFonts.arimo(color: c.primaryText, fontSize: 15),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.arimo(
-            color: c.hintGrey, fontSize: 15),
+        hintStyle:
+        GoogleFonts.arimo(color: c.hintGrey, fontSize: 15),
         prefixIcon: prefixIcon != null
             ? Icon(prefixIcon, color: c.subtleText, size: 18)
             : null,

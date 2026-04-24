@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../cubit/health_cubit.dart';
+import '../core/lang/lang_strings.dart';
+import '../cubit/locale_cubit.dart';
 import 'components.dart';
 
 class ReminderEntry {
@@ -91,8 +93,8 @@ class ReminderTemplateScreen extends StatefulWidget {
     super.key,
     required this.headerTitle,
     required this.reminderType,
-    this.medicineLabel = 'Name of the medicine',
-    this.medicineHint = 'eg. Aspirin',
+    this.medicineLabel = 'name_of_medicine', // Changed to key
+    this.medicineHint = 'eg_aspirin',       // Changed to key
     this.showAddMore = true,
   });
 
@@ -108,25 +110,37 @@ class _ReminderTemplateScreenState
   final _notesCtrl = TextEditingController();
 
   bool _isRecurring = true;
-  String _frequency = 'Daily';
+  String _frequencyKey = 'daily';
   final List<TimeOfDay> _times = [const TimeOfDay(hour: 8, minute: 0)];
   DateTime _startDate = DateTime.now();
   DateTime? _endDate;
 
   bool get _canSave => _nameCtrl.text.trim().isNotEmpty;
 
-  String _formatDate(DateTime dt) {
+  String _formatDate(DateTime dt, String lang) {
     final months = [
-      'Jan','Feb','Mar','Apr','May','Jun',
-      'Jul','Aug','Sep','Oct','Nov','Dec'
+      AppStrings.get('month_short_1', lang),
+      AppStrings.get('month_short_2', lang),
+      AppStrings.get('month_short_3', lang),
+      AppStrings.get('month_short_4', lang),
+      AppStrings.get('month_short_5', lang),
+      AppStrings.get('month_short_6', lang),
+      AppStrings.get('month_short_7', lang),
+      AppStrings.get('month_short_8', lang),
+      AppStrings.get('month_short_9', lang),
+      AppStrings.get('month_short_10', lang),
+      AppStrings.get('month_short_11', lang),
+      AppStrings.get('month_short_12', lang)
     ];
     return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
   }
 
-  String _formatTime(TimeOfDay t) {
+  String _formatTime(TimeOfDay t, String lang) {
     final h = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
     final m = t.minute.toString().padLeft(2, '0');
-    final period = t.period == DayPeriod.am ? 'AM' : 'PM';
+    final period = t.period == DayPeriod.am
+        ? AppStrings.get('am_label', lang)
+        : AppStrings.get('pm_label', lang);
     return '$h:$m $period';
   }
 
@@ -184,10 +198,13 @@ class _ReminderTemplateScreenState
     }
   }
 
-  void _pickFrequency(BuildContext context) {
+  void _pickFrequency(BuildContext context, String lang) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final options = ['Daily', 'Weekly', 'Every 2 days', 'Monthly'];
+
+    // Use keys here to separate the logic state from the UI display
+    final optionKeys = ['daily', 'weekly', 'every_2_days', 'monthly'];
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -209,32 +226,35 @@ class _ReminderTemplateScreenState
               ),
             ),
             const SizedBox(height: 20),
-            Text('Frequency',
+            Text(AppStrings.get('frequency', lang),
                 style: GoogleFonts.arimo(
                     color: isDark ? Colors.white : Colors.black,
                     fontSize: 18,
                     fontWeight: FontWeight.w600)),
             const SizedBox(height: 16),
-            ...options.map((o) => GestureDetector(
-              onTap: () { setState(() => _frequency = o); Navigator.pop(context); },
+            ...optionKeys.map((key) => GestureDetector(
+              onTap: () {
+                setState(() => _frequencyKey = key);
+                Navigator.pop(context);
+              },
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
-                  color: _frequency == o
+                  color: _frequencyKey == key
                       ? theme.primaryColor.withOpacity(0.15)
                       : (isDark ? const Color(0xFF2D2D2D) : Colors.grey[100]),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                      color: _frequency == o
+                      color: _frequencyKey == key
                           ? theme.primaryColor
                           : Colors.transparent),
                 ),
                 child: Center(
-                  child: Text(o,
+                  child: Text(AppStrings.get(key, lang),
                       style: GoogleFonts.arimo(
-                          color: _frequency == o
+                          color: _frequencyKey == key
                               ? theme.primaryColor
                               : (isDark ? Colors.white : Colors.black),
                           fontSize: 16,
@@ -256,8 +276,9 @@ class _ReminderTemplateScreenState
       reminderName: _reminderNameCtrl.text.trim().isEmpty
           ? null
           : _reminderNameCtrl.text.trim(),
-      schedule: _isRecurring ? 'Recurring' : 'Once',
-      frequency: _isRecurring ? _frequency : 'Once',
+      // Saving the logical keys into the model instead of localized strings
+      schedule: _isRecurring ? 'recurring' : 'once',
+      frequency: _isRecurring ? _frequencyKey : 'once',
       times: List.from(_times),
       startDate: _startDate,
       endDate: _endDate,
@@ -273,6 +294,8 @@ class _ReminderTemplateScreenState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final lang = context.watch<LocaleCubit>().state;
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
@@ -289,7 +312,8 @@ class _ReminderTemplateScreenState
                     child: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black),
                   ),
                   const SizedBox(width: 16),
-                  Text(widget.headerTitle,
+                  // Assuming the parent widget passes down the translated title or key
+                  Text(AppStrings.get(widget.headerTitle, lang),
                       style: GoogleFonts.arimo(
                           color: isDark ? Colors.white : Colors.black,
                           fontSize: 16,
@@ -303,11 +327,11 @@ class _ReminderTemplateScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _label(widget.medicineLabel, isDark),
+                    _label(AppStrings.get(widget.medicineLabel, lang), isDark),
                     const SizedBox(height: 6),
                     _textField(
                       controller: _nameCtrl,
-                      hint: widget.medicineHint,
+                      hint: AppStrings.get(widget.medicineHint, lang),
                       onChanged: (_) => setState(() {}),
                       isDark: isDark,
                     ),
@@ -315,7 +339,7 @@ class _ReminderTemplateScreenState
                     if (widget.showAddMore) ...[
                       const SizedBox(height: 6),
                       Center(
-                        child: Text('+ Add More Meds',
+                        child: Text(AppStrings.get('add_more_meds', lang),
                             style: GoogleFonts.arimo(
                                 color: isDark ? const Color(0xFFA0A0A0) : Colors.grey[600],
                                 fontSize: 14,
@@ -329,14 +353,16 @@ class _ReminderTemplateScreenState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Center(child: _scheduleToggle(theme, isDark)),
+                          Center(child: _scheduleToggle(theme, isDark, lang)),
                           const SizedBox(height: 16),
-                          _label('Schedule', isDark),
+                          _label(AppStrings.get('schedule', lang), isDark),
                           _infoRow(
-                            label: 'Schedule',
-                            value: _isRecurring ? _frequency : 'Once',
+                            label: AppStrings.get('schedule', lang),
+                            value: _isRecurring
+                                ? AppStrings.get(_frequencyKey, lang)
+                                : AppStrings.get('once', lang),
                             onTap: _isRecurring
-                                ? () => _pickFrequency(context)
+                                ? () => _pickFrequency(context, lang)
                                 : null,
                             isDark: isDark,
                             theme: theme,
@@ -347,8 +373,8 @@ class _ReminderTemplateScreenState
                             final t = e.value;
                             return Column(children: [
                               _infoRow(
-                                label: i == 0 ? 'Times' : '',
-                                value: _formatTime(t),
+                                label: i == 0 ? AppStrings.get('times', lang) : '',
+                                value: _formatTime(t, lang),
                                 onTap: () => _pickTime(i, context),
                                 trailing: i > 0
                                     ? GestureDetector(
@@ -370,7 +396,7 @@ class _ReminderTemplateScreenState
                             child: Padding(
                               padding:
                               const EdgeInsets.symmetric(vertical: 6),
-                              child: Text('+ Add time',
+                              child: Text(AppStrings.get('add_time', lang),
                                   style: GoogleFonts.arimo(
                                       color: theme.primaryColor,
                                       fontSize: 13,
@@ -383,17 +409,17 @@ class _ReminderTemplateScreenState
                             onTap: () => _openDateRange(context),
                             child: Column(children: [
                               _infoRow(
-                                  label: 'Start date',
-                                  value: _formatDate(_startDate),
+                                  label: AppStrings.get('start_date', lang),
+                                  value: _formatDate(_startDate, lang),
                                   onTap: null,
                                   isDark: isDark,
                                   theme: theme),
                               _divider(isDark),
                               _infoRow(
-                                  label: 'End date',
+                                  label: AppStrings.get('end_date', lang),
                                   value: _endDate != null
-                                      ? _formatDate(_endDate!)
-                                      : 'Never',
+                                      ? _formatDate(_endDate!, lang)
+                                      : AppStrings.get('never', lang),
                                   onTap: null,
                                   isDark: isDark,
                                   theme: theme),
@@ -401,17 +427,19 @@ class _ReminderTemplateScreenState
                           ),
                           _divider(isDark),
                           _infoRowField(
-                            label: 'Reminder name',
-                            hint: 'eg. Morning meds',
+                            label: AppStrings.get('reminder_name', lang),
+                            hint: AppStrings.get('eg_morning_meds', lang),
                             controller: _reminderNameCtrl,
+                            optionalText: AppStrings.get('optional', lang),
                             optional: true,
                             isDark: isDark,
                           ),
                           _divider(isDark),
                           _infoRowField(
-                            label: 'Notes',
-                            hint: 'eg. take after food',
+                            label: AppStrings.get('notes', lang),
+                            hint: AppStrings.get('eg_take_after_food', lang),
                             controller: _notesCtrl,
+                            optionalText: AppStrings.get('optional', lang),
                             optional: true,
                             isDark: isDark,
                           ),
@@ -420,7 +448,7 @@ class _ReminderTemplateScreenState
                     ),
                     const SizedBox(height: 24),
                     MainButton(
-                      text: 'Save',
+                      text: AppStrings.get('save', lang),
                       enabled: _canSave,
                       onTap: _save,
                     ),
@@ -481,7 +509,7 @@ class _ReminderTemplateScreenState
     );
   }
 
-  Widget _scheduleToggle(ThemeData theme, bool isDark) {
+  Widget _scheduleToggle(ThemeData theme, bool isDark, String lang) {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -491,8 +519,8 @@ class _ReminderTemplateScreenState
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _toggleOption("Once", !_isRecurring, () => setState(() => _isRecurring = false), theme, isDark),
-          _toggleOption("Recurring", _isRecurring, () => setState(() => _isRecurring = true), theme, isDark),
+          _toggleOption(AppStrings.get('once', lang), !_isRecurring, () => setState(() => _isRecurring = false), theme, isDark),
+          _toggleOption(AppStrings.get('recurring', lang), _isRecurring, () => setState(() => _isRecurring = true), theme, isDark),
         ],
       ),
     );
@@ -557,6 +585,7 @@ class _ReminderTemplateScreenState
     required String hint,
     required TextEditingController controller,
     bool optional = false,
+    String optionalText = 'optional',
     required bool isDark,
   }) {
     return Padding(
@@ -573,7 +602,7 @@ class _ReminderTemplateScreenState
                       fontWeight: FontWeight.w400)),
               const Spacer(),
               if (optional)
-                Text('optional',
+                Text(optionalText,
                     style: GoogleFonts.arimo(
                         color: isDark ? Colors.white.withOpacity(0.49) : Colors.grey[600],
                         fontSize: 14)),

@@ -1,6 +1,8 @@
 import 'package:chronic_care/main_activity/weight_log/weight_reminder_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/lang/lang_strings.dart';
+import '../../cubit/locale_cubit.dart';
 import '../../widgets/log_screen.dart';
 import '../../widgets/components.dart';
 import '../../cubit/health_cubit.dart';
@@ -14,8 +16,7 @@ class WeightLogScreen extends StatefulWidget {
 }
 
 class _WeightLogScreenState extends State<WeightLogScreen> {
-
-  final kgController = TextEditingController();
+  final kgController  = TextEditingController();
   final lbsController = TextEditingController();
 
   bool buttonEnabled = false;
@@ -23,7 +24,6 @@ class _WeightLogScreenState extends State<WeightLogScreen> {
   @override
   void initState() {
     super.initState();
-
     kgController.addListener(_validate);
     lbsController.addListener(_validate);
   }
@@ -31,12 +31,7 @@ class _WeightLogScreenState extends State<WeightLogScreen> {
   void _validate() {
     final enabled =
         kgController.text.isNotEmpty || lbsController.text.isNotEmpty;
-
-    if (enabled != buttonEnabled) {
-      setState(() {
-        buttonEnabled = enabled;
-      });
-    }
+    if (enabled != buttonEnabled) setState(() => buttonEnabled = enabled);
   }
 
   @override
@@ -48,8 +43,10 @@ class _WeightLogScreenState extends State<WeightLogScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.watch<LocaleCubit>().state;
+
     return LogEntryScreen(
-      title: "Log Weight",
+      title: AppStrings.get('log_weight', lang),
 
       buttonEnabled: buttonEnabled,
 
@@ -61,18 +58,17 @@ class _WeightLogScreenState extends State<WeightLogScreen> {
       ),
 
       onSubmit: (selectedDateTime, notes) {
-
-        final kg = double.tryParse(kgController.text);
+        final kg  = double.tryParse(kgController.text);
         final lbs = double.tryParse(lbsController.text);
 
         if (kg == null && lbs == null) return;
 
         context.read<HealthCubit>().addWeight(
           WeightEntry(
-            kg: kg,
-            lbs: lbs,
+            kg:       kg,
+            lbs:      lbs,
             dateTime: selectedDateTime,
-            notes: notes,
+            notes:    notes,
           ),
         );
 
@@ -80,12 +76,10 @@ class _WeightLogScreenState extends State<WeightLogScreen> {
       },
 
       content: [
-
         WeightInputs(
-          kgController: kgController,
+          kgController:  kgController,
           lbsController: lbsController,
         ),
-
       ],
     );
   }

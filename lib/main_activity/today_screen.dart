@@ -7,7 +7,9 @@ import 'package:chronic_care/main_activity/weight_log/weight_log_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../core/lang/lang_strings.dart';
 import '../cubit/health_cubit.dart';
+import '../cubit/locale_cubit.dart';
 import '../widgets/components.dart';
 import 'blood_log/blood_log_screen.dart';
 
@@ -49,6 +51,8 @@ class _TodayScreenState extends State<TodayScreen> {
                   ),
                   itemCount: widget.tiles.length + 1,
                   itemBuilder: (context, index) {
+                    final lang = context.watch<LocaleCubit>().state; // Get current language
+
                     if (index == widget.tiles.length) {
                       return GestureDetector(
                         onTap: () async {
@@ -57,11 +61,11 @@ class _TodayScreenState extends State<TodayScreen> {
                           if (selectedTile == null) return;
                           setState(() {
                             final alreadyExists = widget.tiles
-                                .any((t) => t.label == selectedTile.label);
+                                .any((t) => t.labelKey == selectedTile.labelKey);
                             if (!alreadyExists) {
                               widget.tiles.add(HealthTile(
                                 icon: selectedTile.icon,
-                                label: selectedTile.label,
+                                labelKey: selectedTile.labelKey,
                                 selected: false,
                               ));
                             }
@@ -80,7 +84,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                   width: 20, height: 20),
                               const SizedBox(width: 6),
                               Text(
-                                "Add Entry",
+                                AppStrings.get('add_entry', lang), // FIX 3: Localize "Add Entry"
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.arimo(
                                   color: Colors.white,
@@ -98,7 +102,8 @@ class _TodayScreenState extends State<TodayScreen> {
 
                     return HighlightableGridTile(
                       iconAsset: tile.icon,
-                      label: tile.label,
+                      // FIX 4: Use translated string for the UI
+                      label: AppStrings.get(tile.labelKey, lang),
                       selected: tile.selected,
                       onTap: () {
                         setState(() {
@@ -106,6 +111,7 @@ class _TodayScreenState extends State<TodayScreen> {
                           tile.selected = true;
                         });
 
+                        // Navigation by type is already safe for localization!
                         switch (tile.type) {
                           case HealthMetricType.bloodPressure:
                             Navigator.push(context, MaterialPageRoute(

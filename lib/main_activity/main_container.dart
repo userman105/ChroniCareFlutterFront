@@ -30,7 +30,7 @@ class _MainContainerState extends State<MainContainer> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark; // from AppThemeX in components.dart
+    final isDark = context.isDark;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
@@ -87,12 +87,12 @@ class _MainContainerState extends State<MainContainer> {
           },
           onTileSelected: (selectedTile) {
             setState(() {
-              final exists =
-              widget.tiles.any((t) => t.label == selectedTile.label);
+              final exists = widget.tiles.any((t) => t.labelKey == selectedTile.labelKey);
+
               if (!exists) {
                 widget.tiles.add(HealthTile(
                   icon:     selectedTile.icon,
-                  label:    selectedTile.label,
+                  labelKey: selectedTile.labelKey, // Required parameter
                   selected: false,
                 ));
               }

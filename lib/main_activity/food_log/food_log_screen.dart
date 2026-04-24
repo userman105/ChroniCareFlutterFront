@@ -4,7 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../core/lang/lang_strings.dart';
 import '../../cubit/health_cubit.dart';
+import '../../cubit/locale_cubit.dart';
 import '../../models/food_entry.dart';
 import '../../services/image_service.dart';
 import '../../widgets/components.dart';
@@ -25,6 +27,7 @@ class _FoodLogScreenState extends State<FoodLogScreen> {
   final _notesCtrl    = TextEditingController();
 
   String?   _imagePath;
+  // Internal English key — localised only at display time
   String    _mealType          = 'Breakfast';
   bool      _showMacros        = false;
   bool      _isProcessingImage = false;
@@ -36,7 +39,8 @@ class _FoodLogScreenState extends State<FoodLogScreen> {
 
   bool get _canSubmit => _nameCtrl.text.trim().isNotEmpty;
 
-  final List<String> _mealTypes = [
+  // English keys kept for logic; localised in build()
+  static const List<String> _mealKeys = [
     'Breakfast', 'Lunch', 'Dinner', 'Snack',
   ];
 
@@ -44,7 +48,6 @@ class _FoodLogScreenState extends State<FoodLogScreen> {
   void initState() {
     super.initState();
     _selectedDate = context.read<HealthCubit>().getSelectedDate();
-    _updateDateLabel(_selectedDate);
     _updateTimeLabel(_selectedTime);
     _nameCtrl.addListener(() => setState(() {}));
   }
@@ -60,20 +63,18 @@ class _FoodLogScreenState extends State<FoodLogScreen> {
     super.dispose();
   }
 
-  String _monthName(int m) => const [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-  ][m - 1];
-
-  void _updateDateLabel(DateTime date) {
+  void _updateDateLabel(DateTime date, String lang) {
     final now     = DateTime.now();
     final isToday = date.year == now.year &&
         date.month == now.month &&
         date.day == now.day;
+    final monthName = AppStrings.get('month_${date.month}', lang);
+    final month = lang == 'ar' ? monthName : monthName.substring(0, 3);
+
     setState(() {
       _currentDate = isToday
-          ? 'Today: ${_monthName(date.month)} ${date.day}'
-          : '${_monthName(date.month)} ${date.day}';
+          ? '${AppStrings.get('today_int', lang)}: $month ${date.day}'
+          : '$month ${date.day}';
     });
   }
 
@@ -84,7 +85,17 @@ class _FoodLogScreenState extends State<FoodLogScreen> {
     _currentTime = '$h:${t.minute.toString().padLeft(2, '0')}$p');
   }
 
-  Future<void> _pickDate() async {
+  String _localMeal(String key, String lang) {
+    const map = {
+      'Breakfast': 'meal_breakfast',
+      'Lunch':     'meal_lunch',
+      'Dinner':    'meal_dinner',
+      'Snack':     'meal_snack',
+    };
+    return AppStrings.get(map[key] ?? 'meal_other', lang);
+  }
+
+  Future<void> _pickDate(String lang) async {
     final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
@@ -93,30 +104,27 @@ class _FoodLogScreenState extends State<FoodLogScreen> {
     );
     if (picked != null) {
       setState(() => _selectedDate = picked);
-      _updateDateLabel(picked);
+      _updateDateLabel(picked, lang);
     }
   }
 
-  Future<void> _pickTime() async {
+  Future<void> _pickTime(String lang) async {
     final picked = await showTimePicker(
         context: context, initialTime: _selectedTime);
     if (picked == null) return;
     final now       = DateTime.now();
-    final candidate = DateTime(_selectedDate.year,
-        _selectedDate.month, _selectedDate.day,
-        picked.hour, picked.minute);
+    final candidate = DateTime(_selectedDate.year, _selectedDate.month,
+        _selectedDate.day, picked.hour, picked.minute);
     if (candidate.isAfter(now)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Future time cannot be selected')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppStrings.get('future_time_error', lang))));
       return;
     }
     setState(() => _selectedTime = picked);
     _updateTimeLabel(picked);
   }
 
-  // ── Image option sheet ────────────────────────────────────
-
-  void _showImageOptions() {
+  void _showImageOptions(String lang) {
     final c = context.colors;
     showModalBottomSheet(
       context: context,
@@ -142,7 +150,7 @@ class _FoodLogScreenState extends State<FoodLogScreen> {
             ),
             const SizedBox(height: 20),
             Text(
-              'Add Photo',
+              AppStrings.get('add_photo', lang),
               style: GoogleFonts.arimo(
                   color: c.primaryText,
                   fontSize: 16,
@@ -152,7 +160,7 @@ class _FoodLogScreenState extends State<FoodLogScreen> {
             _imageOption(
               context: context,
               icon: Icons.camera_alt_outlined,
-              label: 'Take Photo',
+              label: AppStrings.get('take_photo', lang),
               onTap: () {
                 Navigator.pop(context);
                 _processImage(ImageSource.camera);
@@ -162,7 +170,7 @@ class _FoodLogScreenState extends State<FoodLogScreen> {
             _imageOption(
               context: context,
               icon: Icons.photo_library_outlined,
-              label: 'Choose from Gallery',
+              label: AppStrings.get('choose_gallery', lang),
               onTap: () {
                 Navigator.pop(context);
                 _processImage(ImageSource.gallery);
@@ -173,7 +181,7 @@ class _FoodLogScreenState extends State<FoodLogScreen> {
               _imageOption(
                 context: context,
                 icon: Icons.delete_outline,
-                label: 'Remove Photo',
+                label: AppStrings.get('remove_photo', lang),
                 color: Colors.redAccent,
                 onTap: () {
                   Navigator.pop(context);
@@ -201,8 +209,8 @@ class _FoodLogScreenState extends State<FoodLogScreen> {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(
-            horizontal: 16, vertical: 14),
+        padding:
+        const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: c.surface,
           borderRadius: BorderRadius.circular(12),
@@ -235,14 +243,13 @@ class _FoodLogScreenState extends State<FoodLogScreen> {
 
   void _submit() {
     final dt = DateTime(
-        _selectedDate.year, _selectedDate.month,
-        _selectedDate.day, _selectedTime.hour,
-        _selectedTime.minute);
+        _selectedDate.year, _selectedDate.month, _selectedDate.day,
+        _selectedTime.hour, _selectedTime.minute);
 
     context.read<HealthCubit>().addFood(FoodEntry(
       name:      _nameCtrl.text.trim(),
       imagePath: _imagePath,
-      mealType:  _mealType,
+      mealType:  _mealType, // stored as English key
       calories:  int.tryParse(_caloriesCtrl.text),
       carbs:     double.tryParse(_carbsCtrl.text),
       protein:   double.tryParse(_proteinCtrl.text),
@@ -256,370 +263,396 @@ class _FoodLogScreenState extends State<FoodLogScreen> {
     Navigator.pop(context);
   }
 
-  // ── Build ─────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
+    final lang  = context.watch<LocaleCubit>().state;
+    final c     = context.colors;
+    final isRtl = lang == 'ar';
 
-    return Scaffold(
-      backgroundColor: c.bottomSheet,
-      body: SafeArea(
-        child: Column(
-          children: [
+    // Keep date label in sync with language on first build
+    if (_currentDate.isEmpty) _updateDateLabel(_selectedDate, lang);
 
-            // ── Top bar ──────────────────────────────────
-            Container(
-              height: 46,
-              color: c.surface,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back_ios_new,
-                        color: c.primaryText, size: 20),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  Text(
-                    'Log Food',
-                    style: GoogleFonts.arimo(
-                        color: c.primaryText,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
-            ),
-
-            Expanded(
-              child: SingleChildScrollView(
+    return Directionality(
+      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: c.bottomSheet,
+        body: SafeArea(
+          child: Column(
+            children: [
+              Container(
+                height: 46,
+                color: c.surface,
                 padding:
-                const EdgeInsets.fromLTRB(20, 25, 20, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
                   children: [
+                    IconButton(
+                      icon: Icon(
+                        isRtl
+                            ? Icons.arrow_forward_ios
+                            : Icons.arrow_back_ios_new,
+                        color: c.primaryText,
+                        size: 20,
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    Text(
+                      AppStrings.get('log_food', lang),
+                      style: GoogleFonts.arimo(
+                          color: c.primaryText,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ),
 
-                    // ── Photo picker ─────────────────────
-                    GestureDetector(
-                      onTap: _showImageOptions,
-                      child: Container(
-                        width: double.infinity,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          color: c.sectionBg,
-                          borderRadius:
-                          BorderRadius.circular(16),
-                          border: Border.all(
-                              color: c.divider, width: 1),
-                        ),
-                        child: _isProcessingImage
-                            ? Center(
-                          child: Column(
+              Expanded(
+                child: SingleChildScrollView(
+                  padding:
+                  const EdgeInsets.fromLTRB(20, 25, 20, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      GestureDetector(
+                        onTap: () => _showImageOptions(lang),
+                        child: Container(
+                          width: double.infinity,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            color: c.sectionBg,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                                color: c.divider, width: 1),
+                          ),
+                          child: _isProcessingImage
+                              ? Center(
+                            child: Column(
+                              mainAxisAlignment:
+                              MainAxisAlignment.center,
+                              children: [
+                                const CircularProgressIndicator(
+                                  color: AppColors.primary,
+                                  strokeWidth: 2,
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  AppStrings.get(
+                                      'processing', lang),
+                                  style: GoogleFonts.arimo(
+                                      color: c.hintText,
+                                      fontSize: 13),
+                                ),
+                              ],
+                            ),
+                          )
+                              : _imagePath != null
+                              ? ClipRRect(
+                            borderRadius:
+                            BorderRadius.circular(15),
+                            child: Image.file(
+                              File(_imagePath!),
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              cacheWidth: 512,
+                            ),
+                          )
+                              : Column(
                             mainAxisAlignment:
                             MainAxisAlignment.center,
                             children: [
-                              const CircularProgressIndicator(
-                                color: AppColors.primary,
-                                strokeWidth: 2,
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary
+                                      .withOpacity(0.15),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.camera_alt_outlined,
+                                  color: AppColors.primary,
+                                  size: 26,
+                                ),
                               ),
-                              const SizedBox(height: 12),
-                              Text('Processing...',
-                                  style: GoogleFonts.arimo(
-                                      color: c.hintText,
-                                      fontSize: 13)),
-                            ],
-                          ),
-                        )
-                            : _imagePath != null
-                            ? ClipRRect(
-                          borderRadius:
-                          BorderRadius.circular(15),
-                          child: Image.file(
-                            File(_imagePath!),
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            height: double.infinity,
-                            cacheWidth: 512,
-                          ),
-                        )
-                            : Column(
-                          mainAxisAlignment:
-                          MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: AppColors.primary
-                                    .withOpacity(0.15),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.camera_alt_outlined,
-                                color: AppColors.primary,
-                                size: 26,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text('Add Photo',
+                              const SizedBox(height: 10),
+                              Text(
+                                AppStrings.get(
+                                    'add_photo', lang),
                                 style: GoogleFonts.arimo(
                                     color: c.primaryText,
                                     fontSize: 14,
                                     fontWeight:
-                                    FontWeight.w500)),
-                            const SizedBox(height: 4),
-                            Text('optional',
+                                    FontWeight.w500),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                AppStrings.get(
+                                    'optional', lang),
                                 style: GoogleFonts.arimo(
                                     color: c.subtleText,
-                                    fontSize: 12)),
-                          ],
+                                    fontSize: 12),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 20),
-
-                    // ── Date / Time ───────────────────────
-                    Text('Date/Time:',
+                      const SizedBox(height: 20),
+                      Text(
+                        '${AppStrings.get('date_time', lang)}:',
                         style: GoogleFonts.arimo(
-                            color: c.primaryText, fontSize: 16)),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        _chip(
+                            color: c.primaryText, fontSize: 16),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          _chip(
                             context: context,
-                            onTap: _pickDate,
+                            onTap: () => _pickDate(lang),
                             icon: 'assets/icons/calendar.png',
-                            label: _currentDate),
-                        const SizedBox(width: 10),
-                        _chip(
+                            label: _currentDate,
+                          ),
+                          const SizedBox(width: 10),
+                          _chip(
                             context: context,
-                            onTap: _pickTime,
+                            onTap: () => _pickTime(lang),
                             icon: 'assets/icons/clock.png',
-                            label: _currentTime),
-                      ],
-                    ),
+                            label: _currentTime,
+                          ),
+                        ],
+                      ),
 
-                    const SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
-                    // ── Meal type selector ────────────────
-                    Text('Meal',
+                      Text(
+                        AppStrings.get('meal', lang),
                         style: GoogleFonts.arimo(
-                            color: c.primaryText, fontSize: 14)),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: _mealTypes.map((type) {
-                        final active = _mealType == type;
-                        return Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(
-                                    () => _mealType = type),
-                            child: Container(
-                              margin: const EdgeInsets.only(
-                                  right: 6),
-                              padding:
-                              const EdgeInsets.symmetric(
-                                  vertical: 8),
-                              decoration: BoxDecoration(
-                                color: active
-                                    ? AppColors.primary
-                                    .withOpacity(0.15)
-                                    : c.surface,
-                                borderRadius:
-                                BorderRadius.circular(10),
-                                border: Border.all(
+                            color: c.primaryText, fontSize: 14),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: _mealKeys.map((key) {
+                          final active = _mealType == key;
+                          return Expanded(
+                            child: GestureDetector(
+                              onTap: () =>
+                                  setState(() => _mealType = key),
+                              child: Container(
+                                margin: const EdgeInsets.only(right: 6),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8),
+                                decoration: BoxDecoration(
                                   color: active
                                       ? AppColors.primary
-                                      : Colors.transparent,
-                                ),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  type,
-                                  style: GoogleFonts.arimo(
+                                      .withOpacity(0.15)
+                                      : c.surface,
+                                  borderRadius:
+                                  BorderRadius.circular(10),
+                                  border: Border.all(
                                     color: active
                                         ? AppColors.primary
-                                        : c.hintText,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
+                                        : Colors.transparent,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    _localMeal(key, lang),
+                                    style: GoogleFonts.arimo(
+                                      color: active
+                                          ? AppColors.primary
+                                          : c.hintText,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
+                          );
+                        }).toList(),
+                      ),
 
-                    const SizedBox(height: 20),
-
-                    // ── Food name ─────────────────────────
-                    Text('Food name',
+                      const SizedBox(height: 20),
+                      Text(
+                        AppStrings.get('food_name', lang),
                         style: GoogleFonts.arimo(
-                            color: c.primaryText, fontSize: 14)),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _nameCtrl,
-                      style: GoogleFonts.arimo(
-                          color: c.primaryText, fontSize: 15),
-                      decoration: InputDecoration(
-                        hintText: 'eg. Grilled chicken salad',
-                        hintStyle: GoogleFonts.arimo(
-                            color: c.hintGrey, fontSize: 15),
-                        filled: true,
-                        fillColor: c.notesFill,
-                        contentPadding:
-                        const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 14),
-                        border: OutlineInputBorder(
-                          borderRadius:
-                          BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
+                            color: c.primaryText, fontSize: 14),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _nameCtrl,
+                        textDirection: isRtl
+                            ? TextDirection.rtl
+                            : TextDirection.ltr,
+                        style: GoogleFonts.arimo(
+                            color: c.primaryText, fontSize: 15),
+                        decoration: InputDecoration(
+                          hintText:
+                          AppStrings.get('eg_food', lang),
+                          hintStyle: GoogleFonts.arimo(
+                              color: c.hintGrey, fontSize: 15),
+                          filled: true,
+                          fillColor: c.notesFill,
+                          contentPadding:
+                          const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 14),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide.none,
+                          ),
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 20),
-
-                    // ── Nutrition info toggle ─────────────
-                    GestureDetector(
-                      onTap: () => setState(
-                              () => _showMacros = !_showMacros),
-                      child: Row(
-                        children: [
-                          Text('Nutrition Info',
+                      const SizedBox(height: 20),
+                      GestureDetector(
+                        onTap: () => setState(
+                                () => _showMacros = !_showMacros),
+                        child: Row(
+                          children: [
+                            Text(
+                              AppStrings.get(
+                                  'nutrition_info', lang),
                               style: GoogleFonts.arimo(
                                   color: c.primaryText,
                                   fontSize: 14,
-                                  fontWeight: FontWeight.w500)),
-                          const SizedBox(width: 6),
-                          Text('optional',
+                                  fontWeight: FontWeight.w500),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              AppStrings.get('optional', lang),
                               style: GoogleFonts.arimo(
                                   color: c.subtleText,
-                                  fontSize: 12)),
-                          const Spacer(),
-                          AnimatedRotation(
-                            turns: _showMacros ? 0.5 : 0,
-                            duration: const Duration(
-                                milliseconds: 200),
-                            child: Icon(
-                                Icons.keyboard_arrow_down,
-                                color: c.hintText,
-                                size: 20),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // ── Macro fields ──────────────────────
-                    AnimatedCrossFade(
-                      duration:
-                      const Duration(milliseconds: 250),
-                      crossFadeState: _showMacros
-                          ? CrossFadeState.showFirst
-                          : CrossFadeState.showSecond,
-                      firstChild: Column(
-                        children: [
-                          const SizedBox(height: 12),
-                          _macroField(
-                            context: context,
-                            controller: _caloriesCtrl,
-                            label: 'Calories',
-                            hint: '0',
-                            suffix: 'kcal',
-                            isInt: true,
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _macroField(
-                                  context: context,
-                                  controller: _carbsCtrl,
-                                  label: 'Carbs',
-                                  hint: '0',
-                                  suffix: 'g',
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: _macroField(
-                                  context: context,
-                                  controller: _proteinCtrl,
-                                  label: 'Protein',
-                                  hint: '0',
-                                  suffix: 'g',
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: _macroField(
-                                  context: context,
-                                  controller: _fatCtrl,
-                                  label: 'Fat',
-                                  hint: '0',
-                                  suffix: 'g',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      secondChild:
-                      const SizedBox(width: double.infinity),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // ── Notes ─────────────────────────────
-                    Text('Notes',
-                        style: GoogleFonts.arimo(
-                            color: c.primaryText, fontSize: 14)),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _notesCtrl,
-                      style: GoogleFonts.arimo(
-                          color: c.primaryText, fontSize: 14),
-                      maxLines: 2,
-                      decoration: InputDecoration(
-                        hintText: 'eg. Had this after workout',
-                        hintStyle: GoogleFonts.arimo(
-                            color: c.hintGrey, fontSize: 13),
-                        filled: true,
-                        fillColor: c.notesFill,
-                        contentPadding:
-                        const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
-                        border: OutlineInputBorder(
-                          borderRadius:
-                          BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
+                                  fontSize: 12),
+                            ),
+                            const Spacer(),
+                            AnimatedRotation(
+                              turns: _showMacros ? 0.5 : 0,
+                              duration: const Duration(
+                                  milliseconds: 200),
+                              child: Icon(
+                                  Icons.keyboard_arrow_down,
+                                  color: c.hintText,
+                                  size: 20),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
+                      AnimatedCrossFade(
+                        duration:
+                        const Duration(milliseconds: 250),
+                        crossFadeState: _showMacros
+                            ? CrossFadeState.showFirst
+                            : CrossFadeState.showSecond,
+                        firstChild: Column(
+                          children: [
+                            const SizedBox(height: 12),
+                            _macroField(
+                              context: context,
+                              controller: _caloriesCtrl,
+                              label: AppStrings.get(
+                                  'macro_calories', lang),
+                              hint: '0',
+                              suffix: AppStrings.get('kcal', lang),
+                              isInt: true,
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _macroField(
+                                    context: context,
+                                    controller: _carbsCtrl,
+                                    label: AppStrings.get(
+                                        'macro_carbs', lang),
+                                    hint: '0',
+                                    suffix: 'g',
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: _macroField(
+                                    context: context,
+                                    controller: _proteinCtrl,
+                                    label: AppStrings.get(
+                                        'macro_protein', lang),
+                                    hint: '0',
+                                    suffix: 'g',
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: _macroField(
+                                    context: context,
+                                    controller: _fatCtrl,
+                                    label: AppStrings.get(
+                                        'macro_fat', lang),
+                                    hint: '0',
+                                    suffix: 'g',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        secondChild:
+                        const SizedBox(width: double.infinity),
+                      ),
 
-                    const SizedBox(height: 32),
-                  ],
+                      const SizedBox(height: 20),
+                      Text(
+                        AppStrings.get('notes', lang),
+                        style: GoogleFonts.arimo(
+                            color: c.primaryText, fontSize: 14),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _notesCtrl,
+                        textDirection: isRtl
+                            ? TextDirection.rtl
+                            : TextDirection.ltr,
+                        style: GoogleFonts.arimo(
+                            color: c.primaryText, fontSize: 14),
+                        maxLines: 2,
+                        decoration: InputDecoration(
+                          hintText: AppStrings.get(
+                              'eg_notes_food', lang),
+                          hintStyle: GoogleFonts.arimo(
+                              color: c.hintGrey, fontSize: 13),
+                          filled: true,
+                          fillColor: c.notesFill,
+                          contentPadding:
+                          const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 10),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+                    ],
+                  ),
                 ),
               ),
-            ),
 
-            Padding(
-              padding:
-              const EdgeInsets.fromLTRB(20, 12, 20, 24),
-              child: MainButton(
-                text: 'Add',
-                enabled: _canSubmit,
-                onTap: _canSubmit ? _submit : null,
+              Padding(
+                padding:
+                const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                child: MainButton(
+                  text: AppStrings.get('add', lang),
+                  enabled: _canSubmit,
+                  onTap: _canSubmit ? _submit : null,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
-
-  // ── Small helpers ─────────────────────────────────────────
 
   Widget _chip({
     required BuildContext context,
@@ -631,8 +664,8 @@ class _FoodLogScreenState extends State<FoodLogScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(
-            horizontal: 12, vertical: 8),
+        padding:
+        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: c.cardBg,
           borderRadius: BorderRadius.circular(30),
@@ -663,15 +696,14 @@ class _FoodLogScreenState extends State<FoodLogScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: GoogleFonts.arimo(
-                color: c.hintText, fontSize: 12)),
+            style:
+            GoogleFonts.arimo(color: c.hintText, fontSize: 12)),
         const SizedBox(height: 4),
         TextField(
           controller: controller,
           keyboardType: isInt
               ? TextInputType.number
-              : const TextInputType.numberWithOptions(
-              decimal: true),
+              : const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: [
             isInt
                 ? FilteringTextInputFormatter.digitsOnly

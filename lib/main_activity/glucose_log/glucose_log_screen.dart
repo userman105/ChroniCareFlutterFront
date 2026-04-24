@@ -1,6 +1,8 @@
 import 'package:chronic_care/main_activity/glucose_log/glucose_reminder_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/lang/lang_strings.dart';
+import '../../cubit/locale_cubit.dart';
 import '../../models/glucose_entry.dart';
 import '../../widgets/components.dart';
 import '../../widgets/log_screen.dart';
@@ -16,19 +18,15 @@ class GlucoseScreen extends StatefulWidget {
 class _GlucoseScreenState extends State<GlucoseScreen> {
   final glucoseController = TextEditingController();
 
-  String selectedUnit = 'mg/dl';
-  bool buttonEnabled = false;
+  String selectedUnit  = 'mg/dl';
+  bool   buttonEnabled = false;
 
   @override
   void initState() {
     super.initState();
-
     glucoseController.addListener(() {
       final enabled = glucoseController.text.isNotEmpty;
-
-      if (enabled != buttonEnabled) {
-        setState(() => buttonEnabled = enabled);
-      }
+      if (enabled != buttonEnabled) setState(() => buttonEnabled = enabled);
     });
   }
 
@@ -40,8 +38,10 @@ class _GlucoseScreenState extends State<GlucoseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.watch<LocaleCubit>().state;
+
     return LogEntryScreen(
-      title: "Log Glucose",
+      title: AppStrings.get('log_glucose', lang),
 
       buttonEnabled: buttonEnabled,
 
@@ -69,14 +69,10 @@ class _GlucoseScreenState extends State<GlucoseScreen> {
       },
 
       content: [
-
         GlucoseInput(
           controller: glucoseController,
-          onUnitChanged: (unit) {
-            selectedUnit = unit;
-          },
+          onUnitChanged: (unit) => selectedUnit = unit,
         ),
-
       ],
     );
   }

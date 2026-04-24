@@ -2,7 +2,9 @@ import 'package:chronic_care/main_activity/doctor_log/appointment_details_screen
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../core/lang/lang_strings.dart';
 import '../cubit/health_cubit.dart';
+import '../cubit/locale_cubit.dart'; // Added
 import '../models/blood_pressure_entry.dart';
 import '../widgets/components.dart';
 
@@ -16,18 +18,25 @@ class RemindersScreen extends StatefulWidget {
 class _RemindersScreenState extends State<RemindersScreen> {
   bool _measurementsExpanded = false;
   bool _medsExpanded = false;
+  String _formatCount(int count, String lang) {
+    String text = AppStrings.get('reminder_count', lang);
+    if (lang == 'en') {
+      text = text.replaceFirst('{s}', count == 1 ? '' : 's');
+    }
+    return text.replaceFirst('{n}', '$count');
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final color = theme.colorScheme;
+    final lang = context.watch<LocaleCubit>().state; // Listen to language
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
-
             /// HEADER
             Container(
               height: 52,
@@ -35,9 +44,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 14),
               color: color.surface,
               child: Align(
-                alignment: Alignment.centerLeft,
+                alignment: lang == 'ar' ? Alignment.centerRight : Alignment.centerLeft,
                 child: Text(
-                  'Reminders',
+                  AppStrings.get('reminders', lang),
                   style: GoogleFonts.arimo(
                     color: color.onSurface,
                     fontSize: 16,
@@ -53,14 +62,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
                 listener: (context, _) => setState(() {}),
                 child: Builder(
                   builder: (context) {
-                    final allReminders =
-                    context.read<HealthCubit>().getReminders();
-
-                    final medsReminders =
-                    allReminders.where((r) => r.type == 'meds').toList();
-
-                    final measurementReminders =
-                    allReminders.where((r) => r.type != 'meds').toList();
+                    final allReminders = context.read<HealthCubit>().getReminders();
+                    final medsReminders = allReminders.where((r) => r.type == 'meds').toList();
+                    final measurementReminders = allReminders.where((r) => r.type != 'meds').toList();
 
                     Widget buildSection({
                       required String title,
@@ -70,13 +74,11 @@ class _RemindersScreenState extends State<RemindersScreen> {
                     }) {
                       return Column(
                         children: [
-
                           /// HEADER
                           GestureDetector(
                             onTap: onToggle,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 14),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                               decoration: BoxDecoration(
                                 color: color.surfaceContainerHighest,
                                 borderRadius: BorderRadius.vertical(
@@ -88,8 +90,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                                 children: [
                                   AnimatedRotation(
                                     turns: expanded ? 0.5 : 0,
-                                    duration:
-                                    const Duration(milliseconds: 250),
+                                    duration: const Duration(milliseconds: 250),
                                     child: Icon(
                                       Icons.keyboard_arrow_down,
                                       color: color.onSurface,
@@ -106,7 +107,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                                   ),
                                   const Spacer(),
                                   Text(
-                                    '${items.length} reminder${items.length == 1 ? '' : 's'}',
+                                    _formatCount(items.length, lang),
                                     style: GoogleFonts.arimo(
                                       color: color.onSurfaceVariant,
                                       fontSize: 13,
@@ -120,28 +121,21 @@ class _RemindersScreenState extends State<RemindersScreen> {
                           /// CONTENT
                           AnimatedCrossFade(
                             duration: const Duration(milliseconds: 250),
-                            crossFadeState: expanded
-                                ? CrossFadeState.showFirst
-                                : CrossFadeState.showSecond,
+                            crossFadeState: expanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
                             firstChild: Container(
                               width: double.infinity,
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color: color.surface,
-                                borderRadius: const BorderRadius.vertical(
-                                  bottom: Radius.circular(12),
-                                ),
-                                border: Border.all(
-                                  color: color.outlineVariant,
-                                ),
+                                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+                                border: Border.all(color: color.outlineVariant),
                               ),
                               child: items.isEmpty
                                   ? Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 20),
+                                padding: const EdgeInsets.symmetric(vertical: 20),
                                 child: Center(
                                   child: Text(
-                                    'No reminders yet',
+                                    AppStrings.get('no_reminders', lang),
                                     style: GoogleFonts.arimo(
                                       color: color.onSurfaceVariant,
                                       fontSize: 14,
@@ -150,12 +144,10 @@ class _RemindersScreenState extends State<RemindersScreen> {
                                 ),
                               )
                                   : Column(
-                                children: items
-                                    .map((r) => ReminderTile(entry: r))
-                                    .toList(),
+                                children: items.map((r) => ReminderTile(entry: r)).toList(),
                               ),
                             ),
-                            secondChild: const SizedBox(),
+                            secondChild: const SizedBox(width: double.infinity),
                           ),
                         ],
                       );
@@ -165,26 +157,19 @@ class _RemindersScreenState extends State<RemindersScreen> {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-
                           buildSection(
-                            title: "Measurements",
+                            title: AppStrings.get("measurements", lang),
                             items: measurementReminders,
                             expanded: _measurementsExpanded,
-                            onToggle: () => setState(() =>
-                            _measurementsExpanded =
-                            !_measurementsExpanded),
+                            onToggle: () => setState(() => _measurementsExpanded = !_measurementsExpanded),
                           ),
-
                           const SizedBox(height: 16),
-
                           buildSection(
-                            title: "Meds",
+                            title: AppStrings.get("meds_section", lang),
                             items: medsReminders,
                             expanded: _medsExpanded,
-                            onToggle: () =>
-                                setState(() => _medsExpanded = !_medsExpanded),
+                            onToggle: () => setState(() => _medsExpanded = !_medsExpanded),
                           ),
-
                           const SizedBox(height: 20),
 
                           /// APPOINTMENTS CARD
@@ -193,27 +178,22 @@ class _RemindersScreenState extends State<RemindersScreen> {
                             onTap: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                  const AppointmentDetailsScreen(),
-                                ),
+                                MaterialPageRoute(builder: (_) => const AppointmentDetailsScreen()),
                               );
                             },
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 14),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                               decoration: BoxDecoration(
                                 color: color.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.add_chart,
-                                      color: color.onSurface),
+                                  Icon(Icons.add_chart, color: color.onSurface),
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: Text(
-                                      "View Doctor's appointments",
+                                      AppStrings.get("view_appointments", lang),
                                       style: GoogleFonts.arimo(
                                         color: color.onSurface,
                                         fontSize: 15,
@@ -221,8 +201,10 @@ class _RemindersScreenState extends State<RemindersScreen> {
                                       ),
                                     ),
                                   ),
-                                  Icon(Icons.folder,
-                                      color: color.onSurfaceVariant),
+                                  Icon(
+                                    lang == 'ar' ? Icons.folder_shared : Icons.folder,
+                                    color: color.onSurfaceVariant,
+                                  ),
                                 ],
                               ),
                             ),

@@ -11,6 +11,7 @@ import 'main_activity/main_container.dart';
 import 'sign_up_screen.dart';
 import 'cubit/health_cubit.dart';
 import 'cubit/auth_cubit.dart';
+import 'cubit/locale_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +35,7 @@ void main() async {
         BlocProvider(create: (_) => HealthCubit()),
         BlocProvider(create: (_) => AuthCubit()),
         BlocProvider(create: (_) => ThemeCubit()),
+        BlocProvider(create: (_) => LocaleCubit()..loadSavedLang()),
       ],
       child: const MyApp(),
     ),
@@ -44,29 +46,37 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ThemeCubit, ThemeMode>(
-      builder: (context, mode) {
-        return MaterialApp(
-          title: 'ChroniCare',
-          debugShowCheckedModeBanner: false,
+    return BlocBuilder<LocaleCubit, String>(
+      builder: (context, lang) {
+        return BlocBuilder<ThemeCubit, ThemeMode>(
+          builder: (context, mode) {
+            return Directionality(
+              textDirection:
+              lang == "ar" ? TextDirection.rtl : TextDirection.ltr,
+              child: MaterialApp(
+                title: 'ChroniCare',
+                debugShowCheckedModeBanner: false,
 
-          themeMode: mode,
+                themeMode: mode,
 
-          theme: ThemeData(
-            brightness: Brightness.light,
-            fontFamily: "arimo",
-            scaffoldBackgroundColor: Colors.white,
-            primaryColor: const Color(0xFF00C950),
-          ),
+                theme: ThemeData(
+                  brightness: Brightness.light,
+                  fontFamily: "arimo",
+                  scaffoldBackgroundColor: Colors.white,
+                  primaryColor: const Color(0xFF00C950),
+                ),
 
-          darkTheme: ThemeData(
-            brightness: Brightness.dark,
-            fontFamily: "arimo",
-            scaffoldBackgroundColor: const Color(0xFF111111),
-            primaryColor: const Color(0xFF00C950),
-          ),
+                darkTheme: ThemeData(
+                  brightness: Brightness.dark,
+                  fontFamily: "arimo",
+                  scaffoldBackgroundColor: const Color(0xFF111111),
+                  primaryColor: const Color(0xFF00C950),
+                ),
 
-          home: const RootDecider(),
+                home: const RootDecider(),
+              ),
+            );
+          },
         );
       },
     );
