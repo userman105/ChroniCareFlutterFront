@@ -2703,34 +2703,46 @@ class LogDrawersState extends State<LogDrawers> {
     }
   }
 
-  void _handleAddLog(BuildContext context, _LogInstance instance) {
+  Future<void> _handleAddLog(BuildContext context, _LogInstance instance) async {
     if (instance.reminder == null) return;
-    final cubit = context.read<HealthCubit>();
-    final today = DateTime.now();
+    final cubit   = context.read<HealthCubit>();
+    final today   = DateTime.now();
+    final reminder = instance.reminder!;
+    final idx      = instance.timeIndex!;
 
-    switch (instance.reminder!.type) {
+    Widget screen;
+    switch (reminder.type) {
       case 'blood_pressure':
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const BloodPressureScreen()));
+        screen = const BloodPressureScreen();
         break;
       case 'meds':
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const MedicationLogScreen()));
+        screen = const MedicationLogScreen();
         break;
       case 'weight':
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const WeightLogScreen()));
+        screen = const WeightLogScreen();
         break;
       case 'glucose':
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const GlucoseScreen()));
+        screen = const GlucoseScreen();
         break;
+      default:
+        return;
     }
-    cubit.resolveReminderLog(instance.reminder!, instance.timeIndex!, today);
-    NotificationService.syncUpcomingToDrawer(cubit.getReminders());
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => screen),
+    );
+
+    cubit.resolveReminderLog(reminder, idx, today);
+
+    await NotificationService.syncUpcomingToDrawer(cubit.getReminders());
   }
 
-  void _handleSkip(BuildContext context, _LogInstance instance) {
+  Future<void> _handleSkip(BuildContext context, _LogInstance instance) async {
     if (instance.reminder == null) return;
     final cubit = context.read<HealthCubit>();
     cubit.skipReminderLog(instance.reminder!, instance.timeIndex!, DateTime.now());
-    NotificationService.syncUpcomingToDrawer(cubit.getReminders());
+    await NotificationService.syncUpcomingToDrawer(cubit.getReminders());
   }
 
   @override
@@ -2877,6 +2889,7 @@ class LogDrawersState extends State<LogDrawers> {
           ),
           if (!isAppointment && !isDone) ...[
             GestureDetector(
+              // FIX: handlers are now async — wrap with a non-async lambda
               onTap: () => _handleSkip(context, instance),
               child: Icon(Icons.close, color: c.hintText),
             ),

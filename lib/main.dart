@@ -14,7 +14,6 @@ import 'cubit/auth_cubit.dart';
 import 'cubit/locale_cubit.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
 final HealthCubit healthCubit = HealthCubit();
 
 void main() async {
@@ -59,8 +58,7 @@ class MyApp extends StatelessWidget {
         return BlocBuilder<ThemeCubit, ThemeMode>(
           builder: (context, mode) {
             return Directionality(
-              textDirection:
-              lang == "ar" ? TextDirection.rtl : TextDirection.ltr,
+              textDirection: lang == "ar" ? TextDirection.rtl : TextDirection.ltr,
               child: MaterialApp(
                 title: 'ChroniCare',
                 debugShowCheckedModeBanner: false,
@@ -94,22 +92,19 @@ Future<void> rescheduleNotificationsCallback() async {
 
   await NotificationService.init();
 
-  final prefs = await SharedPreferences.getInstance();
-  final list  = prefs.getStringList('reminder_entries') ?? [];
-
+  final prefs     = await SharedPreferences.getInstance();
+  final list      = prefs.getStringList('reminder_entries') ?? [];
   final reminders = list.map((e) => ReminderEntry.fromJson(e)).toList();
 
-  for (final r in reminders) {
-    await NotificationService.scheduleReminder(r);
-  }
+  await NotificationService.rescheduleAll(reminders);
 }
 
 class RootDecider extends StatelessWidget {
   const RootDecider({super.key});
 
   Future<bool> _checkLogin() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = await TokenStorage.getAccessToken();
+    final prefs    = await SharedPreferences.getInstance();
+    final token    = await TokenStorage.getAccessToken();
     final loggedIn = prefs.getBool("is_logged_in") == true;
     final guest    = prefs.getBool("is_guest") == true;
     return loggedIn && token != null && (guest || token.isNotEmpty);
