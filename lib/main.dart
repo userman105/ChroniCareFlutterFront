@@ -13,14 +13,21 @@ import 'cubit/health_cubit.dart';
 import 'cubit/auth_cubit.dart';
 import 'cubit/locale_cubit.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+final HealthCubit healthCubit = HealthCubit();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   ApiClient.init();
 
-  await AndroidAlarmManager.initialize();
   await NotificationService.init();
 
+  NotificationService.navigatorKey = navigatorKey;
+  NotificationService.cubit        = healthCubit;
+
+  await AndroidAlarmManager.initialize();
   await AndroidAlarmManager.oneShot(
     const Duration(seconds: 5),
     999,
@@ -32,7 +39,7 @@ void main() async {
   runApp(
     MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => HealthCubit()),
+        BlocProvider.value(value: healthCubit),
         BlocProvider(create: (_) => AuthCubit()),
         BlocProvider(create: (_) => ThemeCubit()),
         BlocProvider(create: (_) => LocaleCubit()..loadSavedLang()),
@@ -41,6 +48,7 @@ void main() async {
     ),
   );
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -56,23 +64,20 @@ class MyApp extends StatelessWidget {
               child: MaterialApp(
                 title: 'ChroniCare',
                 debugShowCheckedModeBanner: false,
-
+                navigatorKey: navigatorKey,
                 themeMode: mode,
-
                 theme: ThemeData(
                   brightness: Brightness.light,
                   fontFamily: "arimo",
                   scaffoldBackgroundColor: Colors.white,
                   primaryColor: const Color(0xFF00C950),
                 ),
-
                 darkTheme: ThemeData(
                   brightness: Brightness.dark,
                   fontFamily: "arimo",
                   scaffoldBackgroundColor: const Color(0xFF111111),
                   primaryColor: const Color(0xFF00C950),
                 ),
-
                 home: const RootDecider(),
               ),
             );
@@ -90,7 +95,7 @@ Future<void> rescheduleNotificationsCallback() async {
   await NotificationService.init();
 
   final prefs = await SharedPreferences.getInstance();
-  final list = prefs.getStringList('reminders') ?? [];
+  final list  = prefs.getStringList('reminder_entries') ?? [];
 
   final reminders = list.map((e) => ReminderEntry.fromJson(e)).toList();
 
@@ -105,10 +110,8 @@ class RootDecider extends StatelessWidget {
   Future<bool> _checkLogin() async {
     final prefs = await SharedPreferences.getInstance();
     final token = await TokenStorage.getAccessToken();
-
     final loggedIn = prefs.getBool("is_logged_in") == true;
-    final guest = prefs.getBool("is_guest") == true;
-
+    final guest    = prefs.getBool("is_guest") == true;
     return loggedIn && token != null && (guest || token.isNotEmpty);
   }
 
@@ -131,14 +134,9 @@ class RootDecider extends StatelessWidget {
               body: Center(child: CircularProgressIndicator()),
             );
           }
-
-          final loggedIn = snapshot.data as bool;
-
-          if (loggedIn) {
-            return const MainContainer();
-          }
-
-          return const SignUpScreen();
+          return snapshot.data as bool
+              ? const MainContainer()
+              : const SignUpScreen();
         },
       ),
     );

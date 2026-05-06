@@ -37,7 +37,6 @@ class _RemindersScreenState extends State<RemindersScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            /// HEADER
             Container(
               height: 52,
               width: double.infinity,
@@ -176,6 +175,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                           InkWell(
                             borderRadius: BorderRadius.circular(12),
                             onTap: () {
+
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (_) => const AppointmentDetailsScreen()),

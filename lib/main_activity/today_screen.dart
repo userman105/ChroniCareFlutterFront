@@ -10,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../core/lang/lang_strings.dart';
 import '../cubit/health_cubit.dart';
 import '../cubit/locale_cubit.dart';
+import '../services/notification_service.dart';
 import '../widgets/components.dart';
 import 'blood_log/blood_log_screen.dart';
 
@@ -21,6 +22,16 @@ class TodayScreen extends StatefulWidget {
 }
 
 class _TodayScreenState extends State<TodayScreen> {
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final reminders = context.read<HealthCubit>().getReminders();
+      NotificationService.syncUpcomingToDrawer(reminders);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final healthCubit = context.watch<HealthCubit>();
@@ -51,7 +62,6 @@ class _TodayScreenState extends State<TodayScreen> {
                   itemCount: tiles.length + 1,
                   itemBuilder: (context, index) {
 
-                    /// ➕ ADD BUTTON
                     if (index == tiles.length) {
                       return GestureDetector(
                         onTap: () async {

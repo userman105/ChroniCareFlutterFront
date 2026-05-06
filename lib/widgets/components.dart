@@ -20,6 +20,7 @@ import '../core/lang/lang_strings.dart';
 import '../main_activity/blood_log/blood_log_screen.dart';
 import '../main_activity/weight_log/weight_log_screen.dart';
 import '../models/appointment_entry.dart';
+import '../services/notification_service.dart';
 import 'alarm_screen.dart';
 
 class AppColors {
@@ -786,7 +787,6 @@ class HighlightableGridTile extends StatelessWidget {
   }
 }
 
-
 class BottomNavigationBarCustom extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTabSelected;
@@ -806,20 +806,25 @@ class BottomNavigationBarCustom extends StatelessWidget {
 
     Widget navItem(int index, String icon, String activeIcon, String label) {
       final bool isActive = currentIndex == index;
+      final screenWidth = MediaQuery.of(context).size.width;
+      final double fontSize = screenWidth < 360 ? 10 : 12;
 
       return GestureDetector(
         onTap: () => onTabSelected(index),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(isActive ? activeIcon : icon, width: 26, height: 26),
+            Image.asset(isActive ? activeIcon : icon, width: 24, height: 24),
             const SizedBox(height: 4),
-            Text(
-              label,
-              style: GoogleFonts.arimo(
-                color: isActive ? AppColors.primary : c.navInactive,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                style: GoogleFonts.arimo(
+                  color: isActive ? AppColors.primary : c.navInactive,
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],
@@ -858,7 +863,7 @@ class BottomNavigationBarCustom extends StatelessWidget {
     }
 
     return SizedBox(
-      height: 100, // more space for floating button
+      height: 100 + MediaQuery.of(context).padding.bottom, // Adjusted height for floating button and safe area, with buffer
       child: Stack(
         alignment: Alignment.bottomCenter,
         children: [
@@ -871,7 +876,7 @@ class BottomNavigationBarCustom extends StatelessWidget {
             child: SafeArea(
               top: false,
               child: Container(
-                height: 75,
+                height: 65 + MediaQuery.of(context).padding.bottom,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 decoration: BoxDecoration(
                   color: c.surface,
@@ -904,7 +909,7 @@ class BottomNavigationBarCustom extends StatelessWidget {
                     ),
 
                     /// GAP FOR CENTER BUTTON
-                    const SizedBox(width: 70),
+                    SizedBox(width: MediaQuery.of(context).size.width * 0.15),
 
                     Expanded(
                       child: navItem(
@@ -929,9 +934,8 @@ class BottomNavigationBarCustom extends StatelessWidget {
             ),
           ),
 
-          /// FLOATING BUTTON
           Positioned(
-            bottom: 35, // 🔥 controls how high it floats
+            bottom: 25 + MediaQuery.of(context).padding.bottom,
             child: floatingButton(),
           ),
         ],
@@ -939,8 +943,6 @@ class BottomNavigationBarCustom extends StatelessWidget {
     );
   }
 }
-
-
 
 class AddEntryPopup extends StatefulWidget {
   final List<HealthTile> currentTiles;
@@ -2708,29 +2710,27 @@ class LogDrawersState extends State<LogDrawers> {
 
     switch (instance.reminder!.type) {
       case 'blood_pressure':
-        Navigator.push(context, MaterialPageRoute(
-            builder: (_) => const BloodPressureScreen()));
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const BloodPressureScreen()));
         break;
       case 'meds':
-        Navigator.push(context, MaterialPageRoute(
-            builder: (_) => const MedicationLogScreen()));
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const MedicationLogScreen()));
         break;
       case 'weight':
-        Navigator.push(context, MaterialPageRoute(
-            builder: (_) => const WeightLogScreen()));
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const WeightLogScreen()));
         break;
       case 'glucose':
-        Navigator.push(context, MaterialPageRoute(
-            builder: (_) => const GlucoseScreen()));
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const GlucoseScreen()));
         break;
     }
     cubit.resolveReminderLog(instance.reminder!, instance.timeIndex!, today);
+    NotificationService.syncUpcomingToDrawer(cubit.getReminders());
   }
 
   void _handleSkip(BuildContext context, _LogInstance instance) {
     if (instance.reminder == null) return;
-    context.read<HealthCubit>().skipReminderLog(
-        instance.reminder!, instance.timeIndex!, DateTime.now());
+    final cubit = context.read<HealthCubit>();
+    cubit.skipReminderLog(instance.reminder!, instance.timeIndex!, DateTime.now());
+    NotificationService.syncUpcomingToDrawer(cubit.getReminders());
   }
 
   @override
