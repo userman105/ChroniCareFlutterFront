@@ -42,6 +42,7 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     _loadFoodEntries();
     _loadReminders();
     _loadAppointments();
+    _loadLabTests();
   }
 
   DateTime selectedDate = DateTime.now();

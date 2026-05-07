@@ -8,6 +8,8 @@ import '../cubit/theme_cubit.dart';
 import '../cubit/locale_cubit.dart';
 import '../core/lang/lang_strings.dart';
 import '../sign_up_screen.dart';
+import 'export_logs_screen.dart';
+import 'exported_reports_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -601,6 +603,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   activeColor: _primary(context),
                                   onChanged: (v) => context.read<ThemeCubit>().toggleTheme(v),
                                 ),
+                              ),
+
+                              _settingsRow(
+                                label: AppStrings.get('Export_health_report', lang),
+                                value: '',
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const ExportLogsScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
+
+                              _settingsRow(
+                                label: AppStrings.get('Exported_reports', lang),
+                                value: '',
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const ExportedReportsScreen(),
+                                    ),
+                                  );
+                                },
                               ),
 
                               _settingsRow(

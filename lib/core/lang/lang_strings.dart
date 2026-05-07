@@ -1,7 +1,6 @@
 class AppStrings {
   static const Map<String, Map<String, String>> _localized = {
     "en": {
-      // ── Profile Screen ──────────────────────────────────
       "profile_settings": "Profile Settings",
       "account_settings": "Account Settings",
       "light_mode": "Light Mode",
@@ -27,13 +26,14 @@ class AppStrings {
       "exit_guest": "Exit guest mode?",
       "enter_name": "Enter your name",
 
-      // ── Bottom Nav ──────────────────────────────────────
+      "Export_health_report":"Export health report",
+      "Exported_reports":"Exported reports",
+
       "today": "Today",
       "insights": "Insights",
       "reminders": "Reminders",
       "profile": "Profile",
 
-      // ── Add-Event Slider ────────────────────────────────
       "select_type": "Select Type",
       "select_what_to_do": "Select what you want to do",
       "add_doctor_appointment": "Add a doctor appointment",
@@ -48,7 +48,6 @@ class AppStrings {
       "photograph_tests_desc":
       "Save medical information related to lab tests for feature insights.",
 
-      // ── Health Inputs ───────────────────────────────────
       "blood_pressure_label": "Blood Pressure (systolic/diastolic)",
       "heart_rate_optional": "Heart Rate (optional)",
       "mmhg": "mmHg",
@@ -57,7 +56,6 @@ class AppStrings {
       "lbs": "LBS",
       "glucose": "Glucose",
 
-      // ── Reminder Tile / Edit Sheet ──────────────────────
       "edit_reminder": "Edit Reminder",
       "recurring": "Recurring",
       "once": "Once",
@@ -76,24 +74,20 @@ class AppStrings {
       "eg_morning_meds": "eg. Morning meds",
       "eg_take_after_food": "eg. take after food",
 
-      // ── Frequency ───────────────────────────────────────
       "frequency": "Frequency",
       "daily": "Daily",
       "weekly": "Weekly",
       "every_2_days": "Every 2 days",
       "monthly": "Monthly",
 
-      // ── Date Range Picker ───────────────────────────────
       "start_date_display": "Start Date",
       "end_date_display": "End Date",
       "apply": "Apply",
 
-      // ── Log Drawers ─────────────────────────────────────
       "missed_logs": "Missed logs",
       "upcoming_logs": "Upcoming logs",
       "resolved_logs": "Resolved logs",
 
-      // ── Time ────────────────────────────────────────────
       "am_label": "AM",
       "pm_label": "PM",
 
@@ -120,7 +114,6 @@ class AppStrings {
       "month_11" : "November",
       "month_12" : "December",
 
-      // ── Blood Pressure ──────────────────────────────────
       "log_blood_pressure": "Log Blood Pressure",
       "blood_pressure": "Blood Pressure",
       "blood_pressure_reminder": "Blood Pressure Reminder",
@@ -172,7 +165,6 @@ class AppStrings {
       "in_hours_min": "In {h}h {m}m",
       "in_min": "In {n} min",
 
-      // ── Food ────────────────────────────────────────────
       "food": "Food",
       "log_food": "Log Food",
       "all_entries_food": "All Entries",
@@ -206,7 +198,6 @@ class AppStrings {
       "yesterday": "Yesterday",
       "all_filter": "All",
 
-      // ── Glucose ─────────────────────────────────────────
       "glucose_title": "Glucose",
       "log_glucose": "Log Glucose",
       "glucose_reminder": "Glucose Reminder",
@@ -220,7 +211,6 @@ class AppStrings {
       "status_high": "High",
       "glucose_legend": "Glucose",
 
-      // ── Lab Tests ────────────────────────────────────────
       "lab_tests": "Lab Tests",
       "log_lab_test": "Log Lab Test",
       "no_lab_tests_yet": "No lab tests yet",
@@ -254,7 +244,7 @@ class AppStrings {
       "delete_test_confirm": "Are you sure you want to delete",
       "cannot_be_undone": "This cannot be undone.",
 
-      // ── Medication ───────────────────────────────────────
+
       "medication": "Medication",
       "log_medication": "Log Medication",
       "meds" : "meds",
@@ -285,7 +275,6 @@ class AppStrings {
       "qty": "Qty",
       "form_label": "Form",
 
-      // ── Symptoms ─────────────────────────────────────────
       "symptoms": "Symptoms",
       "log_symptom": "Log Symptom",
       "symptom_entry": "Symptom Entry",
@@ -310,7 +299,7 @@ class AppStrings {
       "symptom_fatigue": "Fatigue",
       "symptom_nausea": "Nausea",
       "symptom_dizziness": "Dizziness",
-      // ── Weight ───────────────────────────────────────────
+
       "weight_title": "Weight",
       "log_weight": "Log Weight",
       "weight_reminder": "Weight Reminder",
@@ -325,7 +314,7 @@ class AppStrings {
       "pounds": "POUNDS",
       "logs": "logs",
       "no_entries_logged_yet_weight": "No entries logged yet",
-      // ── Added for Reminder Template ─────────────────────
+
       "name_of_medicine": "Name of the medicine",
       "eg_aspirin": "eg. Aspirin",
       "add_more_meds": "+ Add More Meds",
@@ -342,7 +331,6 @@ class AppStrings {
       "month_short_11": "Nov",
       "month_short_12": "Dec",
 
-      // ── Insights Screen ────────────────────────────────
       "just_now": "Just now",
       "min_ago": "{n} min ago",
       "h_ago": "{n} h ago",
@@ -355,6 +343,33 @@ class AppStrings {
       "reminder_count": "{n} reminder{s}",
       "test_logs" : "test logs" ,
       "add_entry" : "add entry",
+      "export_title": "Export Health Report",
+      "timeline_filter": "Timeline Filter",
+      "timeline_desc": "Choose a custom timeline or leave empty to export all available logs.",
+      "not_selected": "Not selected",
+      "detected_logs": "Detected Logs",
+      "blood_pressure_logs": "Blood Pressure Logs",
+      "glucose_logs": "Glucose Logs",
+      "weight_logs": "Weight Logs",
+      "medication_logs": "Medication Logs",
+      "food_logs": "Food Logs",
+      "symptom_logs": "Symptom Logs",
+      "export_summary": "Export Summary",
+      "total_logs_desc": "{total} total logs will be included in the generated PDF report.",
+      "generate_pdf": "Generate PDF Report",
+      "pdf_success": "PDF exported successfully",
+      "export_complete": "Export Complete",
+      "saved_to": "Saved to:",
+      "done": "Done",
+      "logs_detected_count": "{count} logs detected",
+      "exported_reports_title": "Exported Reports",
+      "report_deleted": "Report deleted",
+      "delete_report_title": "Delete Report",
+      "delete_report_confirm": "Are you sure you want to permanently delete this exported report?",
+      "no_reports_title": "No Exported Reports",
+      "no_reports_desc": "Your exported PDF health reports will appear here once generated.",
+      "open": "Open",
+
 
 
 
@@ -364,7 +379,7 @@ class AppStrings {
 
     },
     "ar": {
-      // ── Profile Screen ──────────────────────────────────
+
       "profile_settings": "إعدادات الملف الشخصي",
       "account_settings": "إعدادات الحساب",
       "light_mode": "وضع النهار",
@@ -389,14 +404,14 @@ class AppStrings {
       "logout_confirm": "هل أنت متأكد أنك تريد تسجيل الخروج؟",
       "exit_guest": "الخروج من وضع الضيف؟",
       "enter_name": "أدخل اسمك",
+      "Export_health_report":"انشاء تقرير",
+      "Exported_reports":"التقارير المستخرجة",
 
-      // ── Bottom Nav ──────────────────────────────────────
       "today": "اليوم",
       "insights": "متابعة",
       "reminders": "التذكيرات",
       "profile": "الملف الشخصي",
 
-      // ── Add-Event Slider ────────────────────────────────
       "select_type": "اختر النوع",
       "select_what_to_do": "اختر ما تريد فعله",
       "add_doctor_appointment": "إضافة موعد طبيب",
@@ -411,7 +426,6 @@ class AppStrings {
       "photograph_tests_desc":
       "احفظ المعلومات الطبية المتعلقة بنتائج التحاليل.",
 
-      // ── Health Inputs ───────────────────────────────────
       "blood_pressure_label": "ضغط الدم (الانقباضي/الانبساطي)",
       "heart_rate_optional": "معدل ضربات القلب (اختياري)",
       "mmhg": "مم زئبق",
@@ -420,7 +434,6 @@ class AppStrings {
       "lbs": "رطل",
       "glucose": "الجلوكوز",
 
-      // ── Reminder Tile / Edit Sheet ──────────────────────
       "edit_reminder": "تعديل التذكير",
       "recurring": "متكرر",
       "once": "مرة واحدة",
@@ -439,24 +452,20 @@ class AppStrings {
       "eg_morning_meds": "مثال: أدوية الصباح",
       "eg_take_after_food": "مثال: تناول بعد الطعام",
 
-      // ── Frequency ───────────────────────────────────────
       "frequency": "التكرار",
       "daily": "يومياً",
       "weekly": "أسبوعياً",
       "every_2_days": "كل يومين",
       "monthly": "شهرياً",
 
-      // ── Date Range Picker ───────────────────────────────
       "start_date_display": "تاريخ البداية",
       "end_date_display": "تاريخ النهاية",
       "apply": "تطبيق",
 
-      // ── Log Drawers ─────────────────────────────────────
       "missed_logs": "السجلات الفائتة",
       "upcoming_logs": "السجلات القادمة",
       "resolved_logs": "السجلات المنجزة",
 
-      // ── Time ────────────────────────────────────────────
       "am_label": "ص",
       "pm_label": "م",
 
@@ -487,7 +496,6 @@ class AppStrings {
       "month_11" : "نوفمبر",
       "month_12" : "ديسمبر",
 
-      // ── Blood Pressure (ar) ─────────────────────────────
       "log_blood_pressure": "تسجيل ضغط الدم",
       "blood_pressure": "ضغط الدم",
       "blood_pressure_reminder": "تذكير ضغط الدم",
@@ -518,7 +526,6 @@ class AppStrings {
       "at_time": "الساعة",
       "bpm": "نبضة/د",
 
-      // ── Appointments (ar) ───────────────────────────────
       "appointments": "المواعيد",
       "upcoming": "القادمة",
       "past_section": "السابقة",
@@ -540,7 +547,6 @@ class AppStrings {
       "in_hours_min": "بعد {h}س {m}د",
       "in_min": "بعد {n} دقيقة",
 
-      // ── Food (ar) ───────────────────────────────────────
       "food": "الطعام",
       "log_food": "تسجيل وجبة",
       "all_entries_food": "كل السجلات",
@@ -574,7 +580,6 @@ class AppStrings {
       "yesterday": "أمس",
       "all_filter": "الكل",
 
-      // ── Glucose (ar) ────────────────────────────────────
       "glucose_title": "الجلوكوز",
       "log_glucose": "تسجيل الجلوكوز",
       "glucose_reminder": "تذكير الجلوكوز",
@@ -588,7 +593,6 @@ class AppStrings {
       "status_high": "مرتفع",
       "glucose_legend": "الجلوكوز",
 
-      // ── Lab Tests (ar) ───────────────────────────────────
       "lab_tests": "تحاليل المختبر",
       "log_lab_test": "تسجيل تحليل",
       "no_lab_tests_yet": "لا توجد تحاليل بعد",
@@ -621,7 +625,7 @@ class AppStrings {
       "delete_test": "حذف التحليل",
       "delete_test_confirm": "هل أنت متأكد من حذف",
       "cannot_be_undone": "لا يمكن التراجع عن هذا.",
-      // ── Medication (ar) ──────────────────────────────────
+
       "medication": "الدواء",
       "meds" : "الادوية",
       "log_medication": "تسجيل دواء",
@@ -651,7 +655,6 @@ class AppStrings {
       "less_label": "أقل",
       "qty": "الكمية",
       "form_label": "الشكل",
-      // ── Symptoms (ar) ────────────────────────────────────
       "symptoms": "الأعراض",
       "log_symptom": "تسجيل عرض",
       "symptom_entry": "سجل العرض",
@@ -676,7 +679,7 @@ class AppStrings {
       "symptom_fatigue": "إرهاق",
       "symptom_nausea": "غثيان",
       "symptom_dizziness": "دوخة",
-      // ── Weight (ar) ──────────────────────────────────────
+
       "weight_title": "الوزن",
       "log_weight": "تسجيل الوزن",
       "weight_reminder": "تذكير الوزن",
@@ -691,7 +694,7 @@ class AppStrings {
       "pounds": "رطل",
       "logs": "سجل",
       "no_entries_logged_yet_weight": "لا توجد سجلات بعد",
-      // ── Added for Reminder Template ─────────────────────
+
       "name_of_medicine": "اسم الدواء",
       "eg_aspirin": "مثال: أسبرين",
       "add_more_meds": "+ إضافة المزيد من الأدوية",
@@ -707,7 +710,7 @@ class AppStrings {
       "month_short_10": "أكتوبر",
       "month_short_11": "نوفمبر",
       "month_short_12": "ديسمبر",
-      // ── Insights Screen ────────────────────────────────
+
       "just_now": "الآن",
       "min_ago": "منذ {n} دقيقة",
       "h_ago": "منذ {n} ساعة",
@@ -721,6 +724,32 @@ class AppStrings {
       "test_logs" : "صور الفحوصات" ,
       "add_entry" : "اٍضافة سجل",
 
+      "export_title": "تصدير التقرير الصحي",
+      "timeline_filter": "تحديد الجدول الزمني",
+      "timeline_desc": "اختر جدولاً زمنياً مخصصاً أو اتركه فارغاً لتصدير جميع السجلات المتاحة.",
+      "not_selected": "لم يتم الاختيار",
+      "detected_logs": "السجلات المكتشفة",
+      "blood_pressure_logs": "سجلات ضغط الدم",
+      "glucose_logs": "سجلات الجلوكوز",
+      "weight_logs": "سجلات الوزن",
+      "medication_logs": "سجلات الأدوية",
+      "food_logs": "سجلات الطعام",
+      "symptom_logs": "سجلات الأعراض",
+      "export_summary": "ملخص التقرير",
+      "total_logs_desc": "سيتم انشاء {total} من السجلات الإجمالية في التقرير الناتج.",
+      "generate_pdf": "إنشاء تقرير PDF",
+      "pdf_success": "تم تصدير ملف PDF بنجاح",
+      "export_complete": "اكتمل الاستخراج",
+      "saved_to": "تم الحفظ في:",
+      "done": "تم",
+      "logs_detected_count": "تم اكتشاف {count} سجلات",
+      "exported_reports_title": "التقارير المستخرجة",
+      "report_deleted": "تم حذف التقرير",
+      "delete_report_title": "حذف التقرير",
+      "delete_report_confirm": "هل أنت متأكد أنك تريد حذف هذا التقرير المصدر نهائيًا؟",
+      "no_reports_title": "لا توجد تقارير مصدرة",
+      "no_reports_desc": "ستظهر تقاريرك الصحية بصيغة PDF هنا بمجرد إنشائها.",
+      "open": "فتح",
 
 
     },
