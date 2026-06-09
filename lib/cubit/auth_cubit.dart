@@ -6,14 +6,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/token_service.dart';
 
 abstract class AuthState {}
-
 class AuthInitial extends AuthState {}
 class AuthLoading extends AuthState {}
 class AuthSuccess extends AuthState {}
-
 class AuthOtpSent extends AuthState {
   final String email;
   AuthOtpSent(this.email);
+}
+class AuthNeedsVerification extends AuthState {
+  final String email;
+
+  AuthNeedsVerification(this.email);
 }
 
 class AuthError extends AuthState {
@@ -25,8 +28,6 @@ class AuthCubit extends Cubit<AuthState> {
   AuthCubit() : super(AuthInitial());
 
   final Dio dio = ApiClient.dio;
-
-
 
   String _extractMessage(dynamic data) {
     if (data == null) return "Unknown error";
@@ -82,10 +83,10 @@ class AuthCubit extends Cubit<AuthState> {
         emit(AuthError(_extractMessage(res.data)));
       }
     } on DioException catch (e) {
-      emit(AuthError(_extractMessage(e.response?.data ?? e.message)));
+      emit(AuthError(_dioMessage(e)));
     } on TimeoutException {
       emit(AuthError("Request timed out"));
-    } catch (e) {
+    } catch (_) {
       emit(AuthError("Unexpected error occurred"));
     }
   }
@@ -113,14 +114,8 @@ class AuthCubit extends Cubit<AuthState> {
         emit(AuthError(_extractMessage(res.data)));
       }
     } on DioException catch (e) {
-      print("DIO ERROR VERIFY OTP:");
-      print(e.message);
-      print(e.response?.data);
-      print(e.response?.statusCode);
-
-      emit(AuthError(_extractMessage(e.response?.data ?? e.message)));
-    } catch (e) {
-      print("UNKNOWN ERROR: $e");
+      emit(AuthError(_dioMessage(e)));
+    } catch (_) {
       emit(AuthError("Unexpected error occurred"));
     }
   }
@@ -136,7 +131,7 @@ class AuthCubit extends Cubit<AuthState> {
 
       emit(AuthOtpSent(email));
     } on DioException catch (e) {
-      emit(AuthError(_extractMessage(e.response?.data ?? e.message)));
+      emit(AuthError(_dioMessage(e)));
     } catch (_) {
       emit(AuthError("Failed to resend OTP"));
     }
@@ -144,11 +139,11 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> login(String email, String password) async {
     final prefs = await SharedPreferences.getInstance();
+
     emit(AuthLoading());
 
     try {
-      /// GUEST MODE (OFFLINE)
-
+      // GUEST MODE
       if (email == "guest" && password == "guest") {
         await TokenStorage.saveTokens(
           accessToken: "guest_access_token",
@@ -164,7 +159,7 @@ class AuthCubit extends Cubit<AuthState> {
         await prefs.setBool("is_guest", true);
 
         emit(AuthSuccess());
-        return; // 🚨 VERY IMPORTANT (prevents API call)
+        return;
       }
 
       final res = await dio.post(
@@ -196,26 +191,38 @@ class AuthCubit extends Cubit<AuthState> {
 
       if (user["date_of_birth"] != null) {
         final dob = DateTime.parse(user["date_of_birth"]);
-        final formatted =
-            "${dob.month.toString().padLeft(2, '0')} / "
-            "${dob.day.toString().padLeft(2, '0')} / "
-            "${dob.year}";
 
-        await prefs.setString("birthday", formatted);
+        await prefs.setString(
+          "birthday",
+          "${dob.month.toString().padLeft(2, '0')} / "
+              "${dob.day.toString().padLeft(2, '0')} / "
+              "${dob.year}",
+        );
       }
 
-      /// flags
       await prefs.setBool("is_logged_in", true);
       await prefs.setBool("is_guest", false);
 
       emit(AuthSuccess());
 
     } on DioException catch (e) {
-      final msg = e.response?.data is Map
-          ? e.response?.data["message"]
-          : e.message;
+      final data = e.response?.data;
 
-      emit(AuthError(msg ?? "Network error"));
+      if (e.response?.statusCode == 403 &&
+          data is Map &&
+          data["message"] == "Account not activated") {
+
+        emit(
+          AuthNeedsVerification(
+            data["email"] as String,
+          ),
+        );
+
+        return;
+      }
+
+      emit(AuthError(_dioMessage(e)));
+
     } catch (_) {
       emit(AuthError("Login failed"));
     }
@@ -246,5 +253,10 @@ class AuthCubit extends Cubit<AuthState> {
     await prefs.clear();
 
     emit(AuthInitial());
+  }
+  String _dioMessage(DioException e) {
+    return _extractMessage(
+      e.response?.data ?? e.message ?? "Network error",
+    );
   }
 }

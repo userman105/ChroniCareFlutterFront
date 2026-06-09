@@ -402,7 +402,10 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   Future<Map<String, dynamic>> uploadLabTest(File imageFile) async {
     final token = await TokenStorage.getAccessToken();
 
-    final uri = Uri.parse("http://10.0.2.2:3000/api/user/lab-test");
+    final uri = Uri.parse("http://10.0.2.2:3000/api/user/lab-test");//local
+
+    //ngrok
+    //final uri = Uri.parse("https://9aed-197-46-56-194.ngrok-free.app/api/user/lab-test");
 
     final request = http.MultipartRequest("POST", uri);
 

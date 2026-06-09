@@ -4,7 +4,10 @@ import 'token_service.dart';
 class ApiClient {
   static final Dio dio = Dio(
     BaseOptions(
+      //local
       baseUrl: "http://10.0.2.2:3000/api",
+
+      //baseUrl: "https://9aed-197-46-56-194.ngrok-free.app/api",
       headers: {
         "Content-Type": "application/json",
       },

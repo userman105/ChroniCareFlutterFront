@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/appointment_entry.dart';
 import '../models/blood_pressure_entry.dart';
 import '../models/food_entry.dart';
@@ -29,6 +30,22 @@ class PdfExportService {
     (await rootBundle.load('assets/logos/appIcon.png'))
         .buffer
         .asUint8List();
+
+
+    final prefs = await SharedPreferences.getInstance();
+    final isGuest = prefs.getBool('is_guest') ?? false;
+
+    final String? userName   = prefs.getString('name');
+    final String? userEmail  = prefs.getString('email');
+    final String? userGender = prefs.getString('gender');
+    final String? userDob    = prefs.getString('birthday') // "MM / DD / YYYY"
+        ?? prefs.getString('dob');                        // "YYYY-MM-DD" fallback
+
+
+    int? userAge;
+    if (!isGuest && userDob != null) {
+      userAge = _calculateAge(userDob);
+    }
 
     bool inRange(DateTime dt) {
       if (startDate == null || endDate == null) return true;
@@ -79,12 +96,12 @@ class PdfExportService {
 
     pdf.addPage(
       pw.MultiPage(
-        pageTheme: pw.PageTheme(
-          margin: const pw.EdgeInsets.all(32),
+        pageTheme: const pw.PageTheme(
+          margin: pw.EdgeInsets.all(32),
         ),
         build: (context) => [
 
-          /// HEADER
+
           pw.Row(
             crossAxisAlignment: pw.CrossAxisAlignment.center,
             children: [
@@ -119,7 +136,28 @@ class PdfExportService {
             ],
           ),
 
-          pw.SizedBox(height: 30),
+          pw.SizedBox(height: 24),
+
+          if (!isGuest) ...[
+            pw.Text(
+              'Patient Details',
+              style: pw.TextStyle(
+                fontSize: 16,
+                fontWeight: pw.FontWeight.bold,
+              ),
+            ),
+
+            pw.SizedBox(height: 8),
+
+            _patientDetailsTable([
+              if (userName  != null) ['Name',   userName],
+              if (userEmail != null) ['Email',  userEmail],
+              if (userGender != null) ['Gender', userGender],
+              if (userAge   != null) ['Age',    '$userAge years'],
+            ]),
+
+            pw.SizedBox(height: 24),
+          ],
 
           pw.Text(
             'Export Summary',
@@ -133,31 +171,24 @@ class PdfExportService {
 
           _summaryTable([
             ['Blood Pressure Logs', blood.length.toString()],
-            ['Glucose Logs', glucose.length.toString()],
-            ['Weight Logs', weight.length.toString()],
-            ['Medication Logs', meds.length.toString()],
-            ['Food Logs', food.length.toString()],
-            ['Symptom Logs', symptoms.length.toString()],
-            ['Appointments', appointments.length.toString()],
-            ['Lab Tests', labs.length.toString()],
+            ['Glucose Logs',        glucose.length.toString()],
+            ['Weight Logs',         weight.length.toString()],
+            ['Medication Logs',     meds.length.toString()],
+            ['Food Logs',           food.length.toString()],
+            ['Symptom Logs',        symptoms.length.toString()],
+            ['Appointments',        appointments.length.toString()],
+            ['Lab Tests',           labs.length.toString()],
           ]),
 
           pw.SizedBox(height: 28),
 
           ..._bloodPressureSection(blood),
-
           ..._glucoseSection(glucose),
-
           ..._weightSection(weight),
-
           ..._medicationSection(meds),
-
           ..._foodSection(food),
-
           ..._symptomSection(symptoms),
-
           ..._appointmentSection(appointments),
-
           ..._labSection(labs),
         ],
       ),
@@ -165,8 +196,7 @@ class PdfExportService {
 
     final dir = await getApplicationDocumentsDirectory();
 
-    final reportsDir =
-    Directory('${dir.path}/reports');
+    final reportsDir = Directory('${dir.path}/reports');
 
     if (!await reportsDir.exists()) {
       await reportsDir.create(recursive: true);
@@ -179,6 +209,82 @@ class PdfExportService {
     await file.writeAsBytes(await pdf.save());
 
     return file;
+  }
+
+  // Handles two stored formats:
+  //   "MM / DD / YYYY"  (from login flow → prefs key "birthday")
+  //   "YYYY-MM-DD"      (from register flow → prefs key "dob")
+  static int? _calculateAge(String dobRaw) {
+    try {
+      DateTime? dob;
+
+      final trimmed = dobRaw.trim();
+
+      if (trimmed.contains('/')) {
+        // "MM / DD / YYYY"  →  remove spaces around slashes
+        final parts = trimmed
+            .split('/')
+            .map((s) => s.trim())
+            .toList();
+
+        if (parts.length == 3) {
+          final month = int.parse(parts[0]);
+          final day   = int.parse(parts[1]);
+          final year  = int.parse(parts[2]);
+          dob = DateTime(year, month, day);
+        }
+      } else if (trimmed.contains('-')) {
+        // "YYYY-MM-DD"
+        dob = DateTime.parse(trimmed);
+      }
+
+      if (dob == null) return null;
+
+      final today = DateTime.now();
+      int age = today.year - dob.year;
+
+      // Subtract 1 if birthday hasn't occurred yet this year
+      final hadBirthday = (today.month > dob.month) ||
+          (today.month == dob.month && today.day >= dob.day);
+
+      if (!hadBirthday) age--;
+
+      return age < 0 ? null : age;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static pw.Widget _patientDetailsTable(List<List<String>> rows) {
+    if (rows.isEmpty) return pw.SizedBox();
+
+    return pw.Table(
+      border: pw.TableBorder.all(color: PdfColors.grey400),
+      columnWidths: {
+        0: const pw.FixedColumnWidth(120),
+        1: const pw.FlexColumnWidth(),
+      },
+      children: rows.map((row) {
+        return pw.TableRow(
+          children: [
+            _cell(row[0], bold: true),
+            _cell(row[1]),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
+  static pw.Widget _cell(String text, {bool bold = false}) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      child: pw.Text(
+        text,
+        style: pw.TextStyle(
+          fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+        ),
+      ),
+    );
   }
 
   static pw.Widget _summaryTable(List<List<String>> rows) {

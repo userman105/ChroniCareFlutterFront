@@ -29,9 +29,23 @@ class _LoginScreenState extends State<LoginScreen> {
       listener: (context, state) {
         if (state is AuthLoading) {
           setState(() => loading = true);
-        }
 
-        if (state is AuthSuccess) {
+        } else if (state is AuthNeedsVerification) {
+          setState(() => loading = false);
+
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => BlocProvider.value(
+              value: context.read<AuthCubit>(),
+              child: OtpDialog(
+                email: state.email,
+                password: password.text.trim(),
+              ),
+            ),
+          );
+
+        } else if (state is AuthSuccess) {
           setState(() => loading = false);
 
           Navigator.pushReplacement(
@@ -40,13 +54,14 @@ class _LoginScreenState extends State<LoginScreen> {
               builder: (_) => const ChooseYourCondition(),
             ),
           );
-        }
 
-        if (state is AuthError) {
+        } else if (state is AuthError) {
           setState(() => loading = false);
 
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
+            SnackBar(
+              content: Text(state.message),
+            ),
           );
         }
       },
@@ -115,7 +130,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     if (emailText.isEmpty || passText.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text("Enter email and password"),
+                          content: Text(
+                            "Enter email and password",
+                          ),
                         ),
                       );
                       return;

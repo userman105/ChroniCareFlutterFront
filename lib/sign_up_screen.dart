@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/components.dart';
 import 'cubit/auth_cubit.dart';
+import 'main_activity/main_container.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -128,7 +129,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
               final cubit = context.read<AuthCubit>();
               return BlocProvider.value(
                 value: cubit,
-                child: OtpDialog(email: state.email),
+                child: OtpDialog(
+                  email: state.email,
+                  password: _passCtrl.text, // ← pass password here
+                ),
               );
             },
           );
@@ -400,8 +404,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
 class OtpDialog extends StatefulWidget {
   final String email;
+  final String password; // ← added
 
-  const OtpDialog({super.key, required this.email});
+  const OtpDialog({
+    super.key,
+    required this.email,
+    required this.password,
+  });
 
   @override
   State<OtpDialog> createState() => _OtpDialogState();
@@ -471,11 +480,21 @@ class _OtpDialogState extends State<OtpDialog> {
         listener: (context, state) {
           if (state is AuthSuccess) {
             Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Account activated')),
+
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (_) => const MainContainer(),
+              ),
+                  (route) => false,
             );
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (_) => LoginScreen()));
+
+            Future.microtask(() {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Account created successfully'),
+                ),
+              );
+            });
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context)
                 .showSnackBar(SnackBar(content: Text(state.message)));
@@ -529,8 +548,8 @@ class _OtpDialogState extends State<OtpDialog> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(6, (i) {
                   return SizedBox(
-                    width: 42,
-                    height: 50,
+                    width: 44,
+                    height: 56,
                     child: TextField(
                       controller: _controllers[i],
                       focusNode: _focusNodes[i],
@@ -542,13 +561,15 @@ class _OtpDialogState extends State<OtpDialog> {
                       ],
                       style: GoogleFonts.arimo(
                         color: c.primaryText,
-                        fontSize: 20,
+                        fontSize: 22,
                         fontWeight: FontWeight.w700,
                       ),
                       decoration: InputDecoration(
                         counterText: '',
                         filled: true,
                         fillColor: c.inputFill,
+
+                        contentPadding: EdgeInsets.zero,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide:

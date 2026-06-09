@@ -11,7 +11,7 @@ class LabImageService {
   }) async {
     final picked = await _picker.pickImage(
       source: source,
-      imageQuality: 100, // keep max quality first
+      imageQuality: 100,
     );
 
     if (picked == null) return null;
