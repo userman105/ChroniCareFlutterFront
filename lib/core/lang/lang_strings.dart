@@ -369,6 +369,10 @@ class AppStrings {
       "no_reports_title": "No Exported Reports",
       "no_reports_desc": "Your exported PDF health reports will appear here once generated.",
       "open": "Open",
+      "exit_title":"Exit App",
+      "exit_message":"Are you sure you want to close the app?",
+      "exit_confirm":"Exit",
+
 
 
 
@@ -750,6 +754,9 @@ class AppStrings {
       "no_reports_title": "لا توجد تقارير مصدرة",
       "no_reports_desc": "ستظهر تقاريرك الصحية بصيغة PDF هنا بمجرد إنشائها.",
       "open": "فتح",
+      "exit_title":"اغلاق التطبيق",
+      "exit_message":"الخروج من التطبيق؟",
+      "exit_confirm":"نعم",
 
 
     },

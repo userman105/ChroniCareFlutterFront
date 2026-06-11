@@ -50,6 +50,8 @@ dependencies:
   pdf: ^3.11.0
   printing: ^5.12.0
   open_filex: ^4.4.0
+  connectivity_plus: ^6.0.3
+  uuid: ^4.4.0
 
 
 

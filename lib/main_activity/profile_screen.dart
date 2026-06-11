@@ -10,6 +10,7 @@ import '../core/lang/lang_strings.dart';
 import '../sign_up_screen.dart';
 import 'export_logs_screen.dart';
 import 'exported_reports_screen.dart';
+import '../services/account_scoped_storage.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -34,23 +35,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadUserData() async {
+    // Pull from the account-scoped store via AuthCubit
+    final profile = await context.read<AuthCubit>().getProfile();
+
+    // is_guest lives in plain prefs (set before a user namespace exists)
     final prefs = await SharedPreferences.getInstance();
+
     setState(() {
-      _name = prefs.getString('name') ?? 'User';
-      _email = prefs.getString('email') ?? 'example@mail.com';
-      _gender = prefs.getString('gender') ?? 'Male';
-      final birthday = prefs.getString('birthday');
-      final dob = prefs.getString('dob');
-      if (birthday != null && birthday.isNotEmpty) {
-        _birthday = birthday;
-      } else if (dob != null && dob.isNotEmpty) {
-        _birthday = _formatDob(dob);
-      } else {
-        _birthday = '-- / -- / ----';
-      }
-      _isGuest = prefs.getBool('is_guest') ?? false;
+      _name     = profile['name']     ?? 'User';
+      _email    = profile['email']    ?? 'example@mail.com';
+      _gender   = profile['gender']   ?? 'Male';
+      _birthday = profile['birthday'] ?? '-- / -- / ----';
+      _isGuest  = prefs.getBool('is_guest') ?? false;
       _isLoading = false;
     });
+  }
+
+  Future<void> _saveToPrefs() async {
+    final store = await AccountScopedStorage.forCurrentUser();
+    await store.setString('name',     _name);
+    await store.setString('gender',   _gender);
+    await store.setString('birthday', _birthday);
   }
 
   String _formatDob(String dob) {
@@ -61,12 +66,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return dob;
   }
 
-  Future<void> _saveToPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('name', _name);
-    await prefs.setString('gender', _gender);
-    await prefs.setString('birthday', _birthday);
-  }
 
   Color _primary(BuildContext context) => Theme.of(context).primaryColor;
   Color _text(BuildContext context) => Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black;
@@ -86,7 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.logout, color: Color(0xFFFF3030), size: 48),
+              const Icon(Icons.home_sharp, color: Color(0xFFFF3030), size: 48),
               const SizedBox(height: 16),
               Text(
                 AppStrings.get('logout', lang),

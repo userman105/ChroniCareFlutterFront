@@ -68,7 +68,7 @@ class _WeightLogScreenState extends State<WeightLogScreen> {
             kg:       kg,
             lbs:      lbs,
             dateTime: selectedDateTime,
-            notes:    notes,
+            notes:    notes, localId: '',
           ),
         );
 

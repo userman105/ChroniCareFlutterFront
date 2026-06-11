@@ -42,6 +42,14 @@ void main() async {
         BlocProvider(create: (_) => AuthCubit()),
         BlocProvider(create: (_) => ThemeCubit()),
         BlocProvider(create: (_) => LocaleCubit()..loadSavedLang()),
+        BlocProvider(
+          create: (ctx) {
+            final auth = AuthCubit();
+            final health = ctx.read<HealthCubit>();
+            auth.onUserSwitched = () => health.reloadForCurrentUser();
+            return auth;
+          },
+        ),
       ],
       child: const MyApp(),
     ),

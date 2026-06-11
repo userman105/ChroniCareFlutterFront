@@ -61,7 +61,7 @@ class _GlucoseScreenState extends State<GlucoseScreen> {
             value: value,
             unit: selectedUnit,
             dateTime: selectedDateTime,
-            notes: notes,
+            notes: notes, localId: '',
           ),
         );
 

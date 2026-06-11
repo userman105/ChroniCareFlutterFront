@@ -75,6 +75,7 @@ class _BloodPressureScreenState extends State<BloodPressureScreen> {
             heartRate: heartRate,
             dateTime: selectedDateTime,
             notes: notes,
+            localId: '',
           ),
         );
 

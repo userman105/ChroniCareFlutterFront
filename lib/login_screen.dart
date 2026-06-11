@@ -1,10 +1,10 @@
-import 'package:chronic_care/choose_your_condition.dart';
 import 'package:chronic_care/sign_up_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'cubit/auth_cubit.dart';
+import 'main_activity/main_container.dart';
 import 'widgets/components.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -51,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (_) => const ChooseYourCondition(),
+              builder: (_) => const MainContainer(),
             ),
           );
 
