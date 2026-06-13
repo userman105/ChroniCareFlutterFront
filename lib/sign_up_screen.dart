@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:chronic_care/choose_your_condition.dart';
 import 'package:chronic_care/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -457,14 +458,14 @@ class _OtpDialogState extends State<OtpDialog> {
     final otp = _otp;
     if (otp.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Enter the complete 6-digit code')),
+        const SnackBar(content: Text('Enter the complete 6-digit code')),
       );
       return;
     }
     context.read<AuthCubit>().verifyOtp(
       email: widget.email,
       otp: otp,
+      password: widget.password,
     );
   }
 
@@ -483,7 +484,7 @@ class _OtpDialogState extends State<OtpDialog> {
 
             Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(
-                builder: (_) => const MainContainer(),
+                builder: (_) => const ChooseYourCondition(),
               ),
                   (route) => false,
             );

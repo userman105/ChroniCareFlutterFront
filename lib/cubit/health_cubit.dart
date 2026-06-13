@@ -64,6 +64,7 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
       _loadLabTests(),
       _loadTiles(),
     ]);
+    await syncFromServer();
   }
 
   // Convenience: get an account-scoped store.
@@ -446,6 +447,7 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
 
   Future<Map<String, dynamic>> uploadLabTest(File imageFile) async {
     final token = await TokenStorage.getAccessToken();
+    // final uri = Uri.parse('https://3405-156-193-133-185.ngrok-free.app/api/user/lab-test');
     final uri = Uri.parse('http://10.0.2.2:3000/api/user/lab-test');
     final request = http.MultipartRequest('POST', uri)
       ..headers['Authorization'] = 'Bearer $token'
@@ -554,4 +556,122 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     emit([]);
     await _init();
   }
+
+  Future<void> syncFromServer() async {
+    await Future.wait([
+      _syncBloodPressureFromServer(),
+      _syncGlucoseFromServer(),
+      _syncWeightFromServer(),
+    ]);
+  }
+
+  Future<void> _syncBloodPressureFromServer() async {
+    final rows = await _sync.fetchRecords('/user/logs/blood-pressure');
+    if (rows.isEmpty) return;
+
+    final existingServerIds = state
+        .where((e) => e.serverId != null)
+        .map((e) => e.serverId)
+        .toSet();
+
+    final newEntries = <BloodPressureEntry>[];
+    for (final row in rows) {
+      final serverId = row['bp_id'] as int;
+      if (existingServerIds.contains(serverId)) continue;
+
+      newEntries.add(BloodPressureEntry(
+        serverId: serverId,
+        systolic: row['systolic'] as int,
+        diastolic: row['diastolic'] as int,
+        heartRate: null,
+        dateTime: DateTime.parse(row['measurement_date'] as String),
+        notes: row['notes'] as String?,
+        localId: _uuid.v4(),
+        isSynced: true,
+      ));
+    }
+
+    if (newEntries.isEmpty) return;
+
+    final updated = [...state, ...newEntries];
+    emit(updated);
+    await _saveEntries(updated);
+  }
+
+  Future<void> _syncGlucoseFromServer() async {
+    final rows = await _sync.fetchRecords('/user/logs/glucose');
+    if (rows.isEmpty) return;
+
+    final existingServerIds = _glucoseEntries
+        .where((e) => e.serverId != null)
+        .map((e) => e.serverId)
+        .toSet();
+
+    bool changed = false;
+    for (final row in rows) {
+      final serverId = row['glucose_id'] as int;
+      if (existingServerIds.contains(serverId)) continue;
+
+      _glucoseEntries.add(GlucoseEntry(
+        serverId: serverId,
+        value: num.parse(row['glucose_level'].toString()).toDouble(),
+        unit: 'mg/dL',
+        dateTime: DateTime.parse(row['measurement_time'] as String),
+        notes: row['notes'] as String?,
+        localId: _uuid.v4(),
+        isSynced: true,
+      ));
+      changed = true;
+    }
+
+    if (changed) {
+      await _saveGlucoseEntries();
+      emit(List.from(state));
+    }
+  }
+
+  Future<void> _syncWeightFromServer() async {
+    final rows = await _sync.fetchRecords('/user/logs/health-metrics');
+    if (rows.isEmpty) return;
+
+    final existingServerIds = _weightEntries
+        .where((e) => e.serverId != null)
+        .map((e) => e.serverId)
+        .toSet();
+
+    bool changed = false;
+    for (final row in rows) {
+      final serverId = row['metric_id'] as int;
+      if (existingServerIds.contains(serverId)) continue;
+
+      final weightKg = row['weight_kg'] != null
+          ? num.parse(row['weight_kg'].toString()).toDouble()
+          : null;
+      final heightCm = row['height_cm'] != null
+          ? num.parse(row['height_cm'].toString()).toDouble()
+          : null;
+      final bmi = row['bmi'] != null
+          ? num.parse(row['bmi'].toString()).toDouble()
+          : null;
+
+      _weightEntries.add(WeightEntry(
+        serverId: serverId,
+        kg: weightKg,
+        lbs: weightKg != null ? weightKg * 2.20462 : null,
+        heightCm: heightCm,
+        bmi: bmi,
+        dateTime: DateTime.parse(row['recorded_date'] as String),
+        notes: null, // HealthMetrics has no notes column
+        localId: _uuid.v4(),
+        isSynced: true,
+      ));
+      changed = true;
+    }
+
+    if (changed) {
+      await _saveWeightEntries();
+      emit(List.from(state));
+    }
+  }
+
 }

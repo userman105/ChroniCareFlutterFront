@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import '../services/account_scoped_storage.dart';
 import 'widgets/components.dart';
 import 'main_activity/main_container.dart';
 import 'cubit/health_cubit.dart';
@@ -121,24 +121,27 @@ class _PersonalizeScheduleState extends State<PersonalizeSchedule> {
 
               const SizedBox(height: 50),
 
-              MainButton(
-                text: AppStrings.get('proceed', lang),
-                enabled: selectedIndexes.isNotEmpty,
-                onTap: () {
-                  final cubit = context.read<HealthCubit>();
+        MainButton(
+        text: AppStrings.get('proceed', lang),
+        enabled: selectedIndexes.isNotEmpty,
+        onTap: () async {
+          final cubit = context.read<HealthCubit>();
 
-                  for (final i in selectedIndexes) {
-                    cubit.addTile(buttons[i]['key']!);
-                  }
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const MainContainer(),
-                    ),
-                        (route) => false,
-                  );
-                },
-              ),
+          for (final i in selectedIndexes) {
+            cubit.addTile(buttons[i]['key']!);
+          }
+
+          // Mark onboarding as done for this account
+          final store = await AccountScopedStorage.forCurrentUser();
+          await store.setBool('onboarding_completed', true);
+
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const MainContainer()),
+                (route) => false,
+          );
+        },
+      ),
             ],
           ),
         ),

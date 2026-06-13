@@ -47,22 +47,27 @@ class SyncService {
     required String modelType,
     required Map<String, dynamic> apiPayload,
     required String localRecordId,
-    String endpoint = '/api/user/log',
+    String endpoint = '/user/logs',
   }) async {
     final online = await _isOnline();
+    print('[SyncService] modelType=$modelType online=$online');
 
     if (online) {
       try {
+        print('[SyncService] POST $endpoint payload=$apiPayload');
         final result = await _postToServer(endpoint, apiPayload);
+        print('[SyncService] SUCCESS: $result');
         return result;
       } on DioException catch (e) {
+        print('[SyncService] DioException type=${e.type} status=${e.response?.statusCode} data=${e.response?.data}');
         if (_isTransient(e)) {
           await _enqueue(modelType, apiPayload, localRecordId, endpoint);
           return null;
         }
-        rethrow; // permanent error (400, 401 etc.) – caller handles it
+        rethrow;
       }
     } else {
+      print('[SyncService] OFFLINE — queuing');
       await _enqueue(modelType, apiPayload, localRecordId, endpoint);
       return null;
     }
@@ -78,7 +83,7 @@ class SyncService {
 
     for (final entry in queue) {
       try {
-        await _postToServer(entry.payload['_endpoint'] as String? ?? '/api/user/log',
+        await _postToServer(entry.payload['_endpoint'] as String? ?? '/user/logs',
             entry.payload);
       } on DioException catch (e) {
         entry.retryCount++;
@@ -165,9 +170,21 @@ class SyncService {
 
   Future<bool> _isOnline() async {
     try {
-      final result = await InternetAddress.lookup('google.com');
-      return result.isNotEmpty && result.first.rawAddress.isNotEmpty;
-    } catch (_) {
+      final baseUrl = _dio.options.baseUrl.replaceAll(RegExp(r'/api/?$'), '');
+      final url = '$baseUrl/health';
+      print('[SyncService] health check: $url');
+
+      final response = await Dio().get(
+        url,
+        options: Options(
+          sendTimeout: const Duration(seconds: 3),
+          receiveTimeout: const Duration(seconds: 3),
+        ),
+      );
+      print('[SyncService] health check status: ${response.statusCode}');
+      return response.statusCode == 200;
+    } catch (e) {
+      print('[SyncService] health check FAILED: $e');
       return false;
     }
   }
@@ -191,6 +208,23 @@ class SyncService {
   void _logFailure(OfflineQueueEntry entry, Object error) {
     print('[SyncService] Permanently failed entry ${entry.id}: $error');
   }
+
+  Future<List<Map<String, dynamic>>> fetchRecords(String endpoint) async {
+    try {
+      final response = await _dio.get(endpoint);
+      final data = response.data;
+      if (data is Map && data['data'] is List) {
+        return List<Map<String, dynamic>>.from(
+          (data['data'] as List).map((e) => Map<String, dynamic>.from(e)),
+        );
+      }
+      return [];
+    } catch (e) {
+      print('[SyncService] fetchRecords($endpoint) failed: $e');
+      return [];
+    }
+  }
+
 }
 
 enum SyncStatus {

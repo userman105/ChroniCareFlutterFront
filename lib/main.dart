@@ -1,4 +1,5 @@
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'package:chronic_care/services/account_scoped_storage.dart';
 import 'package:chronic_care/services/api_client.dart';
 import 'package:chronic_care/services/notification_service.dart';
 import 'package:chronic_care/services/token_service.dart';
@@ -6,6 +7,7 @@ import 'package:chronic_care/widgets/alarm_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'choose_your_condition.dart';
 import 'cubit/theme_cubit.dart';
 import 'main_activity/main_container.dart';
 import 'sign_up_screen.dart';
@@ -110,12 +112,25 @@ Future<void> rescheduleNotificationsCallback() async {
 class RootDecider extends StatelessWidget {
   const RootDecider({super.key});
 
-  Future<bool> _checkLogin() async {
+  Future<_RootRoute> _decide() async {
     final prefs    = await SharedPreferences.getInstance();
     final token    = await TokenStorage.getAccessToken();
     final loggedIn = prefs.getBool("is_logged_in") == true;
     final guest    = prefs.getBool("is_guest") == true;
-    return loggedIn && token != null && (guest || token.isNotEmpty);
+
+    final isAuthenticated =
+        loggedIn && token != null && (guest || token.isNotEmpty);
+
+    if (!isAuthenticated) return _RootRoute.signUp;
+
+    try {
+      final store = await AccountScopedStorage.forCurrentUser();
+      final onboardingDone = store.getBool('onboarding_completed') ?? false;
+      return onboardingDone ? _RootRoute.main : _RootRoute.onboarding;
+    } catch (_) {
+      // No active user namespace yet — treat as not onboarded
+      return _RootRoute.onboarding;
+    }
   }
 
   @override
@@ -129,19 +144,27 @@ class RootDecider extends StatelessWidget {
           );
         }
       },
-      child: FutureBuilder(
-        future: _checkLogin(),
+      child: FutureBuilder<_RootRoute>(
+        future: _decide(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             );
           }
-          return snapshot.data as bool
-              ? const MainContainer()
-              : const SignUpScreen();
+
+          switch (snapshot.data!) {
+            case _RootRoute.main:
+              return const MainContainer();
+            case _RootRoute.onboarding:
+              return const ChooseYourCondition();
+            case _RootRoute.signUp:
+              return const SignUpScreen();
+          }
         },
       ),
     );
   }
 }
+
+enum _RootRoute { signUp, onboarding, main }

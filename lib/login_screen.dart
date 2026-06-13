@@ -4,7 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'cubit/auth_cubit.dart';
-import 'main_activity/main_container.dart';
+import 'forgot_password_screen.dart';
+import 'main.dart';
 import 'widgets/components.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -50,11 +51,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(
-              builder: (_) => const MainContainer(),
-            ),
+            MaterialPageRoute(builder: (_) => const RootDecider()),
           );
-
         } else if (state is AuthError) {
           setState(() => loading = false);
 
@@ -115,6 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   hintTop: "Password",
                   centerPlaceholder: "Enter your password",
                   controller: password,
+                  isPassword: true,
                 ),
 
                 SizedBox(height: h * 0.035),
@@ -178,6 +177,29 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
 
+                const SizedBox(height: 10),
+
+                Center(
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ForgotPasswordScreen(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      "Forgot your password?",
+                      style: TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+
                 SizedBox(height: h * 0.02),
               ],
             ),
@@ -187,3 +209,4 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+

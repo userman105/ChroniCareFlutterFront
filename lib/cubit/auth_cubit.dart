@@ -78,15 +78,25 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
 
-  Future<void> verifyOtp({required String email, required String otp}) async {
+  Future<void> verifyOtp({
+    required String email,
+    required String otp,
+    String? password,
+  }) async {
     emit(AuthLoading());
+
     try {
       final res = await _dio.post('/auth/verify-otp', data: {
         'email': email,
         'otp': otp,
       });
+
       if (res.statusCode == 200) {
-        emit(AuthSuccess());
+        if (password != null) {
+          await login(email, password);
+        } else {
+          emit(AuthSuccess());
+        }
       } else {
         emit(AuthError(_msg(res.data)));
       }
@@ -278,4 +288,51 @@ class AuthCubit extends Cubit<AuthState> {
 
     await prefs.setBool(migrationFlag, true);
   }
+
+  Future<void> forgotPassword(String email) async {
+    emit(AuthLoading());
+    try {
+      final res = await _dio.post('/auth/forgot-password', data: {'email': email});
+      if (res.statusCode == 200) {
+        emit(PasswordResetOtpSent(email));
+      } else {
+        emit(AuthError(_msg(res.data)));
+      }
+    } on DioException catch (e) {
+      emit(AuthError(_dioMsg(e)));
+    } catch (_) {
+      emit(AuthError('Unexpected error occurred'));
+    }
+  }
+
+  Future<void> resetPassword({
+    required String email,
+    required String otp,
+    required String newPassword,
+  }) async {
+    emit(AuthLoading());
+    try {
+      final res = await _dio.post('/auth/reset-password', data: {
+        'email': email,
+        'otp': otp,
+        'new_password': newPassword,
+      });
+      if (res.statusCode == 200) {
+        emit(PasswordResetSuccess());
+      } else {
+        emit(AuthError(_msg(res.data)));
+      }
+    } on DioException catch (e) {
+      emit(AuthError(_dioMsg(e)));
+    } catch (_) {
+      emit(AuthError('Unexpected error occurred'));
+    }
+  }
 }
+
+class PasswordResetOtpSent extends AuthState {
+  final String email;
+  PasswordResetOtpSent(this.email);
+}
+
+class PasswordResetSuccess extends AuthState {}

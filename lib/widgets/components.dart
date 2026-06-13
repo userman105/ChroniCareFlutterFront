@@ -88,7 +88,7 @@ String formatTimeLocalized(TimeOfDay t, String lang) {
 }
 
 
-class RoundedInputBox extends StatelessWidget {
+class RoundedInputBox extends StatefulWidget {
   final String hintTop;
   final String centerPlaceholder;
   final TextEditingController controller;
@@ -103,23 +103,44 @@ class RoundedInputBox extends StatelessWidget {
   });
 
   @override
+  State<RoundedInputBox> createState() => _RoundedInputBoxState();
+}
+
+class _RoundedInputBoxState extends State<RoundedInputBox> {
+  bool _obscure = true;
+
+  @override
   Widget build(BuildContext context) {
     final c = context.colors;
     return TextFormField(
-      controller: controller,
-      obscureText: isPassword,
+      controller: widget.controller,
+      obscureText: widget.isPassword ? _obscure : false,
+      enableSuggestions: !widget.isPassword,
+      autocorrect: !widget.isPassword,
       textAlign: TextAlign.start,
       style: TextStyle(color: c.primaryText, fontSize: 16),
       cursorColor: c.primaryText,
       decoration: InputDecoration(
-        labelText: hintTop,
+        labelText: widget.hintTop,
         labelStyle: TextStyle(color: c.primaryText, fontSize: 14),
-        hintText: centerPlaceholder,
+        hintText: widget.centerPlaceholder,
         hintStyle: TextStyle(color: c.hintText),
         alignLabelWithHint: true,
         floatingLabelAlignment: FloatingLabelAlignment.start,
         filled: true,
         fillColor: c.inputFill,
+        suffixIcon: widget.isPassword
+            ? IconButton(
+          icon: Icon(
+            _obscure
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
+            color: c.hintText,
+            size: 20,
+          ),
+          onPressed: () => setState(() => _obscure = !_obscure),
+        )
+            : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide(color: c.border),
@@ -138,7 +159,6 @@ class RoundedInputBox extends StatelessWidget {
     );
   }
 }
-
 
 class MainButton extends StatelessWidget {
   final String text;
