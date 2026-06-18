@@ -42,7 +42,6 @@ void main() async {
     MultiBlocProvider(
       providers: [
         BlocProvider.value(value: healthCubit),
-        BlocProvider(create: (_) => AuthCubit()),
         BlocProvider(create: (_) => ThemeCubit()),
         BlocProvider(create: (_) => LocaleCubit()..loadSavedLang()),
         BlocProvider(

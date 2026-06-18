@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/appointment_entry.dart';
 import '../models/blood_pressure_entry.dart';
 import '../models/food_entry.dart';
@@ -50,8 +50,11 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   }
 
   Future<void> _init() async {
-    // Drain any items left over from a previous offline session
+    final prefs = await SharedPreferences.getInstance();
+    final isGuest = prefs.getBool('is_guest') ?? false;
+
     await _sync.drainQueue();
+
     await Future.wait([
       _loadEntries(),
       _loadWeightEntries(),
@@ -64,7 +67,10 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
       _loadLabTests(),
       _loadTiles(),
     ]);
-    await syncFromServer();
+
+    if (!isGuest) {
+      await syncFromServer();
+    }
   }
 
   // Convenience: get an account-scoped store.
@@ -545,6 +551,9 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   // ─── Called by AuthCubit after login ──────────────────────────────────────
 
   Future<void> reloadForCurrentUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isGuest = prefs.getBool('is_guest') ?? false;
+
     _weightEntries = [];
     _glucoseEntries = [];
     _medicationEntries = [];
@@ -554,10 +563,27 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     _labTests = [];
     _appointments = [];
     _tileKeys = [];
+
     emit([]);
+
+    if (isGuest) {
+      await Future.wait([
+        _loadEntries(),
+        _loadWeightEntries(),
+        _loadGlucoseEntries(),
+        _loadMedicationEntries(),
+        _loadSymptomEntries(),
+        _loadFoodEntries(),
+        _loadReminders(),
+        _loadAppointments(),
+        _loadLabTests(),
+        _loadTiles(),
+      ]);
+      return;
+    }
+
     await _init();
   }
-
   Future<void> syncFromServer() async {
     await Future.wait([
       _syncBloodPressureFromServer(),

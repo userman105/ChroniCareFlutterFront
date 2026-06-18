@@ -35,8 +35,6 @@ class AuthCubit extends Cubit<AuthState> {
 
   final Dio _dio = ApiClient.dio;
 
-  // Callback set by the widget tree so AuthCubit can trigger a HealthCubit
-  // reload without a hard dependency on it.
   Future<void> Function()? onUserSwitched;
 
 
@@ -60,7 +58,6 @@ class AuthCubit extends Cubit<AuthState> {
       });
 
       if (res.statusCode == 201) {
-        // Store profile data globally (not yet user-scoped – user not logged in)
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('pending_email', email);
         await prefs.setString('pending_name', fullName);
@@ -130,7 +127,6 @@ class AuthCubit extends Cubit<AuthState> {
           refreshToken: 'guest_refresh_token',
         );
 
-        // Use a stable guest user id so the namespace is consistent
         const guestUid = 'guest';
         await AccountScopedStorage.setActiveUser(guestUid);
 
@@ -150,10 +146,15 @@ class AuthCubit extends Cubit<AuthState> {
         return;
       }
 
-      final res = await _dio.post('/auth/login', data: {
-        'email': email,
-        'password': password,
-      });
+      final res = await _dio.post(
+        '/auth/login',
+        data: {
+          'email': email,
+          'password': password,
+        },
+      ).timeout(
+        const Duration(seconds: 3),
+      );
 
       await TokenStorage.saveTokens(
         accessToken: res.data['access_token'],
@@ -163,10 +164,9 @@ class AuthCubit extends Cubit<AuthState> {
       final user = res.data['user'] as Map<String, dynamic>;
       final userId = (res.data['user_id'] ?? user['user_id']).toString();
 
-      // !! Critical: set the active user BEFORE touching scoped storage !!
       await AccountScopedStorage.setActiveUser(userId);
 
-      // Save profile into the user-scoped namespace
+
       final store = await AccountScopedStorage.forCurrentUser();
       await store.setString(
           'name', '${user['first_name']} ${user['last_name']}');
@@ -202,8 +202,24 @@ class AuthCubit extends Cubit<AuthState> {
         return;
       }
       emit(AuthError(_dioMsg(e)));
-    } catch (_) {
-      emit(AuthError('Login failed'));
+    } on TimeoutException {
+
+      emit(
+        AuthError(
+          "Request timed out. Please try again.",
+        ),
+      );
+
+    }
+
+    catch (e) {
+
+      emit(
+        AuthError(
+          "Login failed",
+        ),
+      );
+
     }
   }
 
