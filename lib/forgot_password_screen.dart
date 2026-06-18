@@ -1,3 +1,4 @@
+import 'package:chronic_care/services/token_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -151,8 +152,12 @@ class _ResetPasswordOtpDialogState extends State<ResetPasswordOtpDialog> {
 
   @override
   void dispose() {
-    for (final c in _otpControllers) c.dispose();
-    for (final f in _focusNodes) f.dispose();
+    for (final c in _otpControllers) {
+      c.dispose();
+    }
+    for (final f in _focusNodes) {
+      f.dispose();
+    }
     newPasswordCtrl.dispose();
     confirmPasswordCtrl.dispose();
     super.dispose();
@@ -160,7 +165,7 @@ class _ResetPasswordOtpDialogState extends State<ResetPasswordOtpDialog> {
 
   String get _otp => _otpControllers.map((c) => c.text).join();
 
-  void _submit(BuildContext context) {
+  Future<void> _submit(BuildContext context) async {
     final otp = _otp;
     final newPass = newPasswordCtrl.text;
     final confirmPass = confirmPasswordCtrl.text;
@@ -186,10 +191,13 @@ class _ResetPasswordOtpDialogState extends State<ResetPasswordOtpDialog> {
       return;
     }
 
+    final refreshToken = await TokenStorage.getRefreshToken();
+
     context.read<AuthCubit>().resetPassword(
       email: widget.email,
       otp: otp,
       newPassword: newPass,
+      refreshToken: refreshToken, // ← new
     );
   }
 

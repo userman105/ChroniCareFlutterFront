@@ -447,8 +447,9 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
 
   Future<Map<String, dynamic>> uploadLabTest(File imageFile) async {
     final token = await TokenStorage.getAccessToken();
-    // final uri = Uri.parse('https://3405-156-193-133-185.ngrok-free.app/api/user/lab-test');
-    final uri = Uri.parse('http://10.0.2.2:3000/api/user/lab-test');
+
+     //final uri = Uri.parse('https://581d-41-34-187-18.ngrok-free.app/api/user/lab-test');
+   final uri = Uri.parse('http://10.0.2.2:3000/api/user/lab-test');
     final request = http.MultipartRequest('POST', uri)
       ..headers['Authorization'] = 'Bearer $token'
       ..fields['test_type'] = 'blood_test'

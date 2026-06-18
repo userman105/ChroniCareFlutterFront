@@ -309,6 +309,7 @@ class AuthCubit extends Cubit<AuthState> {
     required String email,
     required String otp,
     required String newPassword,
+    String? refreshToken,             // ← new optional param
   }) async {
     emit(AuthLoading());
     try {
@@ -316,9 +317,26 @@ class AuthCubit extends Cubit<AuthState> {
         'email': email,
         'otp': otp,
         'new_password': newPassword,
+        if (refreshToken != null) 'refresh_token': refreshToken, // ← only sent when available
       });
       if (res.statusCode == 200) {
         emit(PasswordResetSuccess());
+      } else {
+        emit(AuthError(_msg(res.data)));
+      }
+    } on DioException catch (e) {
+      emit(AuthError(_dioMsg(e)));
+    } catch (_) {
+      emit(AuthError('Unexpected error occurred'));
+    }
+  }
+
+  Future<void> sendPasswordChangeOtp(String email) async {
+    emit(AuthLoading());
+    try {
+      final res = await _dio.post('/auth/forgot-password', data: {'email': email});
+      if (res.statusCode == 200) {
+        emit(PasswordResetOtpSent(email));
       } else {
         emit(AuthError(_msg(res.data)));
       }

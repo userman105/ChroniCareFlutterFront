@@ -35,4 +35,13 @@ class SymptomEntry {
 
   factory SymptomEntry.fromJson(String source) =>
       SymptomEntry.fromMap(json.decode(source));
+
+  Map<String, dynamic> toApiPayload() => {
+    'type': 'symptom',
+    'data': {
+      'symptom': symptom,
+      'severity': severity,
+      'notes': notes,
+    },
+  };
 }

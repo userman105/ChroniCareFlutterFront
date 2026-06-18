@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,10 +8,12 @@ import '../cubit/auth_cubit.dart';
 import '../cubit/theme_cubit.dart';
 import '../cubit/locale_cubit.dart';
 import '../core/lang/lang_strings.dart';
+import '../services/api_client.dart';
 import '../sign_up_screen.dart';
 import 'export_logs_screen.dart';
 import 'exported_reports_screen.dart';
 import '../services/account_scoped_storage.dart';
+import '../forgot_password_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -35,10 +38,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadUserData() async {
-    // Pull from the account-scoped store via AuthCubit
     final profile = await context.read<AuthCubit>().getProfile();
 
-    // is_guest lives in plain prefs (set before a user namespace exists)
     final prefs = await SharedPreferences.getInstance();
 
     setState(() {
@@ -157,16 +158,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _handleRegularLogout() async {
+    final isOnline = await _checkOnline();
+    if (!isOnline) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No internet connection. Please connect to log out.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => Center(child: CircularProgressIndicator(color: _primary(context))),
+      builder: (_) => Center(
+          child: CircularProgressIndicator(color: _primary(context))),
     );
     await context.read<AuthCubit>().logout();
     if (!mounted) return;
     Navigator.of(context, rootNavigator: true).pop();
     Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const SignUpScreen()), (r) => false);
+        MaterialPageRoute(builder: (_) => const SignUpScreen()),
+            (r) => false);
+  }
+
+  Future<bool> _checkOnline() async {
+    try {
+      final baseUrl = ApiClient.dio.options.baseUrl
+          .replaceAll(RegExp(r'/api/?$'), '');
+
+      final result = await Dio().get(
+        '$baseUrl/health',
+        options: Options(
+          sendTimeout: const Duration(seconds: 3),
+          receiveTimeout: const Duration(seconds: 3),
+        ),
+      );
+      return result.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
   }
 
   void _pickBirthday(String lang) {
@@ -527,146 +560,236 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(body: Center(child: CircularProgressIndicator(color: _primary(context))));
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: _primary(context)),
+        ),
+      );
     }
 
-    return BlocBuilder<LocaleCubit, String>(
-      builder: (context, lang) {
-        final isArabic = lang == 'ar';
-        final isLightMode = context.watch<ThemeCubit>().state == ThemeMode.light;
+    return BlocListener<AuthCubit, AuthState>(
+      listener: (context, state) {
+        if (state is AuthLoading) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => Center(
+              child: CircularProgressIndicator(color: _primary(context)),
+            ),
+          );
+        } else if (state is PasswordResetOtpSent) {
+          Navigator.of(context, rootNavigator: true).pop();
 
-        return Directionality(
-          textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-          child: Scaffold(
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            body: SafeArea(
-              child: Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    height: 46,
-                    color: _field(context),
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: Align(
-                      alignment: isArabic ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Text(AppStrings.get('profile_and_settings', lang),
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => BlocProvider.value(
+              value: context.read<AuthCubit>(),
+              child: ResetPasswordOtpDialog(email: state.email),
+            ),
+          );
+        } else if (state is PasswordResetSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Password changed successfully'),
+            ),
+          );
+        } else if (state is AuthError) {
+          Navigator.of(context, rootNavigator: true).pop();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message)),
+          );
+        }
+      },
+      child: BlocBuilder<LocaleCubit, String>(
+        builder: (context, lang) {
+          final isArabic = lang == 'ar';
+          final isLightMode =
+              context.watch<ThemeCubit>().state == ThemeMode.light;
+
+          return Directionality(
+            textDirection:
+            isArabic ? TextDirection.rtl : TextDirection.ltr,
+            child: Scaffold(
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              body: SafeArea(
+                child: Column(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      height: 46,
+                      color: _field(context),
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      child: Align(
+                        alignment: isArabic
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: Text(
+                          AppStrings.get('profile_and_settings', lang),
                           style: GoogleFonts.arimo(
-                              color: _text(context), fontSize: 14, fontWeight: FontWeight.w500)),
-                    ),
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          _buildSection(
-                            AppStrings.get('profile_settings', lang),
-                            [
-                              _settingsRow(label: AppStrings.get('name', lang), value: _name, onTap: () => _editName(lang)),
-                              _settingsRow(label: AppStrings.get('birthday', lang), value: _birthday, onTap: () => _pickBirthday(lang)),
-                              _settingsRow(label: AppStrings.get('gender', lang), value: _gender, onTap: () => _pickGender(lang)),
-                            ],
-                            lang,
+                            color: _text(context),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
                           ),
-                          const SizedBox(height: 16),
-
-                          // Account section
-                          _buildSection(
-                            AppStrings.get('account_settings', lang),
-                            [
-                              _settingsRow(label: AppStrings.get('email', lang), value: _email, onTap: () {}),
-                              if (!_isGuest)
-                                _settingsRow(label: AppStrings.get('password', lang), value: '', onTap: () {}),
-
-                              _settingsRow(
-                                label: AppStrings.get('notifications', lang),
-                                value: _notificationsOn
-                                    ? AppStrings.get('on', lang)
-                                    : AppStrings.get('off', lang),
-                                showChevron: false,
-                                trailing: Switch(
-                                  value: _notificationsOn,
-                                  activeColor: _primary(context),
-                                  onChanged: (v) => setState(() => _notificationsOn = v),
-                                ),
-                              ),
-
-                              _settingsRow(
-                                label: AppStrings.get('light_mode', lang),
-                                value: isLightMode
-                                    ? AppStrings.get('on', lang)
-                                    : AppStrings.get('off', lang),
-                                showChevron: false,
-                                trailing: Switch(
-                                  value: isLightMode,
-                                  activeColor: _primary(context),
-                                  onChanged: (v) => context.read<ThemeCubit>().toggleTheme(v),
-                                ),
-                              ),
-
-                              _settingsRow(
-                                label: AppStrings.get('Export_health_report', lang),
-                                value: '',
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const ExportLogsScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-
-                              _settingsRow(
-                                label: AppStrings.get('Exported_reports', lang),
-                                value: '',
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const ExportedReportsScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-
-                              _settingsRow(
-                                label: AppStrings.get('language', lang),
-                                value: lang == 'ar'
-                                    ? AppStrings.get('arabic', lang)
-                                    : AppStrings.get('english', lang),
-                                onTap: () => _pickLanguage(lang),
-                              ),
-
-                              _settingsRow(
-                                label: AppStrings.get('logout', lang),
-                                value: '',
-                                isDestructive: true,
-                                showChevron: false,
-                                onTap: () => _showLogoutDialog(lang),
-                              ),
-
-                              if (!_isGuest)
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            _buildSection(
+                              AppStrings.get('profile_settings', lang),
+                              [
                                 _settingsRow(
-                                  label: AppStrings.get('delete_account', lang),
+                                  label: AppStrings.get('name', lang),
+                                  value: _name,
+                                  onTap: () => _editName(lang),
+                                ),
+                                _settingsRow(
+                                  label: AppStrings.get('birthday', lang),
+                                  value: _birthday,
+                                  onTap: () => _pickBirthday(lang),
+                                ),
+                                _settingsRow(
+                                  label: AppStrings.get('gender', lang),
+                                  value: _gender,
+                                  onTap: () => _pickGender(lang),
+                                ),
+                              ],
+                              lang,
+                            ),
+                            const SizedBox(height: 16),
+
+                            _buildSection(
+                              AppStrings.get('account_settings', lang),
+                              [
+                                _settingsRow(
+                                  label: AppStrings.get('email', lang),
+                                  value: _email,
+                                  onTap: () {},
+                                ),
+
+                                if (!_isGuest)
+                                  _settingsRow(
+                                    label: AppStrings.get('password', lang),
+                                    value: '',
+                                    onTap: () {
+                                      context
+                                          .read<AuthCubit>()
+                                          .sendPasswordChangeOtp(_email);
+                                    },
+                                  ),
+
+                                _settingsRow(
+                                  label: AppStrings.get('notifications', lang),
+                                  value: _notificationsOn
+                                      ? AppStrings.get('on', lang)
+                                      : AppStrings.get('off', lang),
+                                  showChevron: false,
+                                  trailing: Switch(
+                                    value: _notificationsOn,
+                                    activeColor: _primary(context),
+                                    onChanged: (v) => setState(
+                                          () => _notificationsOn = v,
+                                    ),
+                                  ),
+                                ),
+
+                                _settingsRow(
+                                  label: AppStrings.get('light_mode', lang),
+                                  value: isLightMode
+                                      ? AppStrings.get('on', lang)
+                                      : AppStrings.get('off', lang),
+                                  showChevron: false,
+                                  trailing: Switch(
+                                    value: isLightMode,
+                                    activeColor: _primary(context),
+                                    onChanged: (v) {
+                                      context
+                                          .read<ThemeCubit>()
+                                          .toggleTheme(v);
+                                    },
+                                  ),
+                                ),
+
+                                _settingsRow(
+                                  label: AppStrings.get(
+                                    'Export_health_report',
+                                    lang,
+                                  ),
+                                  value: '',
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                        const ExportLogsScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
+
+                                _settingsRow(
+                                  label: AppStrings.get(
+                                    'Exported_reports',
+                                    lang,
+                                  ),
+                                  value: '',
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                        const ExportedReportsScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
+
+                                _settingsRow(
+                                  label: AppStrings.get('language', lang),
+                                  value: lang == 'ar'
+                                      ? AppStrings.get('arabic', lang)
+                                      : AppStrings.get('english', lang),
+                                  onTap: () => _pickLanguage(lang),
+                                ),
+
+                                _settingsRow(
+                                  label: AppStrings.get('logout', lang),
                                   value: '',
                                   isDestructive: true,
                                   showChevron: false,
-                                  onTap: () {},
+                                  onTap: () => _showLogoutDialog(lang),
                                 ),
-                            ],
-                            lang,
-                          ),
-                        ],
+
+                                if (!_isGuest)
+                                  _settingsRow(
+                                    label: AppStrings.get(
+                                      'delete_account',
+                                      lang,
+                                    ),
+                                    value: '',
+                                    isDestructive: true,
+                                    showChevron: false,
+                                    onTap: () {},
+                                  ),
+                              ],
+                              lang,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

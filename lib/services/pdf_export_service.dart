@@ -15,6 +15,7 @@ import '../models/symptom_entry.dart';
 import '../models/weight_entry.dart';
 
 import '../cubit/health_cubit.dart';
+import 'account_scoped_storage.dart';
 
 class PdfExportService {
 
@@ -35,11 +36,17 @@ class PdfExportService {
     final prefs = await SharedPreferences.getInstance();
     final isGuest = prefs.getBool('is_guest') ?? false;
 
-    final String? userName   = prefs.getString('name');
-    final String? userEmail  = prefs.getString('email');
-    final String? userGender = prefs.getString('gender');
-    final String? userDob    = prefs.getString('birthday') // "MM / DD / YYYY"
-        ?? prefs.getString('dob');                        // "YYYY-MM-DD" fallback
+    String? userName, userEmail, userGender, userDob;
+
+    try {
+      final store = await AccountScopedStorage.forCurrentUser();
+      userName   = store.getString('name');
+      userEmail  = store.getString('email');
+      userGender = store.getString('gender');
+      userDob    = store.getString('birthday');
+    } catch (_) {
+      // No active user — guest mode, fields stay null
+    }
 
 
     int? userAge;

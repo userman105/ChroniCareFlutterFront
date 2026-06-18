@@ -372,7 +372,7 @@ class AppStrings {
       "exit_title":"Exit App",
       "exit_message":"Are you sure you want to close the app?",
       "exit_confirm":"Exit",
-
+      "personalize_title":"Personalize Schedule",
 
 
 
@@ -757,6 +757,7 @@ class AppStrings {
       "exit_title":"اغلاق التطبيق",
       "exit_message":"الخروج من التطبيق؟",
       "exit_confirm":"نعم",
+      "personalize_title":"تخصيص الجدول"
 
 
     },

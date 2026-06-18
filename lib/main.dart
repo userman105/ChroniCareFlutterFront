@@ -14,6 +14,7 @@ import 'sign_up_screen.dart';
 import 'cubit/health_cubit.dart';
 import 'cubit/auth_cubit.dart';
 import 'cubit/locale_cubit.dart';
+import 'dart:async';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final HealthCubit healthCubit = HealthCubit();
@@ -109,14 +110,21 @@ Future<void> rescheduleNotificationsCallback() async {
   await NotificationService.rescheduleAll(reminders);
 }
 
-class RootDecider extends StatelessWidget {
+class RootDecider extends StatefulWidget {
   const RootDecider({super.key});
 
+  @override
+  State<RootDecider> createState() => _RootDeciderState();
+}
+
+class _RootDeciderState extends State<RootDecider> {
+  Widget? _targetScreen;
+
   Future<_RootRoute> _decide() async {
-    final prefs    = await SharedPreferences.getInstance();
-    final token    = await TokenStorage.getAccessToken();
+    final prefs = await SharedPreferences.getInstance();
+    final token = await TokenStorage.getAccessToken();
     final loggedIn = prefs.getBool("is_logged_in") == true;
-    final guest    = prefs.getBool("is_guest") == true;
+    final guest = prefs.getBool("is_guest") == true;
 
     final isAuthenticated =
         loggedIn && token != null && (guest || token.isNotEmpty);
@@ -125,12 +133,46 @@ class RootDecider extends StatelessWidget {
 
     try {
       final store = await AccountScopedStorage.forCurrentUser();
-      final onboardingDone = store.getBool('onboarding_completed') ?? false;
-      return onboardingDone ? _RootRoute.main : _RootRoute.onboarding;
+      final onboardingDone =
+          store.getBool('onboarding_completed') ?? false;
+
+      return onboardingDone
+          ? _RootRoute.main
+          : _RootRoute.onboarding;
     } catch (_) {
-      // No active user namespace yet — treat as not onboarded
       return _RootRoute.onboarding;
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRoute();
+  }
+
+  Future<void> _loadRoute() async {
+    final route = await _decide();
+
+    // Keep splash visible briefly
+    await Future.delayed(const Duration(milliseconds: 1500));
+
+    if (!mounted) return;
+
+    switch (route) {
+      case _RootRoute.main:
+        _targetScreen = const MainContainer();
+        break;
+
+      case _RootRoute.onboarding:
+        _targetScreen = const ChooseYourCondition();
+        break;
+
+      case _RootRoute.signUp:
+        _targetScreen = const SignUpScreen();
+        break;
+    }
+
+    setState(() {});
   }
 
   @override
@@ -139,32 +181,76 @@ class RootDecider extends StatelessWidget {
       listener: (context, state) {
         if (state is AuthInitial) {
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const SignUpScreen()),
+            MaterialPageRoute(
+              builder: (_) => const SignUpScreen(),
+            ),
                 (route) => false,
           );
         }
       },
-      child: FutureBuilder<_RootRoute>(
-        future: _decide(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
-
-          switch (snapshot.data!) {
-            case _RootRoute.main:
-              return const MainContainer();
-            case _RootRoute.onboarding:
-              return const ChooseYourCondition();
-            case _RootRoute.signUp:
-              return const SignUpScreen();
-          }
-        },
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 800),
+        switchInCurve: Curves.easeOut,
+        switchOutCurve: Curves.easeIn,
+        child: _targetScreen ?? const _SplashScreen(),
       ),
     );
   }
 }
 
 enum _RootRoute { signUp, onboarding, main }
+
+class _SplashScreen extends StatelessWidget {
+  const _SplashScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark =
+        Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Center(
+        child: TweenAnimationBuilder<double>(
+          duration: const Duration(milliseconds: 1200),
+          tween: Tween(begin: 0.0, end: 1.0),
+          builder: (context, value, child) {
+            return Opacity(
+              opacity: value,
+              child: Transform.scale(
+                scale: 0.9 + (value * 0.1),
+                child: child,
+              ),
+            );
+          },
+          child: Container(
+            width: 180,
+            height: 180,
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFF1E1E1E)
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(32),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                  color: Colors.black.withValues(
+                   alpha: isDark ? 0.25 : 0.08,
+                  ),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Image.asset(
+                'assets/logos/appIcon.png',
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -5,13 +5,15 @@ class ApiClient {
   static final Dio dio = Dio(
     BaseOptions(
       baseUrl: "http://10.0.2.2:3000/api",
+       //baseUrl: "https://581d-41-34-187-18.ngrok-free.app/api",
       headers: {"Content-Type": "application/json"},
     ),
   );
 
   // Separate Dio without interceptors, to avoid infinite loops on refresh calls
   static final Dio _refreshDio = Dio(
-    BaseOptions(baseUrl: "http://10.0.2.2:3000/api"),
+   BaseOptions(baseUrl: "http://10.0.2.2:3000/api"),
+    // BaseOptions(baseUrl: "https://581d-41-34-187-18.ngrok-free.app/api"),
   );
 
   static bool _isRefreshing = false;
@@ -52,7 +54,6 @@ class ApiClient {
 
               _isRefreshing = false;
 
-              // Retry the original request with the new token
               final retryOptions = error.requestOptions;
               retryOptions.headers['Authorization'] = 'Bearer $newAccessToken';
 

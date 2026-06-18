@@ -69,4 +69,17 @@ class FoodEntry {
 
   factory FoodEntry.fromJson(String source) =>
       FoodEntry.fromMap(json.decode(source));
+
+  Map<String, dynamic> toApiPayload() => {
+    'type': 'food',
+    'data': {
+      'name': name,
+      'meal_type': mealType,
+      'calories': calories,
+      'carbs': carbs,
+      'protein': protein,
+      'fat': fat,
+      'notes': notes,
+    },
+  };
 }
