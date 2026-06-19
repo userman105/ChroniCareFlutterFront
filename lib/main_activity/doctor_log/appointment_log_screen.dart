@@ -44,7 +44,6 @@ class _AppointmentLogScreenState extends State<AppointmentLogScreen> {
     super.dispose();
   }
 
-  // ── Label builders ──────────────────────────────────────
 
   String _monthShort(DateTime date, String lang) {
     final name = AppStrings.get('month_${date.month}', lang);
@@ -82,7 +81,6 @@ class _AppointmentLogScreenState extends State<AppointmentLogScreen> {
     setState(() => _currentTime = '$h:$m$p');
   }
 
-  // ── Pickers ─────────────────────────────────────────────
 
   Future<void> _pickDate(String lang) async {
     final isDark = context.isDark;

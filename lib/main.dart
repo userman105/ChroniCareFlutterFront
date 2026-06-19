@@ -121,6 +121,16 @@ class _RootDeciderState extends State<RootDecider> {
 
   Future<_RootRoute> _decide() async {
     final prefs = await SharedPreferences.getInstance();
+
+    if (AppConfig.guestMode) {
+      final onboardingDone =
+          prefs.getBool('guest_onboarding_completed') ?? false;
+
+      return onboardingDone
+          ? _RootRoute.main
+          : _RootRoute.onboarding;
+    }
+
     final token = await TokenStorage.getAccessToken();
     final loggedIn = prefs.getBool("is_logged_in") == true;
     final guest = prefs.getBool("is_guest") == true;
@@ -128,10 +138,13 @@ class _RootDeciderState extends State<RootDecider> {
     final isAuthenticated =
         loggedIn && token != null && (guest || token.isNotEmpty);
 
-    if (!isAuthenticated) return _RootRoute.signUp;
+    if (!isAuthenticated) {
+      return _RootRoute.signUp;
+    }
 
     try {
       final store = await AccountScopedStorage.forCurrentUser();
+
       final onboardingDone =
           store.getBool('onboarding_completed') ?? false;
 
@@ -150,6 +163,8 @@ class _RootDeciderState extends State<RootDecider> {
   }
 
   Future<void> _loadRoute() async {
+    await _ensureGuestLogin();
+
     final route = await _decide();
 
     // Keep splash visible briefly
@@ -194,6 +209,22 @@ class _RootDeciderState extends State<RootDecider> {
         child: _targetScreen ?? const _SplashScreen(),
       ),
     );
+  }
+  Future<void> _ensureGuestLogin() async {
+    if (!AppConfig.guestMode) return;
+
+    final prefs = await SharedPreferences.getInstance();
+
+    // Already initialized
+    if (prefs.getBool("is_guest") == true) {
+      return;
+    }
+
+    await prefs.setBool("is_logged_in", true);
+    await prefs.setBool("is_guest", true);
+
+    // Optional fake token if your code expects one
+    await TokenStorage.saveAccessToken("guest-token");
   }
 }
 
@@ -253,3 +284,8 @@ class _SplashScreen extends StatelessWidget {
     );
   }
 }
+class AppConfig {
+  static const bool guestMode =
+  bool.fromEnvironment('GUEST_MODE', defaultValue: false);
+}
+// flutter build apk --release --dart-define=GUEST_MODE=true

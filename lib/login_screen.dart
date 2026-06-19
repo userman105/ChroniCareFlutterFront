@@ -15,12 +15,31 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+
   final TextEditingController email = TextEditingController();
   final TextEditingController password = TextEditingController();
 
   bool loading = false;
   bool authLocked = false;
   bool loginLoading = false;
+  @override
+  void initState() {
+    super.initState();
+
+    if (AppConfig.guestMode) {
+      email.text = 'guest';
+      password.text = 'guest';
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+
+        context.read<AuthCubit>().login(
+          email.text,
+          password.text,
+        );
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

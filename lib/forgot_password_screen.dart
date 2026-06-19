@@ -130,8 +130,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 }
 
-/// OTP dialog for password reset — collects the 6-digit code and the new
-/// password, then submits both to AuthCubit.resetPassword.
 class ResetPasswordOtpDialog extends StatefulWidget {
   final String email;
 

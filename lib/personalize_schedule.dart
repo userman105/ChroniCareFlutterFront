@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/account_scoped_storage.dart';
+import 'main.dart';
 import 'widgets/components.dart';
 import 'main_activity/main_container.dart';
 import 'cubit/health_cubit.dart';
@@ -131,9 +133,14 @@ class _PersonalizeScheduleState extends State<PersonalizeSchedule> {
             cubit.addTile(buttons[i]['key']!);
           }
 
-          // Mark onboarding as done for this account
-          final store = await AccountScopedStorage.forCurrentUser();
-          await store.setBool('onboarding_completed', true);
+          final prefs = await SharedPreferences.getInstance();
+
+          if (AppConfig.guestMode) {
+            await prefs.setBool('guest_onboarding_completed', true);
+          } else {
+            final store = await AccountScopedStorage.forCurrentUser();
+            await store.setBool('onboarding_completed', true);
+          }
 
           Navigator.pushAndRemoveUntil(
             context,
