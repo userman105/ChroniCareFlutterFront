@@ -4,7 +4,7 @@ import 'token_service.dart';
 class ApiClient {
   static final Dio dio = Dio(
     BaseOptions(
-      baseUrl: "http://10.0.2.2:3000/api",
+      baseUrl: "https://b2a1-156-193-205-137.ngrok-free.app/api",
        //baseUrl: "https://581d-41-34-187-18.ngrok-free.app/api",
       headers: {"Content-Type": "application/json"},
     ),
@@ -12,7 +12,7 @@ class ApiClient {
 
   // Separate Dio without interceptors, to avoid infinite loops on refresh calls
   static final Dio _refreshDio = Dio(
-   BaseOptions(baseUrl: "http://10.0.2.2:3000/api"),
+   BaseOptions(baseUrl: "https://b2a1-156-193-205-137.ngrok-free.app/api"),
     // BaseOptions(baseUrl: "https://581d-41-34-187-18.ngrok-free.app/api"),
   );
 

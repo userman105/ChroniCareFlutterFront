@@ -233,11 +233,7 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     }
   }
 
-  // ─── MEDICATION ────────────────────────────────────────────────────────────
-  // Note: Medications are stored locally as a flat MedicationEntry.
-  // Syncing to the server's normalized schema (Medications + UserMedications)
-  // would require a medication search endpoint. For now we log offline only
-  // and mark them as not synced until a proper med-sync endpoint is added.
+
 
   List<MedicationEntry> _medicationEntries = [];
   List<MedicationEntry> getMedicationEntries() => _medicationEntries;
@@ -268,7 +264,6 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     emit(List.from(state));
   }
 
-  // ─── SYMPTOMS ──────────────────────────────────────────────────────────────
 
   List<SymptomEntry> _symptomEntries = [];
   List<SymptomEntry> getSymptomEntries() => _symptomEntries;
@@ -297,8 +292,6 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     await _saveSymptomEntries();
     emit(List.from(state));
   }
-
-  // ─── FOOD LOG ──────────────────────────────────────────────────────────────
 
   List<FoodEntry> _foodEntries = [];
   List<FoodEntry> getFoodEntries() => _foodEntries;
@@ -345,7 +338,6 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     emit(List.from(state));
   }
 
-  // ─── REMINDERS ─────────────────────────────────────────────────────────────
 
   final List<ReminderEntry> _reminders = [];
   List<ReminderEntry> getReminders() => _reminders;
@@ -419,7 +411,6 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
         _Keys.reminders, _reminders.map((e) => e.toJson()).toList());
   }
 
-  // ─── LAB TESTS ─────────────────────────────────────────────────────────────
 
   List<LabTestEntry> _labTests = [];
   List<LabTestEntry> getLabTests() => _labTests;
@@ -454,8 +445,8 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
   Future<Map<String, dynamic>> uploadLabTest(File imageFile) async {
     final token = await TokenStorage.getAccessToken();
 
-     //final uri = Uri.parse('https://581d-41-34-187-18.ngrok-free.app/api/user/lab-test');
-   final uri = Uri.parse('http://10.0.2.2:3000/api/user/lab-test');
+     final uri = Uri.parse('https://b2a1-156-193-205-137.ngrok-free.app/api/user/lab-test');
+   //final uri = Uri.parse('http://10.0.2.2:3000/api/user/lab-test');
     final request = http.MultipartRequest('POST', uri)
       ..headers['Authorization'] = 'Bearer $token'
       ..fields['test_type'] = 'blood_test'
@@ -484,7 +475,6 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     }
   }
 
-  // ─── APPOINTMENTS ──────────────────────────────────────────────────────────
 
   List<AppointmentEntry> _appointments = [];
   List<AppointmentEntry> getAppointments() => _appointments;
@@ -515,7 +505,6 @@ class HealthCubit extends Cubit<List<BloodPressureEntry>> {
     emit(List.from(state));
   }
 
-  // ─── TILES ─────────────────────────────────────────────────────────────────
 
   List<HealthTile> tiles = [];
   List<String> _tileKeys = [];
